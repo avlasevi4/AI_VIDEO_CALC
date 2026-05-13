@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" type="image/png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>AI PRICE КАЛЬКУЛЯТОР by avlasevi4.ai — v1.1</title>
+  <title>AI PRICE КАЛЬКУЛЯТОР by avlasevi4.ai — v1.2</title>
   <style>
     :root {
       --bg0: #020915;
@@ -1656,7 +1656,7 @@
             <img class="version-pill-icon" src="icons/icon-192.png" alt="" aria-hidden="true" />
             <span class="version-pill-copy">
               <span class="version-pill-main">AI PRICE КАЛЬКУЛЯТОР by avlasevi4.ai</span>
-              <span class="version-pill-version">версия v1.1</span>
+              <span class="version-pill-version">версия v1.2</span>
             </span>
           </a>
         </header>
@@ -1853,7 +1853,7 @@
   <script>
     const STORAGE_KEY = 'ai-price-calculator-user-data';
     const LEGACY_STORAGE_KEYS = ['video-cost-calculator-v05'];
-    const APP_VERSION = 'v1.1';
+    const APP_VERSION = 'v1.2';
 
     const defaults = {
       usdRub: 75.05,
@@ -2494,8 +2494,8 @@
         state = clone(defaults);
         hydrateControls();
         render();
-        els.rateStatus.textContent = 'Значения сброшены к v1.1.';
-        setStorageStatus('Сброшено к базовым значениям v1.1. Локальные пользовательские модели удалены.');
+        els.rateStatus.textContent = 'Значения сброшены к v1.2.';
+        setStorageStatus('Сброшено к базовым значениям v1.2. Локальные пользовательские модели удалены.');
       });
 
       els.refreshRate.addEventListener('click', updateRateOnline);

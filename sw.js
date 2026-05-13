@@ -1,12 +1,11 @@
-const CACHE_NAME = 'ai-price-calculator-v1-1';
+const CACHE_NAME = 'ai-price-calculator-v1-2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icons/icon-32.png',
   './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/maskable-icon-512.png'
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
