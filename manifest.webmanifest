@@ -1,0 +1,32 @@
+{
+  "name": "AI PRICE КАЛЬКУЛЯТОР by avlasevi4.ai",
+  "short_name": "AI PRICE",
+  "description": "Калькулятор стоимости генерации 1080p-видео и отдельный Kling Calculator. Версия v1.1.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#020915",
+  "theme_color": "#020915",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
