@@ -79,14 +79,40 @@
   <section class="card project-card">
     <div class="section-head">
       <div>
-        <h2>Проект</h2>
-        <div class="muted">Сначала составь смету, затем фиксируй фактические генерации по мере работы.</div>
+        <h2>Мои проекты</h2>
+        <div class="muted">Личная история синхронизируется между устройствами и доступна только после входа.</div>
       </div>
-      <button id="createProject" class="btn primary" type="button">Создать проект</button>
+      <button id="createProject" class="btn primary" type="button">Новый проект</button>
     </div>
 
-    <div id="projectEmpty" class="project-empty">Проект пока не создан. Нажми «Создать проект», чтобы составить смету и вести фактический расход.</div>
+    <div id="projectAuth" class="project-auth">
+      <div id="authLoading" class="auth-state"><strong>Проверяем доступ…</strong><span>Калькулятор остаётся доступным независимо от входа.</span></div>
+      <form id="authForm" class="auth-form hidden">
+        <div class="auth-copy"><strong>Вход в личные проекты</strong><span>Сметы и история доступны только разрешённому аккаунту.</span></div>
+        <div class="field"><label for="authEmail">E-mail</label><input id="authEmail" type="email" required autocomplete="username"></div>
+        <div class="field"><label for="authPassword">Пароль</label><input id="authPassword" type="password" required autocomplete="current-password"></div>
+        <button id="authSubmit" class="btn primary" type="submit">Войти</button>
+        <div id="authError" class="field-error hidden" role="alert"></div>
+      </form>
+      <div id="authAccount" class="auth-account hidden">
+        <div><span>Выполнен вход</span><strong id="authAccountEmail">—</strong><small id="syncStatus">Локальная копия синхронизирована</small></div>
+        <button id="authSignOut" class="btn secondary" type="button">Выйти</button>
+      </div>
+      <div id="authSetup" class="auth-state hidden"><strong>Облачное хранилище ещё не подключено</strong><span>Публичный калькулятор работает. После добавления параметров Supabase здесь появится вход владельца.</span></div>
+    </div>
+
+    <div id="projectPrivateContent" class="hidden">
+    <div id="projectHistory" class="project-history">
+      <div class="history-head"><strong>История проектов</strong><span id="projectCount">0 проектов</span></div>
+      <div id="projectHistoryList" class="project-history-list"></div>
+    </div>
+
+    <div id="projectEmpty" class="project-empty">Сохранённых проектов пока нет. Нажми «Новый проект», введи название и начни расчёт.</div>
     <div id="projectBuilder" class="hidden">
+      <div class="active-project-bar">
+        <div><span>Текущий проект</span><strong id="activeProjectName">—</strong><small id="activeProjectUpdated">—</small></div>
+        <button id="renameProject" class="btn secondary" type="button">Переименовать</button>
+      </div>
       <details class="project-subdetails" open>
         <summary>
           <span><strong>Смета проекта</strong><small>Планируемые видео, резерв и изображения</small></span>
@@ -230,6 +256,7 @@
         </div>
       </details>
     </div>
+    </div>
   </section>
 
   <details class="card checker-card">
@@ -289,8 +316,31 @@
 
   <footer class="footer">AI VIDEO CALC v2 · 20.08.2026</footer>
 </main>
+
+<dialog id="projectNameDialog" class="project-dialog" aria-labelledby="projectNameTitle">
+  <form id="projectNameForm" class="project-dialog-card">
+    <div>
+      <div class="eyebrow">project memory</div>
+      <h2 id="projectNameTitle">Новый проект</h2>
+      <p>Название поможет быстро найти эту смету в истории.</p>
+    </div>
+    <div class="field">
+      <label for="projectNameInput">Название проекта</label>
+      <input id="projectNameInput" type="text" maxlength="120" required autocomplete="off" placeholder="Например: Ведущий Попков — 25.08.2026">
+      <div id="projectNameError" class="field-error hidden">Введите название проекта.</div>
+    </div>
+    <div class="dialog-actions">
+      <button id="cancelProjectName" class="btn secondary" type="button">Отмена</button>
+      <button id="saveProjectName" class="btn primary" type="submit">Создать проект</button>
+    </div>
+  </form>
+</dialog>
+<script src="./vendor/supabase.min.js"></script>
+<script src="./js/cloud-config.js"></script>
+<script src="./js/cloud.js"></script>
 <script src="./js/calculator.js"></script>
 <script src="./js/pricing.js"></script>
+<script src="./js/projects.js"></script>
 <script src="./js/app.js"></script>
 </body>
 </html>

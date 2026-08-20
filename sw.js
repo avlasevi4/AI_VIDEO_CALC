@@ -1,10 +1,14 @@
-const CACHE_NAME = 'ai-video-calc-v2-20260820';
+const CACHE_NAME = 'ai-video-calc-v2-supabase-owner-20260820';
 const ASSETS = [
   './',
   './index.html',
   './css/app.css',
+  './vendor/supabase.min.js',
+  './js/cloud-config.js',
+  './js/cloud.js',
   './js/calculator.js',
   './js/pricing.js',
+  './js/projects.js',
   './js/app.js',
   './data/pricing.json',
   './manifest.webmanifest',

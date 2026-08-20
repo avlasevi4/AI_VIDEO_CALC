@@ -7,6 +7,8 @@ on:
       - 'js/**'
       - 'scripts/**'
       - 'tests/**'
+      - 'supabase/**'
+      - 'vendor/**'
       - 'package.json'
       - '.github/workflows/check-pricing.yml'
   push:
@@ -17,6 +19,8 @@ on:
       - 'js/**'
       - 'scripts/**'
       - 'tests/**'
+      - 'supabase/**'
+      - 'vendor/**'
       - 'package.json'
 
 permissions:

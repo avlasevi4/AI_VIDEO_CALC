@@ -2,17 +2,21 @@
   'use strict';
 
   const STORAGE_KEY = 'ai-video-calc-v2-settings';
-  const PROJECT_KEY = 'ai-video-calc-v2-project';
-  const PROJECT_META_KEY = 'ai-video-calc-v2-project-meta';
-  const ACTUAL_KEY = 'ai-video-calc-v2-actual';
   let pricing = null;
   let pricingSource = '—';
   let currentProvider = 'kling';
+  let projects = [];
+  let activeProjectId = '';
   let projectItems = [];
   let actualItems = [];
   let projectMeta = defaultProjectMeta();
   let actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
   let showWorkPrice = false;
+  let projectDialogMode = 'create';
+  let cloudConfigured = false;
+  let cloudSession = null;
+  let projectAccess = false;
+  let syncTimer = null;
 
   let settings = {
     usdRub: 75.05,
@@ -64,28 +68,10 @@
       if (!settings.syntexManualUnits || typeof settings.syntexManualUnits !== 'object') settings.syntexManualUnits = {};
     } catch (_) {}
 
-    try {
-      projectItems = JSON.parse(localStorage.getItem(PROJECT_KEY) || '[]') || [];
-    } catch (_) {
-      projectItems = [];
-    }
-
-    try {
-      const savedMeta = JSON.parse(localStorage.getItem(PROJECT_META_KEY) || 'null');
-      projectMeta = { ...defaultProjectMeta(), ...(savedMeta || {}) };
-      if (savedMeta && !Object.prototype.hasOwnProperty.call(savedMeta, 'retryPercent') && settings.retryPercent != null) {
-        projectMeta.retryPercent = settings.retryPercent;
-      }
-    } catch (_) {
-      projectMeta = defaultProjectMeta();
-    }
-
-    try {
-      actualItems = JSON.parse(localStorage.getItem(ACTUAL_KEY) || '[]') || [];
-      if (!Array.isArray(actualItems)) actualItems = [];
-    } catch (_) {
-      actualItems = [];
-    }
+    const library = window.AIVideoProjectStore.load(defaultProjectMeta());
+    projects = library.projects;
+    activeProjectId = library.activeProjectId;
+    loadActiveProjectState();
 
     projectItems = projectItems.map(item => ({
       ...item,
@@ -114,10 +100,37 @@
   function saveLocal() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      localStorage.setItem(PROJECT_KEY, JSON.stringify(projectItems));
-      localStorage.setItem(PROJECT_META_KEY, JSON.stringify(projectMeta));
-      localStorage.setItem(ACTUAL_KEY, JSON.stringify(actualItems));
+      syncActiveProjectState();
+      window.AIVideoProjectStore.save(projects, activeProjectId);
+      scheduleActiveProjectSync();
     } catch (_) {}
+  }
+
+  function activeProject() {
+    return projects.find(project => project.id === activeProjectId) || null;
+  }
+
+  function loadActiveProjectState() {
+    const project = activeProject();
+    if (!project) {
+      activeProjectId = '';
+      projectItems = [];
+      actualItems = [];
+      projectMeta = defaultProjectMeta();
+      return;
+    }
+    projectItems = JSON.parse(JSON.stringify(project.items || []));
+    actualItems = JSON.parse(JSON.stringify(project.actualItems || []));
+    projectMeta = { ...defaultProjectMeta(), ...(project.meta || {}) };
+  }
+
+  function syncActiveProjectState(touch = true) {
+    const project = activeProject();
+    if (!project) return;
+    project.items = JSON.parse(JSON.stringify(projectItems));
+    project.actualItems = JSON.parse(JSON.stringify(actualItems));
+    project.meta = JSON.parse(JSON.stringify(projectMeta));
+    if (touch) project.updatedAt = new Date().toISOString();
   }
 
   async function init() {
@@ -132,6 +145,7 @@
     renderDataStatus(loaded.warning);
     renderSourceLinks();
     setProvider('kling');
+    await initCloudAccess();
     renderProject();
     runPricingCheck(false);
 
@@ -152,6 +166,12 @@
     $('manualUnits').addEventListener('input', () => { setStoredManualUnits($('manualUnits').value); renderResult(); });
 
     $('createProject').addEventListener('click', createNewProject);
+    $('renameProject').addEventListener('click', () => openProjectNameDialog('rename'));
+    $('projectNameForm').addEventListener('submit', saveProjectName);
+    $('cancelProjectName').addEventListener('click', closeProjectNameDialog);
+    $('projectNameDialog').addEventListener('cancel', event => { event.preventDefault(); closeProjectNameDialog(); });
+    $('authForm').addEventListener('submit', signInToProjects);
+    $('authSignOut').addEventListener('click', signOutOfProjects);
     $('addProjectLine').addEventListener('click', () => { projectItems.push(defaultProjectItem()); saveLocal(); renderProject(); });
     $('calculateWorkPrice').addEventListener('click', () => { showWorkPrice = true; renderTotals(); });
 
@@ -251,6 +271,110 @@
     ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens'].forEach(k => {
       if ($(k)) $(k).value = settings[k];
     });
+  }
+
+  function isLocalDevelopment() {
+    return ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
+  }
+
+  async function initCloudAccess() {
+    try {
+      const state = await window.AIVideoCloud.init(session => {
+        cloudSession = session;
+        projectAccess = Boolean(session);
+        renderAuthState();
+        renderProject();
+      });
+      cloudConfigured = state.configured;
+      cloudSession = state.session;
+      projectAccess = cloudConfigured ? Boolean(cloudSession) : isLocalDevelopment();
+      if (cloudSession) await synchronizeCloudProjects();
+    } catch (error) {
+      cloudConfigured = window.AIVideoCloud.isConfigured();
+      cloudSession = null;
+      projectAccess = false;
+      $('authError').textContent = 'Не удалось подключить личные проекты: ' + error.message;
+    }
+    renderAuthState();
+  }
+
+  function renderAuthState() {
+    const localMode = !cloudConfigured && isLocalDevelopment();
+    $('authLoading').classList.add('hidden');
+    $('authForm').classList.toggle('hidden', !cloudConfigured || Boolean(cloudSession));
+    $('authAccount').classList.toggle('hidden', !cloudSession);
+    $('authSetup').classList.toggle('hidden', cloudConfigured || Boolean(cloudSession));
+    $('projectPrivateContent').classList.toggle('hidden', !projectAccess);
+    $('createProject').classList.toggle('hidden', !projectAccess);
+
+    if (localMode) {
+      $('authSetup').querySelector('strong').textContent = 'Локальный режим разработки';
+      $('authSetup').querySelector('span').textContent = 'История доступна только в этом браузере. После подключения Supabase на GitHub потребуется вход владельца.';
+    }
+    if (cloudSession) {
+      $('authAccountEmail').textContent = cloudSession.user.email;
+    }
+  }
+
+  async function signInToProjects(event) {
+    event.preventDefault();
+    const button = $('authSubmit');
+    $('authError').classList.add('hidden');
+    button.disabled = true;
+    button.textContent = 'Входим…';
+    try {
+      cloudSession = await window.AIVideoCloud.signIn($('authEmail').value, $('authPassword').value);
+      projectAccess = true;
+      $('authPassword').value = '';
+      renderAuthState();
+      await synchronizeCloudProjects();
+      renderProject();
+    } catch (error) {
+      $('authError').textContent = error.message;
+      $('authError').classList.remove('hidden');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Войти';
+    }
+  }
+
+  async function signOutOfProjects() {
+    $('syncStatus').textContent = 'Завершаем сессию…';
+    await window.AIVideoCloud.signOut();
+    cloudSession = null;
+    projectAccess = false;
+    renderAuthState();
+    renderProject();
+  }
+
+  async function synchronizeCloudProjects() {
+    if (!cloudSession) return;
+    $('syncStatus').textContent = 'Синхронизация…';
+    try {
+      syncActiveProjectState(false);
+      const merged = await window.AIVideoCloud.synchronize(projects);
+      projects = merged.map(project => window.AIVideoProjectStore.normalizeProject(project, defaultProjectMeta()));
+      if (!projects.some(project => project.id === activeProjectId)) activeProjectId = projects[0]?.id || '';
+      loadActiveProjectState();
+      window.AIVideoProjectStore.save(projects, activeProjectId);
+      $('syncStatus').textContent = `Синхронизировано ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+    } catch (error) {
+      $('syncStatus').textContent = 'Offline: изменения сохранены локально';
+    }
+  }
+
+  function scheduleActiveProjectSync() {
+    if (!cloudSession || !activeProject()) return;
+    clearTimeout(syncTimer);
+    $('syncStatus').textContent = 'Есть несинхронизированные изменения…';
+    syncTimer = setTimeout(async () => {
+      try {
+        await window.AIVideoCloud.saveProject(activeProject());
+        $('syncStatus').textContent = `Синхронизировано ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+      } catch (_) {
+        $('syncStatus').textContent = 'Offline: изменения сохранены локально';
+      }
+    }, 700);
   }
 
   function renderHeadlineRate() {
@@ -451,13 +575,87 @@
   }
 
   function createNewProject() {
-    if ((projectItems.length || actualItems.length) && !confirm('Создать новый проект? Текущая смета и фактический журнал будут удалены.')) return;
-    projectItems = [defaultProjectItem()];
-    actualItems = [];
-    projectMeta = defaultProjectMeta();
+    openProjectNameDialog('create');
+  }
+
+  function openProjectNameDialog(mode) {
+    projectDialogMode = mode;
+    const project = activeProject();
+    $('projectNameTitle').textContent = mode === 'rename' ? 'Переименовать проект' : 'Новый проект';
+    $('saveProjectName').textContent = mode === 'rename' ? 'Сохранить название' : 'Создать проект';
+    $('projectNameInput').value = mode === 'rename' && project ? project.name : '';
+    $('projectNameError').classList.add('hidden');
+    const dialog = $('projectNameDialog');
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+    setTimeout(() => $('projectNameInput').focus(), 0);
+  }
+
+  function closeProjectNameDialog() {
+    const dialog = $('projectNameDialog');
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog.removeAttribute('open');
+  }
+
+  function saveProjectName(event) {
+    event.preventDefault();
+    const name = window.AIVideoProjectStore.normalizeName($('projectNameInput').value, '');
+    if (!name) {
+      $('projectNameError').classList.remove('hidden');
+      $('projectNameInput').focus();
+      return;
+    }
+
+    if (projectDialogMode === 'rename') {
+      const project = activeProject();
+      if (project) {
+        project.name = name;
+        project.updatedAt = new Date().toISOString();
+      }
+    } else {
+      saveLocal();
+      const project = window.AIVideoProjectStore.createProject(name, defaultProjectMeta(), defaultProjectItem());
+      projects.unshift(project);
+      activeProjectId = project.id;
+      loadActiveProjectState();
+    }
+
     actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
     showWorkPrice = false;
+    closeProjectNameDialog();
     saveLocal();
+    renderProject();
+  }
+
+  function openSavedProject(id) {
+    if (id === activeProjectId) return;
+    saveLocal();
+    activeProjectId = id;
+    loadActiveProjectState();
+    actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
+    showWorkPrice = false;
+    window.AIVideoProjectStore.save(projects, activeProjectId);
+    renderProject();
+  }
+
+  async function deleteSavedProject(id) {
+    const project = projects.find(item => item.id === id);
+    if (!project || !confirm(`Удалить проект «${project.name}»? Это действие нельзя отменить.`)) return;
+    if (cloudSession) {
+      try {
+        await window.AIVideoCloud.deleteProject(id);
+        $('syncStatus').textContent = 'Проект удалён из облака';
+      } catch (_) {
+        $('syncStatus').textContent = 'Не удалось удалить проект: проверьте соединение';
+        return;
+      }
+    }
+    projects = projects.filter(item => item.id !== id);
+    if (activeProjectId === id) {
+      activeProjectId = projects[0]?.id || '';
+      loadActiveProjectState();
+    }
+    window.AIVideoProjectStore.save(projects, activeProjectId);
     renderProject();
   }
 
@@ -815,15 +1013,23 @@
 
   function renderProject() {
     if (!pricing) return;
-    projectItems = projectItems.map(recalcProjectItem);
-    saveLocal();
+    $('projectPrivateContent').classList.toggle('hidden', !projectAccess);
+    $('createProject').classList.toggle('hidden', !projectAccess);
+    if (!projectAccess) return;
+    if (activeProject()) {
+      projectItems = projectItems.map(recalcProjectItem);
+      syncActiveProjectState(false);
+      window.AIVideoProjectStore.save(projects, activeProjectId);
+    }
 
-    const hasProject = projectItems.length > 0 || actualItems.length > 0;
+    renderProjectHistory();
+    const hasProject = Boolean(activeProject());
     $('projectEmpty').classList.toggle('hidden', hasProject);
     $('projectBuilder').classList.toggle('hidden', !hasProject);
-    $('createProject').textContent = hasProject ? 'Новый проект' : 'Создать проект';
 
     if (!hasProject) return;
+    $('activeProjectName').textContent = activeProject().name;
+    $('activeProjectUpdated').textContent = `Изменён ${formatProjectDate(activeProject().updatedAt)}`;
     renderProjectMeta();
     const list = $('projectList');
     list.innerHTML = '';
@@ -831,6 +1037,41 @@
     renderActualDraft();
     renderActualList();
     renderTotals();
+  }
+
+  function formatProjectDate(value) {
+    const date = new Date(value || Date.now());
+    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString('ru-RU', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  function renderProjectHistory() {
+    const list = $('projectHistoryList');
+    $('projectCount').textContent = `${projects.length} ${projects.length === 1 ? 'проект' : projects.length >= 2 && projects.length <= 4 ? 'проекта' : 'проектов'}`;
+    $('projectHistory').classList.toggle('hidden', projects.length === 0);
+    list.innerHTML = '';
+
+    [...projects]
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      .forEach(project => {
+        const totals = window.AIVideoCalculator.calculateProject(project.items || [], project.meta || defaultProjectMeta(), project.actualItems || []);
+        const card = document.createElement('article');
+        card.className = 'history-item' + (project.id === activeProjectId ? ' active' : '');
+        card.innerHTML = `
+          <div class="history-copy">
+            <strong>${esc(project.name)}</strong>
+            <span>${formatProjectDate(project.updatedAt)} · ${(project.items || []).length} позиций</span>
+          </div>
+          <div class="history-cost"><span>Смета</span><strong>${fmtRub(totals.estimateCost)}</strong></div>
+          <div class="history-actions">
+            <button class="btn secondary history-open" type="button" ${project.id === activeProjectId ? 'disabled' : ''}>${project.id === activeProjectId ? 'Открыт' : 'Открыть'}</button>
+            <button class="history-delete" type="button" aria-label="Удалить проект ${esc(project.name)}">×</button>
+          </div>`;
+        card.querySelector('.history-open').addEventListener('click', () => openSavedProject(project.id));
+        card.querySelector('.history-delete').addEventListener('click', () => deleteSavedProject(project.id));
+        list.appendChild(card);
+      });
   }
 
   function renderTotals() {
@@ -1094,13 +1335,14 @@
   }
 
   function exportData() {
+    syncActiveProjectState(false);
     const payload = {
-      app: 'AI VIDEO CALC v2.3',
+      app: 'AI VIDEO CALC v2',
+      schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       settings,
-      projectMeta,
-      projectItems,
-      actualItems
+      activeProjectId,
+      projects
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
@@ -1117,9 +1359,18 @@
       const data = JSON.parse(await file.text());
       settings = { ...settings, ...(data.settings || {}) };
       if (!settings.syntexManualUnits) settings.syntexManualUnits = {};
-      projectMeta = { ...defaultProjectMeta(), ...(data.projectMeta || {}) };
-      projectItems = Array.isArray(data.projectItems) ? data.projectItems : [];
-      actualItems = Array.isArray(data.actualItems) ? data.actualItems : [];
+      if (Array.isArray(data.projects)) {
+        projects = data.projects.map(project => window.AIVideoProjectStore.normalizeProject(project, defaultProjectMeta()));
+        activeProjectId = projects.some(project => project.id === data.activeProjectId) ? data.activeProjectId : (projects[0]?.id || '');
+      } else {
+        const imported = window.AIVideoProjectStore.createProject('Импортированный проект', defaultProjectMeta());
+        imported.meta = { ...defaultProjectMeta(), ...(data.projectMeta || {}) };
+        imported.items = Array.isArray(data.projectItems) ? data.projectItems : [];
+        imported.actualItems = Array.isArray(data.actualItems) ? data.actualItems : [];
+        projects = [imported];
+        activeProjectId = imported.id;
+      }
+      loadActiveProjectState();
       projectItems = projectItems.map(item => ({ ...item, qty: Math.max(1, Math.round(Number(item.qty) || 1)) }));
       showWorkPrice = false;
       saveLocal();
@@ -1136,11 +1387,9 @@
   }
 
   function resetData() {
-    if (!confirm('Сбросить локальные настройки, смету и фактический журнал?')) return;
+    if (!confirm('Сбросить локальные настройки и всю историю проектов на этом устройстве?')) return;
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(PROJECT_KEY);
-    localStorage.removeItem(PROJECT_META_KEY);
-    localStorage.removeItem(ACTUAL_KEY);
+    window.AIVideoProjectStore.clear();
     location.reload();
   }
 
