@@ -65,6 +65,8 @@
       name: row.name,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      status: row.payload?.status === 'completed' ? 'completed' : 'active',
+      completedAt: row.payload?.completedAt || null,
       items: row.payload?.items || [],
       meta: row.payload?.meta || {},
       actualItems: row.payload?.actualItems || []
@@ -84,7 +86,13 @@
       id: project.id,
       user_id: current.user.id,
       name: project.name,
-      payload: { items: project.items || [], meta: project.meta || {}, actualItems: project.actualItems || [] },
+      payload: {
+        status: project.status === 'completed' ? 'completed' : 'active',
+        completedAt: project.completedAt || null,
+        items: project.items || [],
+        meta: project.meta || {},
+        actualItems: project.actualItems || []
+      },
       created_at: project.createdAt,
       updated_at: project.updatedAt
     };

@@ -168,6 +168,7 @@
 
     $('createProject').addEventListener('click', createNewProject);
     $('renameProject').addEventListener('click', () => openProjectNameDialog('rename'));
+    $('completeProject').addEventListener('click', toggleProjectCompletion);
     $('projectNameForm').addEventListener('submit', saveProjectName);
     $('cancelProjectName').addEventListener('click', closeProjectNameDialog);
     $('projectNameDialog').addEventListener('cancel', event => { event.preventDefault(); closeProjectNameDialog(); });
@@ -335,7 +336,9 @@
       syncActiveProjectState(false);
       const merged = await window.AIVideoCloud.synchronize(projects);
       projects = merged.map(project => window.AIVideoProjectStore.normalizeProject(project, defaultProjectMeta()));
-      if (!projects.some(project => project.id === activeProjectId)) activeProjectId = projects[0]?.id || '';
+      if (activeProjectId && !projects.some(project => project.id === activeProjectId)) {
+        activeProjectId = projects.find(project => project.status !== 'completed')?.id || '';
+      }
       loadActiveProjectState();
       window.AIVideoProjectStore.save(projects, activeProjectId);
       $('syncStatus').textContent = `Синхронизировано ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
@@ -619,6 +622,36 @@
     renderProject();
   }
 
+  async function toggleProjectCompletion() {
+    const project = activeProject();
+    if (!project) return;
+
+    syncActiveProjectState(false);
+    const completing = project.status !== 'completed';
+    const now = new Date().toISOString();
+    project.status = completing ? 'completed' : 'active';
+    project.completedAt = completing ? now : null;
+    project.updatedAt = now;
+    window.AIVideoProjectStore.save(projects, activeProjectId);
+
+    if (cloudSession) {
+      $('syncStatus').textContent = completing ? 'Сохраняем завершённый проект…' : 'Возвращаем проект в работу…';
+      try {
+        await window.AIVideoCloud.saveProject(project);
+        $('syncStatus').textContent = `Синхронизировано ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+      } catch (_) {
+        $('syncStatus').textContent = 'Offline: статус сохранён локально';
+      }
+    }
+
+    if (completing) {
+      activeProjectId = '';
+      loadActiveProjectState();
+      window.AIVideoProjectStore.save(projects, activeProjectId);
+    }
+    renderProject();
+  }
+
   async function deleteSavedProject(id) {
     const project = projects.find(item => item.id === id);
     if (!project || !confirm(`Удалить проект «${project.name}»? Это действие нельзя отменить.`)) return;
@@ -633,7 +666,7 @@
     }
     projects = projects.filter(item => item.id !== id);
     if (activeProjectId === id) {
-      activeProjectId = projects[0]?.id || '';
+      activeProjectId = projects.find(item => item.status !== 'completed')?.id || '';
       loadActiveProjectState();
     }
     window.AIVideoProjectStore.save(projects, activeProjectId);
@@ -1025,6 +1058,11 @@
     renderProjectHistory();
     const hasProject = Boolean(activeProject());
     $('projectEmpty').classList.toggle('hidden', hasProject);
+    if (!hasProject) {
+      $('projectEmpty').textContent = projects.length
+        ? 'Выберите активный проект или откройте завершённый проект для просмотра.'
+        : 'Сохранённых проектов пока нет. Нажми «Новый проект», введи название и начни расчёт.';
+    }
     $('projectBuilder').classList.toggle('hidden', !hasProject);
 
     if (!hasProject) return;
@@ -1037,6 +1075,35 @@
     renderActualDraft();
     renderActualList();
     renderTotals();
+    renderProjectCompletionState();
+  }
+
+  function renderProjectCompletionState() {
+    const project = activeProject();
+    if (!project) return;
+    const completed = project.status === 'completed';
+    const builder = $('projectBuilder');
+    builder.classList.toggle('project-builder-completed', completed);
+    $('activeProjectStatus').textContent = completed ? 'Завершённый проект' : 'Текущий проект';
+    $('activeProjectUpdated').textContent = completed
+      ? `Завершён ${formatProjectDate(project.completedAt)}`
+      : `Изменён ${formatProjectDate(project.updatedAt)}`;
+    $('renameProject').classList.toggle('hidden', completed);
+    $('completeProject').textContent = completed ? 'Вернуть в работу' : 'Завершить проект';
+    $('completeProject').className = completed ? 'btn secondary' : 'btn primary';
+
+    if (completed) {
+      builder.querySelectorAll('input, select, button').forEach(control => {
+        if (control.id === 'completeProject' || control.disabled) return;
+        control.disabled = true;
+        control.dataset.completionDisabled = 'true';
+      });
+    } else {
+      builder.querySelectorAll('[data-completion-disabled="true"]').forEach(control => {
+        control.disabled = false;
+        delete control.dataset.completionDisabled;
+      });
+    }
   }
 
   function formatProjectDate(value) {
@@ -1047,31 +1114,47 @@
   }
 
   function renderProjectHistory() {
-    const list = $('projectHistoryList');
     $('projectCount').textContent = `${projects.length} ${projects.length === 1 ? 'проект' : projects.length >= 2 && projects.length <= 4 ? 'проекта' : 'проектов'}`;
     $('projectHistory').classList.toggle('hidden', projects.length === 0);
-    list.innerHTML = '';
+    const activeProjects = projects.filter(project => project.status !== 'completed');
+    const completedProjects = projects.filter(project => project.status === 'completed');
+    $('activeProjectCount').textContent = String(activeProjects.length);
+    $('completedProjectCount').textContent = String(completedProjects.length);
+    $('activeProjectsGroup').classList.toggle('hidden', activeProjects.length === 0);
+    $('completedProjectsGroup').classList.toggle('hidden', completedProjects.length === 0);
 
-    [...projects]
-      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-      .forEach(project => {
+    const renderGroup = (listId, group) => {
+      const list = $(listId);
+      list.innerHTML = '';
+      [...group]
+        .sort((a, b) => new Date(b.completedAt || b.updatedAt) - new Date(a.completedAt || a.updatedAt))
+        .forEach(project => {
         const totals = window.AIVideoCalculator.calculateProject(project.items || [], project.meta || defaultProjectMeta(), project.actualItems || []);
+        const completed = project.status === 'completed';
         const card = document.createElement('article');
-        card.className = 'history-item' + (project.id === activeProjectId ? ' active' : '');
+        card.className = 'history-item' + (project.id === activeProjectId ? ' active' : '') + (completed ? ' completed' : '');
         card.innerHTML = `
           <div class="history-copy">
             <strong>${esc(project.name)}</strong>
-            <span>${formatProjectDate(project.updatedAt)} · ${(project.items || []).length} позиций</span>
+            <span>${completed ? 'Завершён ' + formatProjectDate(project.completedAt) : 'Изменён ' + formatProjectDate(project.updatedAt)} · ${(project.items || []).length} позиций</span>
           </div>
-          <div class="history-cost"><span>Смета</span><strong>${fmtRub(totals.estimateCost)}</strong></div>
+          <div class="history-finance">
+            <div><span>Смета</span><strong>${fmtRub(totals.estimateCost)}</strong></div>
+            <div><span>Факт</span><strong>${fmtRub(totals.actualCost)}</strong></div>
+            <div class="profit"><span>Прибыль</span><strong>${fmtRub(totals.actualProfit)}</strong></div>
+          </div>
           <div class="history-actions">
-            <button class="btn secondary history-open" type="button" ${project.id === activeProjectId ? 'disabled' : ''}>${project.id === activeProjectId ? 'Открыт' : 'Открыть'}</button>
+            <button class="btn secondary history-open" type="button" ${project.id === activeProjectId ? 'disabled' : ''}>${project.id === activeProjectId ? 'Открыт' : completed ? 'Посмотреть' : 'Открыть'}</button>
             <button class="history-delete" type="button" aria-label="Удалить проект ${esc(project.name)}">×</button>
           </div>`;
         card.querySelector('.history-open').addEventListener('click', () => openSavedProject(project.id));
         card.querySelector('.history-delete').addEventListener('click', () => deleteSavedProject(project.id));
         list.appendChild(card);
       });
+    };
+
+    renderGroup('activeProjectList', activeProjects);
+    renderGroup('completedProjectList', completedProjects);
   }
 
   function renderTotals() {

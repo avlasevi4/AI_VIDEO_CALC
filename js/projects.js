@@ -5,7 +5,7 @@
   const LEGACY_PROJECT_KEY = 'ai-video-calc-v2-project';
   const LEGACY_META_KEY = 'ai-video-calc-v2-project-meta';
   const LEGACY_ACTUAL_KEY = 'ai-video-calc-v2-actual';
-  const SCHEMA_VERSION = 4;
+  const SCHEMA_VERSION = 5;
 
   const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -21,6 +21,7 @@
 
   function normalizeProject(project, defaultMeta) {
     const now = new Date().toISOString();
+    const status = project?.status === 'completed' ? 'completed' : 'active';
     const meta = { ...clone(defaultMeta), ...(project?.meta || {}) };
     delete meta.retryPercent;
     delete meta.retryGenerations;
@@ -30,6 +31,8 @@
       name: normalizeName(project?.name),
       createdAt: project?.createdAt || now,
       updatedAt: project?.updatedAt || project?.createdAt || now,
+      status,
+      completedAt: status === 'completed' ? (project?.completedAt || project?.updatedAt || now) : null,
       items: Array.isArray(project?.items) ? clone(project.items).map(item => {
         const normalized = {
           ...item,
@@ -51,6 +54,8 @@
       name: normalizeName(name),
       createdAt: now,
       updatedAt: now,
+      status: 'active',
+      completedAt: null,
       items: initialItem ? [initialItem] : [],
       meta: defaultMeta,
       actualItems: []
@@ -70,9 +75,11 @@
     const saved = readJson(STORAGE_KEY, null);
     if (saved && Number(saved.schemaVersion) >= 1 && Number(saved.schemaVersion) <= SCHEMA_VERSION && Array.isArray(saved.projects)) {
       const projects = saved.projects.map(project => normalizeProject(project, defaultMeta));
-      const activeProjectId = projects.some(project => project.id === saved.activeProjectId)
-        ? saved.activeProjectId
-        : (projects[0]?.id || '');
+      const activeProjectId = saved.activeProjectId === ''
+        ? ''
+        : projects.some(project => project.id === saved.activeProjectId)
+          ? saved.activeProjectId
+          : (projects.find(project => project.status === 'active')?.id || '');
       const library = { schemaVersion: SCHEMA_VERSION, projects, activeProjectId };
       if (saved.schemaVersion !== SCHEMA_VERSION) save(library.projects, library.activeProjectId);
       return library;

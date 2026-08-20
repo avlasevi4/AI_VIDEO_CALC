@@ -104,14 +104,26 @@
     <div id="projectPrivateContent" class="hidden">
     <div id="projectHistory" class="project-history">
       <div class="history-head"><strong>История проектов</strong><span id="projectCount">0 проектов</span></div>
-      <div id="projectHistoryList" class="project-history-list"></div>
+      <div class="history-groups">
+        <section id="activeProjectsGroup" class="history-group">
+          <div class="history-group-head"><strong>Активные</strong><span id="activeProjectCount">0</span></div>
+          <div id="activeProjectList" class="project-history-list"></div>
+        </section>
+        <section id="completedProjectsGroup" class="history-group">
+          <div class="history-group-head"><strong>Завершённые</strong><span id="completedProjectCount">0</span></div>
+          <div id="completedProjectList" class="project-history-list"></div>
+        </section>
+      </div>
     </div>
 
     <div id="projectEmpty" class="project-empty">Сохранённых проектов пока нет. Нажми «Новый проект», введи название и начни расчёт.</div>
     <div id="projectBuilder" class="hidden">
       <div class="active-project-bar">
-        <div><span>Текущий проект</span><strong id="activeProjectName">—</strong><small id="activeProjectUpdated">—</small></div>
-        <button id="renameProject" class="btn secondary" type="button">Переименовать</button>
+        <div><span id="activeProjectStatus">Текущий проект</span><strong id="activeProjectName">—</strong><small id="activeProjectUpdated">—</small></div>
+        <div class="active-project-actions">
+          <button id="renameProject" class="btn secondary" type="button">Переименовать</button>
+          <button id="completeProject" class="btn primary" type="button">Завершить проект</button>
+        </div>
       </div>
       <details class="project-subdetails" open>
         <summary>
