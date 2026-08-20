@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v2-generations-multiplier-20260820';
+const CACHE_NAME = 'ai-video-calc-v2-project-completion-20260820';
 const ASSETS = [
   './',
   './index.html',
