@@ -37,7 +37,6 @@
 
   function defaultProjectMeta() {
     return {
-      retryPercent: 30,
       deliverableVideos: 1,
       laborPerVideoRub: 250,
       includeImages: false,
@@ -75,10 +74,12 @@
 
     projectItems = projectItems.map(item => ({
       ...item,
-      qty: Math.max(1, Math.round(Number(item.qty) || 1))
+      qty: Math.max(1, Math.round(Number(item.qty) || 1)),
+      extraQty: Math.max(1, Math.min(30, Math.round(Number(item.extraQty) || 1)))
     }));
 
-    projectMeta.retryPercent = Math.max(0, Math.min(500, Number(projectMeta.retryPercent ?? settings.retryPercent) || 0));
+    delete projectMeta.retryPercent;
+    delete projectMeta.retryGenerations;
     projectMeta.deliverableVideos = Math.max(1, Math.round(Number(projectMeta.deliverableVideos) || 1));
     projectMeta.laborPerVideoRub = Math.max(0, Number(projectMeta.laborPerVideoRub) || 250);
     projectMeta.includeImages = Boolean(projectMeta.includeImages);
@@ -186,25 +187,6 @@
         saveLocal();
         renderTotals();
       });
-    });
-    $('retryPercentPreset').addEventListener('change', () => {
-      if ($('retryPercentPreset').value !== 'custom') {
-        projectMeta.retryPercent = Number($('retryPercentPreset').value);
-        $('retryPercent').value = projectMeta.retryPercent;
-        showWorkPrice = false;
-        saveLocal();
-        renderTotals();
-      } else {
-        $('retryPercent').focus();
-      }
-    });
-    $('retryPercent').addEventListener('input', () => {
-      projectMeta.retryPercent = Math.max(0, Math.min(500, Number($('retryPercent').value) || 0));
-      const preset = ['0', '10', '20', '30', '50'].includes(String(projectMeta.retryPercent)) ? String(projectMeta.retryPercent) : 'custom';
-      $('retryPercentPreset').value = preset;
-      showWorkPrice = false;
-      saveLocal();
-      renderTotals();
     });
     $('includeImages').addEventListener('change', () => {
       projectMeta.includeImages = $('includeImages').checked;
@@ -671,6 +653,7 @@
       duration: variant ? initialDurationForVariant(variant, 5) : 5,
       manualUnits: '',
       qty: 1,
+      extraQty: 1,
       rub: 0,
       units: 0
     };
@@ -694,6 +677,7 @@
     item.variantId = variant.id;
     item.duration = initialDurationForVariant(variant, item.duration);
     item.qty = Math.max(1, Math.round(Number(item.qty) || 1));
+    item.extraQty = Math.max(1, Math.min(30, Math.round(Number(item.extraQty) || 1)));
     if (variant.billing.type === 'manual_required' && !(Number(item.manualUnits) > 0)) {
       const saved = settings.syntexManualUnits?.[manualKeyFor(model.id, variant.id, item.duration)];
       if (Number(saved) > 0) item.manualUnits = Number(saved);
@@ -738,6 +722,7 @@
     const providerModels = modelsForProvider(item.provider);
     const manualNeeded = variant?.billing?.type === 'manual_required';
     const rowBase = item.rub * item.qty;
+    const rowExtra = item.rub * item.extraQty;
 
     const row = document.createElement('article');
     row.className = 'project-editor';
@@ -771,6 +756,10 @@
           <label>Основных генераций</label>
           <input class="project-qty" type="number" min="1" step="1" value="${esc(item.qty)}">
         </div>
+        <div class="field">
+          <label>Доп. генераций</label>
+          <input class="project-extra" type="number" min="1" max="30" step="1" value="${esc(item.extraQty)}">
+        </div>
         <div class="field ${manualNeeded ? '' : 'hidden'} project-manual-field">
           <label>Токенов SYNTX / генерацию</label>
           <input class="project-manual" type="number" min="0.01" step="0.01" value="${manualNeeded ? esc(item.manualUnits || '') : ''}" placeholder="Указать расход">
@@ -779,7 +768,7 @@
       <div class="project-line-result ${item.calcError ? 'has-error' : ''}">
         ${item.calcError
           ? `<span>⚠ ${esc(item.calcError)}</span>`
-          : `<span>${fmtRub(item.rub)} / генерация</span><span>${item.qty} шт.</span><strong>Итого по позиции: ${fmtRub(rowBase)}</strong>`}
+          : `<span>${fmtRub(item.rub)} / генерация</span><span>Основные: ${fmtRub(rowBase)}</span><span>Доп.: ${fmtRub(rowExtra)}</span><strong>Итого по позиции: ${fmtRub(rowBase + rowExtra)}</strong>`}
       </div>`;
 
     row.querySelector('.remove').addEventListener('click', () => {
@@ -847,6 +836,15 @@
       updateProjectLineResult(row, item);
     });
 
+    row.querySelector('.project-extra').addEventListener('input', event => {
+      item.extraQty = Math.max(1, Math.min(30, Math.round(Number(event.target.value) || 1)));
+      showWorkPrice = false;
+      saveLocal();
+      recalcProjectItem(item);
+      renderTotals();
+      updateProjectLineResult(row, item);
+    });
+
     const manualInput = row.querySelector('.project-manual');
     if (manualInput) {
       manualInput.addEventListener('change', event => {
@@ -872,13 +870,12 @@
     }
     box.className = 'project-line-result';
     const rowBase = item.rub * item.qty;
-    box.innerHTML = `<span>${fmtRub(item.rub)} / генерация</span><span>${item.qty} шт.</span><strong>Итого по позиции: ${fmtRub(rowBase)}</strong>`;
+    const rowExtra = item.rub * item.extraQty;
+    box.innerHTML = `<span>${fmtRub(item.rub)} / генерация</span><span>Основные: ${fmtRub(rowBase)}</span><span>Доп.: ${fmtRub(rowExtra)}</span><strong>Итого по позиции: ${fmtRub(rowBase + rowExtra)}</strong>`;
   }
 
   function renderProjectMeta() {
     if (!$('deliverableVideos')) return;
-    $('retryPercent').value = projectMeta.retryPercent;
-    $('retryPercentPreset').value = ['0', '10', '20', '30', '50'].includes(String(projectMeta.retryPercent)) ? String(projectMeta.retryPercent) : 'custom';
     $('deliverableVideos').value = projectMeta.deliverableVideos;
     $('laborPerVideoRub').value = projectMeta.laborPerVideoRub;
     $('includeImages').checked = projectMeta.includeImages;
@@ -1081,8 +1078,8 @@
     $('retryTotal').textContent = fmtRub(totals.reserve);
     $('grandTotal').textContent = fmtRub(totals.estimateCost);
     $('baseCount').textContent = `${totals.plannedGenerations} шт.`;
-    $('retryCount').textContent = `${fmtNum(totals.retryPercent, 2)}%`;
-    $('grandCount').textContent = `${totals.plannedGenerations} основных генераций`;
+    $('retryCount').textContent = `${totals.extraGenerations} шт.`;
+    $('grandCount').textContent = `${totals.totalGenerations} генераций`;
     $('estimateSummary').textContent = fmtRub(totals.estimateCost);
 
     $('plannedImageCost').textContent = fmtRub(totals.plannedImageCost);
