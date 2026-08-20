@@ -62,13 +62,14 @@
     const normalized = items.map(item => ({
       ...item,
       qty: Math.max(1, Math.round(safeNumber(item.qty, 1))),
+      extraQty: Math.max(1, Math.min(30, Math.round(safeNumber(item.extraQty, 1)))),
       rub: Math.max(0, safeNumber(item.rub, 0))
     }));
 
     const base = normalized.reduce((sum, item) => sum + item.rub * item.qty, 0);
-    const retryPercent = Math.max(0, Math.min(500, safeNumber(meta.retryPercent, 30)));
-    const reserve = base * retryPercent / 100;
+    const reserve = normalized.reduce((sum, item) => sum + item.rub * item.extraQty, 0);
     const plannedGenerations = normalized.reduce((sum, item) => sum + item.qty, 0);
+    const extraGenerations = normalized.reduce((sum, item) => sum + item.extraQty, 0);
 
     const includeImages = Boolean(meta.includeImages);
     const plannedImages = includeImages ? Math.max(0, Math.round(safeNumber(meta.plannedImages, 0))) : 0;
@@ -93,10 +94,11 @@
     return {
       base,
       reserve,
-      retryPercent,
       videoEstimate,
       estimateCost,
       plannedGenerations,
+      extraGenerations,
+      totalGenerations: plannedGenerations + extraGenerations,
       includeImages,
       plannedImages,
       actualImages,

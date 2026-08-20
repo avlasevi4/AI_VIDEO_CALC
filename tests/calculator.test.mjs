@@ -26,12 +26,14 @@ assert.ok(Math.abs(kling.usd - (40 * 10 / 660)) < 1e-12);
 assert.ok(Math.abs(kling.rub - (40 * 10 / 660 * 75)) < 1e-12);
 
 const project = calc.calculateProject([
-  { rub: 100, qty: 2 },
-  { rub: 50, qty: 3 }
-], { retryPercent: 30 });
+  { rub: 100, qty: 2, extraQty: 1 },
+  { rub: 50, qty: 3, extraQty: 2 }
+]);
 assert.equal(project.base, 350);
-assert.equal(project.reserve, 105);
-assert.equal(project.estimateCost, 455);
+assert.equal(project.reserve, 200);
+assert.equal(project.estimateCost, 550);
 assert.equal(project.plannedGenerations, 5);
+assert.equal(project.extraGenerations, 3);
+assert.equal(project.totalGenerations, 8);
 
 console.log('calculator tests OK');

@@ -5,7 +5,7 @@
   const LEGACY_PROJECT_KEY = 'ai-video-calc-v2-project';
   const LEGACY_META_KEY = 'ai-video-calc-v2-project-meta';
   const LEGACY_ACTUAL_KEY = 'ai-video-calc-v2-actual';
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
 
   const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -21,13 +21,20 @@
 
   function normalizeProject(project, defaultMeta) {
     const now = new Date().toISOString();
+    const meta = { ...clone(defaultMeta), ...(project?.meta || {}) };
+    delete meta.retryPercent;
+    delete meta.retryGenerations;
     return {
       id: String(project?.id || makeId()),
       name: normalizeName(project?.name),
       createdAt: project?.createdAt || now,
       updatedAt: project?.updatedAt || project?.createdAt || now,
-      items: Array.isArray(project?.items) ? clone(project.items) : [],
-      meta: { ...clone(defaultMeta), ...(project?.meta || {}) },
+      items: Array.isArray(project?.items) ? clone(project.items).map(item => ({
+        ...item,
+        qty: Math.max(1, Math.round(Number(item.qty) || 1)),
+        extraQty: Math.max(1, Math.min(30, Math.round(Number(item.extraQty) || 1)))
+      })) : [],
+      meta,
       actualItems: Array.isArray(project?.actualItems) ? clone(project.actualItems) : []
     };
   }
@@ -56,12 +63,14 @@
 
   function load(defaultMeta) {
     const saved = readJson(STORAGE_KEY, null);
-    if (saved?.schemaVersion === SCHEMA_VERSION && Array.isArray(saved.projects)) {
+    if (saved && Number(saved.schemaVersion) >= 1 && Number(saved.schemaVersion) <= SCHEMA_VERSION && Array.isArray(saved.projects)) {
       const projects = saved.projects.map(project => normalizeProject(project, defaultMeta));
       const activeProjectId = projects.some(project => project.id === saved.activeProjectId)
         ? saved.activeProjectId
         : (projects[0]?.id || '');
-      return { schemaVersion: SCHEMA_VERSION, projects, activeProjectId };
+      const library = { schemaVersion: SCHEMA_VERSION, projects, activeProjectId };
+      if (saved.schemaVersion !== SCHEMA_VERSION) save(library.projects, library.activeProjectId);
+      return library;
     }
 
     const legacyItems = readJson(LEGACY_PROJECT_KEY, []);

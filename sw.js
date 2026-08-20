@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v2-supabase-owner-20260820';
+const CACHE_NAME = 'ai-video-calc-v2-extra-qty-20260820';
 const ASSETS = [
   './',
   './index.html',
