@@ -65,15 +65,15 @@ await cloud.saveProject({
   name: 'Тест',
   createdAt: '2026-08-20T00:00:00.000Z',
   updatedAt: '2026-08-20T01:00:00.000Z',
-  items: [{ id: 'line-1', qty: 2, extraQty: 1 }],
-  meta: { deliverableVideos: 1 },
+  items: [{ id: 'line-1', qty: 2, generationsPerVideo: 3 }],
+  meta: { laborPerVideoRub: 250 },
   actualItems: []
 });
 assert.equal(rows[0].user_id, allowedUser.id);
 
 const loaded = await cloud.loadProjects();
 assert.equal(loaded[0].name, 'Тест');
-assert.equal(loaded[0].items[0].extraQty, 1);
+assert.equal(loaded[0].items[0].generationsPerVideo, 3);
 
 await cloud.deleteProject('project-1');
 assert.equal(rows.length, 0);

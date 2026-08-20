@@ -5,7 +5,7 @@
   const LEGACY_PROJECT_KEY = 'ai-video-calc-v2-project';
   const LEGACY_META_KEY = 'ai-video-calc-v2-project-meta';
   const LEGACY_ACTUAL_KEY = 'ai-video-calc-v2-actual';
-  const SCHEMA_VERSION = 2;
+  const SCHEMA_VERSION = 4;
 
   const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -24,16 +24,21 @@
     const meta = { ...clone(defaultMeta), ...(project?.meta || {}) };
     delete meta.retryPercent;
     delete meta.retryGenerations;
+    delete meta.deliverableVideos;
     return {
       id: String(project?.id || makeId()),
       name: normalizeName(project?.name),
       createdAt: project?.createdAt || now,
       updatedAt: project?.updatedAt || project?.createdAt || now,
-      items: Array.isArray(project?.items) ? clone(project.items).map(item => ({
-        ...item,
-        qty: Math.max(1, Math.round(Number(item.qty) || 1)),
-        extraQty: Math.max(1, Math.min(30, Math.round(Number(item.extraQty) || 1)))
-      })) : [],
+      items: Array.isArray(project?.items) ? clone(project.items).map(item => {
+        const normalized = {
+          ...item,
+          qty: Math.max(1, Math.round(Number(item.qty) || 1)),
+          generationsPerVideo: Math.max(1, Math.min(30, Math.round(Number(item.generationsPerVideo ?? item.extraQty) || 1)))
+        };
+        delete normalized.extraQty;
+        return normalized;
+      }) : [],
       meta,
       actualItems: Array.isArray(project?.actualItems) ? clone(project.actualItems) : []
     };

@@ -121,10 +121,6 @@
         <div class="project-subbody">
           <div class="project-meta-grid">
             <div class="field">
-              <label for="deliverableVideos">Готовых видео в проекте</label>
-              <input id="deliverableVideos" type="number" min="1" step="1" value="1">
-            </div>
-            <div class="field">
               <label for="laborPerVideoRub">Работа за 1 готовое видео, ₽</label>
               <input id="laborPerVideoRub" type="number" min="0" step="10" value="250">
             </div>
@@ -150,8 +146,8 @@
           <button id="addProjectLine" class="btn secondary project-add" type="button">Добавить модель в смету</button>
 
           <div class="totals project-totals">
-            <div class="metric"><span>Основные генерации</span><strong id="baseTotal">0 ₽</strong><small id="baseCount">0 шт.</small></div>
-            <div class="metric"><span>Дополнительные генерации</span><strong id="retryTotal">0 ₽</strong><small id="retryCount">0 шт.</small></div>
+            <div class="metric"><span>Готовые видео</span><strong id="baseTotal">0 ₽</strong><small id="baseCount">0 шт.</small></div>
+            <div class="metric"><span>Повторные генерации</span><strong id="retryTotal">0 ₽</strong><small id="retryCount">0 шт.</small></div>
             <div class="metric"><span>Изображения</span><strong id="estimateImageTotal">0 ₽</strong><small id="estimateImageCount">выключено</small></div>
             <div class="metric total-main"><span>Сметная себестоимость</span><strong id="grandTotal">0 ₽</strong><small id="grandCount">0 генераций</small></div>
           </div>

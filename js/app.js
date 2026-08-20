@@ -37,7 +37,6 @@
 
   function defaultProjectMeta() {
     return {
-      deliverableVideos: 1,
       laborPerVideoRub: 250,
       includeImages: false,
       plannedImages: 0,
@@ -75,12 +74,13 @@
     projectItems = projectItems.map(item => ({
       ...item,
       qty: Math.max(1, Math.round(Number(item.qty) || 1)),
-      extraQty: Math.max(1, Math.min(30, Math.round(Number(item.extraQty) || 1)))
+      generationsPerVideo: Math.max(1, Math.min(30, Math.round(Number(item.generationsPerVideo ?? item.extraQty) || 1)))
     }));
+    projectItems.forEach(item => { delete item.extraQty; });
 
     delete projectMeta.retryPercent;
     delete projectMeta.retryGenerations;
-    projectMeta.deliverableVideos = Math.max(1, Math.round(Number(projectMeta.deliverableVideos) || 1));
+    delete projectMeta.deliverableVideos;
     projectMeta.laborPerVideoRub = Math.max(0, Number(projectMeta.laborPerVideoRub) || 250);
     projectMeta.includeImages = Boolean(projectMeta.includeImages);
     projectMeta.plannedImages = Math.max(0, Math.round(Number(projectMeta.plannedImages) || 0));
@@ -176,9 +176,8 @@
     $('addProjectLine').addEventListener('click', () => { projectItems.push(defaultProjectItem()); saveLocal(); renderProject(); });
     $('calculateWorkPrice').addEventListener('click', () => { showWorkPrice = true; renderTotals(); });
 
-    ['deliverableVideos', 'laborPerVideoRub', 'plannedImages', 'actualImages', 'imageUnitRub'].forEach(id => {
+    ['laborPerVideoRub', 'plannedImages', 'actualImages', 'imageUnitRub'].forEach(id => {
       $(id).addEventListener('input', () => {
-        if (id === 'deliverableVideos') projectMeta.deliverableVideos = Math.max(1, Math.round(Number($(id).value) || 1));
         if (id === 'laborPerVideoRub') projectMeta.laborPerVideoRub = Math.max(0, Number($(id).value) || 0);
         if (id === 'plannedImages') projectMeta.plannedImages = Math.max(0, Math.round(Number($(id).value) || 0));
         if (id === 'actualImages') projectMeta.actualImages = Math.max(0, Math.round(Number($(id).value) || 0));
@@ -653,7 +652,7 @@
       duration: variant ? initialDurationForVariant(variant, 5) : 5,
       manualUnits: '',
       qty: 1,
-      extraQty: 1,
+      generationsPerVideo: 1,
       rub: 0,
       units: 0
     };
@@ -677,7 +676,8 @@
     item.variantId = variant.id;
     item.duration = initialDurationForVariant(variant, item.duration);
     item.qty = Math.max(1, Math.round(Number(item.qty) || 1));
-    item.extraQty = Math.max(1, Math.min(30, Math.round(Number(item.extraQty) || 1)));
+    item.generationsPerVideo = Math.max(1, Math.min(30, Math.round(Number(item.generationsPerVideo ?? item.extraQty) || 1)));
+    delete item.extraQty;
     if (variant.billing.type === 'manual_required' && !(Number(item.manualUnits) > 0)) {
       const saved = settings.syntexManualUnits?.[manualKeyFor(model.id, variant.id, item.duration)];
       if (Number(saved) > 0) item.manualUnits = Number(saved);
@@ -722,7 +722,9 @@
     const providerModels = modelsForProvider(item.provider);
     const manualNeeded = variant?.billing?.type === 'manual_required';
     const rowBase = item.rub * item.qty;
-    const rowExtra = item.rub * item.extraQty;
+    const rowExtraCount = item.qty * (item.generationsPerVideo - 1);
+    const rowExtra = item.rub * rowExtraCount;
+    const rowGenerationCount = item.qty * item.generationsPerVideo;
 
     const row = document.createElement('article');
     row.className = 'project-editor';
@@ -753,12 +755,12 @@
           ${projectDurationControl(item, variant)}
         </div>
         <div class="field">
-          <label>Основных генераций</label>
+          <label>Готовых видео</label>
           <input class="project-qty" type="number" min="1" step="1" value="${esc(item.qty)}">
         </div>
         <div class="field">
-          <label>Доп. генераций</label>
-          <input class="project-extra" type="number" min="1" max="30" step="1" value="${esc(item.extraQty)}">
+          <label>Генераций на 1 готовое видео</label>
+          <input class="project-generations-per-video" type="number" min="1" max="30" step="1" value="${esc(item.generationsPerVideo)}">
         </div>
         <div class="field ${manualNeeded ? '' : 'hidden'} project-manual-field">
           <label>Токенов SYNTX / генерацию</label>
@@ -768,7 +770,7 @@
       <div class="project-line-result ${item.calcError ? 'has-error' : ''}">
         ${item.calcError
           ? `<span>⚠ ${esc(item.calcError)}</span>`
-          : `<span>${fmtRub(item.rub)} / генерация</span><span>Основные: ${fmtRub(rowBase)}</span><span>Доп.: ${fmtRub(rowExtra)}</span><strong>Итого по позиции: ${fmtRub(rowBase + rowExtra)}</strong>`}
+          : `<span>${fmtRub(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtRub(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtRub(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtRub(rowBase + rowExtra)}</strong>`}
       </div>`;
 
     row.querySelector('.remove').addEventListener('click', () => {
@@ -836,8 +838,8 @@
       updateProjectLineResult(row, item);
     });
 
-    row.querySelector('.project-extra').addEventListener('input', event => {
-      item.extraQty = Math.max(1, Math.min(30, Math.round(Number(event.target.value) || 1)));
+    row.querySelector('.project-generations-per-video').addEventListener('input', event => {
+      item.generationsPerVideo = Math.max(1, Math.min(30, Math.round(Number(event.target.value) || 1)));
       showWorkPrice = false;
       saveLocal();
       recalcProjectItem(item);
@@ -870,13 +872,14 @@
     }
     box.className = 'project-line-result';
     const rowBase = item.rub * item.qty;
-    const rowExtra = item.rub * item.extraQty;
-    box.innerHTML = `<span>${fmtRub(item.rub)} / генерация</span><span>Основные: ${fmtRub(rowBase)}</span><span>Доп.: ${fmtRub(rowExtra)}</span><strong>Итого по позиции: ${fmtRub(rowBase + rowExtra)}</strong>`;
+    const rowExtraCount = item.qty * (item.generationsPerVideo - 1);
+    const rowExtra = item.rub * rowExtraCount;
+    const rowGenerationCount = item.qty * item.generationsPerVideo;
+    box.innerHTML = `<span>${fmtRub(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtRub(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtRub(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtRub(rowBase + rowExtra)}</strong>`;
   }
 
   function renderProjectMeta() {
-    if (!$('deliverableVideos')) return;
-    $('deliverableVideos').value = projectMeta.deliverableVideos;
+    if (!$('laborPerVideoRub')) return;
     $('laborPerVideoRub').value = projectMeta.laborPerVideoRub;
     $('includeImages').checked = projectMeta.includeImages;
     $('plannedImages').value = projectMeta.plannedImages;
@@ -1089,7 +1092,7 @@
     if (showWorkPrice && totals.estimateCost >= 0) {
       $('workPriceResult').classList.remove('hidden');
       $('workPrice').textContent = fmtRub(totals.quotedPrice);
-      $('workPriceMeta').textContent = `Себестоимость ${fmtRub(totals.estimateCost)} + ${totals.deliverableVideos} готовых видео × ${fmtRub(totals.laborPerVideoRub)} = ${fmtRub(totals.quotedPrice)}.`;
+      $('workPriceMeta').textContent = `Себестоимость ${fmtRub(totals.estimateCost)} + ${totals.readyVideos} готовых видео × ${fmtRub(totals.laborPerVideoRub)} = ${fmtRub(totals.quotedPrice)}.`;
     } else {
       $('workPriceResult').classList.add('hidden');
     }

@@ -62,14 +62,15 @@
     const normalized = items.map(item => ({
       ...item,
       qty: Math.max(1, Math.round(safeNumber(item.qty, 1))),
-      extraQty: Math.max(1, Math.min(30, Math.round(safeNumber(item.extraQty, 1)))),
+      generationsPerVideo: Math.max(1, Math.min(30, Math.round(safeNumber(item.generationsPerVideo ?? item.extraQty, 1)))),
       rub: Math.max(0, safeNumber(item.rub, 0))
     }));
 
     const base = normalized.reduce((sum, item) => sum + item.rub * item.qty, 0);
-    const reserve = normalized.reduce((sum, item) => sum + item.rub * item.extraQty, 0);
     const plannedGenerations = normalized.reduce((sum, item) => sum + item.qty, 0);
-    const extraGenerations = normalized.reduce((sum, item) => sum + item.extraQty, 0);
+    const extraGenerations = normalized.reduce((sum, item) => sum + item.qty * (item.generationsPerVideo - 1), 0);
+    const totalGenerations = normalized.reduce((sum, item) => sum + item.qty * item.generationsPerVideo, 0);
+    const reserve = normalized.reduce((sum, item) => sum + item.rub * item.qty * (item.generationsPerVideo - 1), 0);
 
     const includeImages = Boolean(meta.includeImages);
     const plannedImages = includeImages ? Math.max(0, Math.round(safeNumber(meta.plannedImages, 0))) : 0;
@@ -80,9 +81,9 @@
 
     const videoEstimate = base + reserve;
     const estimateCost = videoEstimate + plannedImageCost;
-    const deliverableVideos = Math.max(1, Math.round(safeNumber(meta.deliverableVideos, 1)));
+    const readyVideos = plannedGenerations;
     const laborPerVideoRub = Math.max(0, safeNumber(meta.laborPerVideoRub, 250));
-    const laborCost = deliverableVideos * laborPerVideoRub;
+    const laborCost = readyVideos * laborPerVideoRub;
     const quotedPrice = estimateCost + laborCost;
 
     const actualVideoCost = actualItems.reduce((sum, item) => sum + Math.max(0, safeNumber(item.rub, 0)), 0);
@@ -98,14 +99,14 @@
       estimateCost,
       plannedGenerations,
       extraGenerations,
-      totalGenerations: plannedGenerations + extraGenerations,
+      totalGenerations,
       includeImages,
       plannedImages,
       actualImages,
       imageUnitRub,
       plannedImageCost,
       actualImageCost,
-      deliverableVideos,
+      readyVideos,
       laborPerVideoRub,
       laborCost,
       quotedPrice,
