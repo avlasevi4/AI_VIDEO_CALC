@@ -1,0 +1,1625 @@
+{
+  "schemaVersion": 2,
+  "dataVersion": "2.0.0-2026-08-19",
+  "updated": "2026-08-19",
+  "currency": "RUB",
+  "providers": {
+    "kling": {
+      "name": "Kling AI",
+      "unit": "credits",
+      "package": {
+        "price": 10,
+        "currency": "USD",
+        "units": 660
+      },
+      "status": "manual",
+      "sourceNote": "Пакет 10 USD / 660 credits перенесён из v1.2 и редактируется пользователем."
+    },
+    "syntex": {
+      "name": "SYNTX",
+      "unit": "tokens",
+      "package": {
+        "price": 1690,
+        "currency": "RUB",
+        "units": 680
+      },
+      "status": "manual",
+      "sourceNote": "Пользовательский пакет 1690 ₽ / 680 токенов из v1.2; редактируется в настройках."
+    }
+  },
+  "verification": {
+    "snapshotAt": "2026-08-19",
+    "note": "Локальный прототип проверяет структуру базы, контрольные значения и доступность источников. Чтение содержимого внешних страниц может блокироваться CORS; полная автоматическая сверка предназначена для GitHub Actions.",
+    "sources": [
+      {
+        "id": "kling-3-official-guide",
+        "title": "Kling 3.0 official user guide",
+        "url": "https://app.klingai.com/cn/quickstart/klingai-video-3-model-user-guide",
+        "kind": "official-rate",
+        "checkedAt": "2026-08-19"
+      },
+      {
+        "id": "syntx-video-docs",
+        "title": "SYNTX · раздел Видео (23 инструмента)",
+        "url": "https://docs.syntx.ai/%F0%9F%8E%AC-%D0%92%D0%B8%D0%B4%D0%B5%D0%BE/",
+        "kind": "catalog",
+        "checkedAt": "2026-08-19"
+      },
+      {
+        "id": "syntx-status",
+        "title": "SYNTX System Status",
+        "url": "https://status.syntx.ai/",
+        "kind": "catalog-status",
+        "checkedAt": "2026-08-19"
+      },
+      {
+        "id": "syntx-seedance-doc",
+        "title": "SYNTX Seedance",
+        "url": "https://docs.syntx.ai/en/%F0%9F%8E%AC-Video/%F0%9F%A7%BF-Seedance",
+        "kind": "model-doc",
+        "checkedAt": "2026-08-19"
+      },
+      {
+        "id": "syntx-heygen-doc",
+        "title": "SYNTX HeyGen",
+        "url": "https://docs.syntx.ai/en/%F0%9F%8E%AC-Video/%F0%9F%92%9C-HeyGen",
+        "kind": "model-doc",
+        "checkedAt": "2026-08-19"
+      },
+      {
+        "id": "syntx-midjourney-doc",
+        "title": "SYNTX MidJourney Video",
+        "url": "https://docs.syntx.ai/%F0%9F%8E%AC-%D0%92%D0%B8%D0%B4%D0%B5%D0%BE-%D0%B1%D1%83%D0%B4%D1%83%D1%89%D0%B5%D0%B3%D0%BE/%F0%9F%9B%B8-MidJourney",
+        "kind": "model-doc",
+        "checkedAt": "2026-08-19"
+      }
+    ],
+    "kling30Rates": [
+      {
+        "variantId": "720-na",
+        "unitsPerSecond": 6
+      },
+      {
+        "variantId": "1080-na",
+        "unitsPerSecond": 8
+      },
+      {
+        "variantId": "720-a",
+        "unitsPerSecond": 9
+      },
+      {
+        "variantId": "1080-a",
+        "unitsPerSecond": 12
+      }
+    ],
+    "requiredSyntexModelIds": [
+      "syntx-kling",
+      "syntx-seedance",
+      "syntx-veo",
+      "syntx-runway",
+      "syntx-sora",
+      "syntx-grok-imagine",
+      "syntx-wan",
+      "syntx-happyhorse",
+      "syntx-luma",
+      "syntx-higgsfield",
+      "syntx-hailuo",
+      "syntx-heygen",
+      "syntx-pika",
+      "syntx-hedra",
+      "syntx-switchx",
+      "syntx-midjourney-video",
+      "syntx-topaz",
+      "syntx-lipsync",
+      "syntx-higgsfield-speak",
+      "syntx-act-one",
+      "syntx-avatar"
+    ]
+  },
+  "models": [
+    {
+      "id": "kling-25",
+      "provider": "kling",
+      "name": "Kling 2.5",
+      "status": "manual",
+      "verifiedAt": "2026-08-19",
+      "sourceNote": "Перенесено из v1.2; требует повторной проверки официального тарифа.",
+      "variants": [
+        {
+          "id": "720-na",
+          "label": "720p · без аудио",
+          "resolution": "720p",
+          "audio": "Без аудио",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 3,
+            "allowedDurations": [
+              5,
+              10
+            ]
+          }
+        },
+        {
+          "id": "1080-na",
+          "label": "1080p · без аудио",
+          "resolution": "1080p",
+          "audio": "Без аудио",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 5,
+            "allowedDurations": [
+              5,
+              10
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "kling-26",
+      "provider": "kling",
+      "name": "Kling 2.6",
+      "status": "manual",
+      "verifiedAt": "2026-08-19",
+      "sourceNote": "Перенесено из v1.2; требует повторной проверки официального тарифа.",
+      "variants": [
+        {
+          "id": "720-na",
+          "label": "720p · без аудио",
+          "resolution": "720p",
+          "audio": "Без аудио",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 3,
+            "allowedDurations": [
+              5,
+              10
+            ]
+          }
+        },
+        {
+          "id": "1080-na",
+          "label": "1080p · без аудио",
+          "resolution": "1080p",
+          "audio": "Без аудио",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 5,
+            "allowedDurations": [
+              5,
+              10
+            ]
+          }
+        },
+        {
+          "id": "1080-a",
+          "label": "1080p · Native Audio",
+          "resolution": "1080p",
+          "audio": "Native Audio",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 10,
+            "allowedDurations": [
+              5,
+              10
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "kling-30",
+      "provider": "kling",
+      "name": "Kling 3.0 / OMNI 3.0",
+      "status": "verified",
+      "verifiedAt": "2026-08-19",
+      "sourceId": "kling-3-official-guide",
+      "variants": [
+        {
+          "id": "720-na",
+          "label": "720p · без аудио",
+          "resolution": "720p",
+          "audio": "Без аудио",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 6,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          },
+          "status": "verified"
+        },
+        {
+          "id": "1080-na",
+          "label": "1080p · без аудио",
+          "resolution": "1080p",
+          "audio": "Без аудио",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 8,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          },
+          "status": "verified"
+        },
+        {
+          "id": "4k-na",
+          "label": "4K · без аудио",
+          "resolution": "4K",
+          "audio": "Без аудио",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 30,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          },
+          "status": "unverified",
+          "note": "Перенесено из v1.2; не подтверждено найденной официальной таблицей."
+        },
+        {
+          "id": "720-a",
+          "label": "720p · Native Audio",
+          "resolution": "720p",
+          "audio": "Native Audio",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 9,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          },
+          "status": "verified"
+        },
+        {
+          "id": "1080-a",
+          "label": "1080p · Native Audio",
+          "resolution": "1080p",
+          "audio": "Native Audio",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 12,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          },
+          "status": "verified"
+        },
+        {
+          "id": "4k-a",
+          "label": "4K · Native Audio",
+          "resolution": "4K",
+          "audio": "Native Audio",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 30,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          },
+          "status": "unverified",
+          "note": "Перенесено из v1.2; не подтверждено найденной официальной таблицей."
+        }
+      ]
+    },
+    {
+      "id": "kling-o1-old",
+      "provider": "kling",
+      "name": "Kling O1 OMNI (old)",
+      "status": "manual",
+      "verifiedAt": "2026-08-19",
+      "sourceNote": "Перенесено из v1.2.",
+      "variants": [
+        {
+          "id": "720-na",
+          "label": "720p · без аудио",
+          "resolution": "720p",
+          "audio": "Без аудио",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 6,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          }
+        },
+        {
+          "id": "1080-na",
+          "label": "1080p · без аудио",
+          "resolution": "1080p",
+          "audio": "Без аудио",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 8,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "syntx-kling",
+      "provider": "syntex",
+      "name": "Kling (SYNTX)",
+      "status": "manual",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-status",
+      "variants": [
+        {
+          "id": "30-1080-na",
+          "label": "Kling 3.0 · 1080p · без аудио",
+          "resolution": "1080p",
+          "audio": "Без аудио",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 5,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          },
+          "status": "manual",
+          "note": "25 токенов / 5 сек из v1.2."
+        },
+        {
+          "id": "30-1080-a",
+          "label": "Kling 3.0 · 1080p · Native Audio",
+          "resolution": "1080p",
+          "audio": "Native Audio",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 8,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          },
+          "status": "manual",
+          "note": "40 токенов / 5 сек из v1.2."
+        },
+        {
+          "id": "t2v",
+          "label": "Text to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "i2v",
+          "label": "Image to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "keyframes",
+          "label": "Keyframes",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "elements",
+          "label": "Elements",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "o1-i2v",
+          "label": "Kling O1 · Image to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "o1-v2v",
+          "label": "Kling O1 · Video to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "o1-t2v",
+          "label": "Kling O1 · Text to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "motion",
+          "label": "Kling Motion",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-seedance",
+      "provider": "syntex",
+      "name": "Seedance",
+      "status": "manual",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-seedance-doc",
+      "variants": [
+        {
+          "id": "10-fast-old",
+          "label": "Seedance 1.0 Fast · старое значение",
+          "resolution": "1080p",
+          "audio": "—",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 7.26,
+            "durationRange": {
+              "min": 3,
+              "max": 15,
+              "step": 1
+            }
+          },
+          "status": "manual",
+          "note": "72,6 токена / 10 сек из v1.2; перепроверить."
+        },
+        {
+          "id": "10-pro-old",
+          "label": "Seedance 1.0 Pro · старое значение",
+          "resolution": "1080p",
+          "audio": "—",
+          "billing": {
+            "type": "rate_per_second",
+            "unitsPerSecond": 9,
+            "allowedDurations": [
+              5,
+              10
+            ]
+          },
+          "status": "manual",
+          "note": "45 токенов / 5 сек из v1.2; перепроверить."
+        },
+        {
+          "id": "15-pro",
+          "label": "Seedance 1.5 Pro",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "20",
+          "label": "Seedance 2.0",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-veo",
+      "provider": "syntex",
+      "name": "Google Veo",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-status",
+      "variants": [
+        {
+          "id": "31",
+          "label": "Veo 3.1",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "31-fast",
+          "label": "Veo 3.1 Fast",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "31-fast-relax",
+          "label": "Veo 3.1 Fast (Relax)",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "omni-flash",
+          "label": "Veo Omni Flash · 8 сек",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "allowedDurations": [
+              8
+            ]
+          },
+          "status": "unverified",
+          "note": "Официальная инструкция SYNTX указывает 8-секундный результат."
+        }
+      ]
+    },
+    {
+      "id": "syntx-runway",
+      "provider": "syntex",
+      "name": "Runway",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-status",
+      "variants": [
+        {
+          "id": "gen4",
+          "label": "Gen-4",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "gen4-turbo",
+          "label": "Gen-4 Turbo",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "gen3-turbo",
+          "label": "Gen-3 Turbo",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "act-two",
+          "label": "Gen-4 Act-Two",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "45-t2v",
+          "label": "Gen-4.5 · Text to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "45-i2v",
+          "label": "Gen-4.5 · Image to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "aleph",
+          "label": "Runway Aleph / Стилизатор",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-sora",
+      "provider": "syntex",
+      "name": "Sora",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-status",
+      "variants": [
+        {
+          "id": "sora2",
+          "label": "Sora 2",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-grok-imagine",
+      "provider": "syntex",
+      "name": "Grok Imagine",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-status",
+      "variants": [
+        {
+          "id": "t2v",
+          "label": "Text to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "i2v",
+          "label": "Image to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "i2v15",
+          "label": "Image to Video 1.5",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "v2v",
+          "label": "Video to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-wan",
+      "provider": "syntex",
+      "name": "Wan Video",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-status",
+      "variants": [
+        {
+          "id": "25-t2v",
+          "label": "Wan 2.5 · Text to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "25-i2v",
+          "label": "Wan 2.5 · Image to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "26-t2v",
+          "label": "Wan 2.6 · Text to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "26-i2v-flash",
+          "label": "Wan 2.6 · Image to Video Flash",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "26-i2v",
+          "label": "Wan 2.6 · Image to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "26-ref-flash",
+          "label": "Wan 2.6 · Reference to Video Flash",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "26-ref",
+          "label": "Wan 2.6 · Reference to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "27-t2v",
+          "label": "Wan 2.7 · Text to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "27-i2v",
+          "label": "Wan 2.7 · Image to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "27-ref",
+          "label": "Wan 2.7 · Reference to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "27-edit",
+          "label": "Wan 2.7 · Video Edit",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-happyhorse",
+      "provider": "syntex",
+      "name": "HappyHorse",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-status",
+      "variants": [
+        {
+          "id": "t2v",
+          "label": "Text to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "ff2v",
+          "label": "First Frame to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "ref",
+          "label": "Reference to Video",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "edit",
+          "label": "Video Edit",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-luma",
+      "provider": "syntex",
+      "name": "Luma",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-status",
+      "variants": [
+        {
+          "id": "uni1",
+          "label": "Uni 1",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "ray314",
+          "label": "Ray 3.14",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "dm",
+          "label": "Luma Dream Machine",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-higgsfield",
+      "provider": "syntex",
+      "name": "Higgsfield",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-status",
+      "variants": [
+        {
+          "id": "soul",
+          "label": "Soul",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "lite",
+          "label": "Lite",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "turbo",
+          "label": "Turbo",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-hailuo",
+      "provider": "syntex",
+      "name": "Hailuo MiniMax",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-video-docs",
+      "variants": [
+        {
+          "id": "default",
+          "label": "Hailuo MiniMax",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-heygen",
+      "provider": "syntex",
+      "name": "HeyGen",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-heygen-doc",
+      "variants": [
+        {
+          "id": "avatar",
+          "label": "Avatar · 1080p",
+          "resolution": "1080p",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 2,
+              "max": 120,
+              "step": 1
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-pika",
+      "provider": "syntex",
+      "name": "Pika",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-video-docs",
+      "variants": [
+        {
+          "id": "default",
+          "label": "Pika",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-hedra",
+      "provider": "syntex",
+      "name": "Hedra",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-video-docs",
+      "variants": [
+        {
+          "id": "avatar",
+          "label": "Говорящий аватар",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-switchx",
+      "provider": "syntex",
+      "name": "Beeble SwitchX / FLUX 3",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-status",
+      "variants": [
+        {
+          "id": "flux3",
+          "label": "FLUX 3",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "flux3-continue",
+          "label": "FLUX 3 Continue",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "flux3-keyframes",
+          "label": "FLUX 3 Keyframes",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "25",
+          "label": "SwitchX 2.5",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-midjourney-video",
+      "provider": "syntex",
+      "name": "MidJourney Video",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-midjourney-doc",
+      "variants": [
+        {
+          "id": "sd",
+          "label": "SD · 480p",
+          "resolution": "480p",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        },
+        {
+          "id": "hd",
+          "label": "HD · 720p",
+          "resolution": "720p",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-topaz",
+      "provider": "syntex",
+      "name": "Topaz AI (видео)",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-video-docs",
+      "variants": [
+        {
+          "id": "25",
+          "label": "Topaz AI 2.5",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-lipsync",
+      "provider": "syntex",
+      "name": "Синхронизатор губ",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-video-docs",
+      "variants": [
+        {
+          "id": "default",
+          "label": "Lip Sync",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-higgsfield-speak",
+      "provider": "syntex",
+      "name": "Higgsfield Speak",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-video-docs",
+      "variants": [
+        {
+          "id": "default",
+          "label": "Говорящий аватар",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-act-one",
+      "provider": "syntex",
+      "name": "Runway Act-One / Аватары 2.0",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-video-docs",
+      "variants": [
+        {
+          "id": "default",
+          "label": "Act-One",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "syntx-avatar",
+      "provider": "syntex",
+      "name": "Создание аватара",
+      "status": "unverified",
+      "catalogVerifiedAt": "2026-08-19",
+      "sourceId": "syntx-video-docs",
+      "variants": [
+        {
+          "id": "default",
+          "label": "Аватар",
+          "resolution": "—",
+          "audio": "—",
+          "billing": {
+            "type": "manual_required",
+            "durationRange": {
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "generic": true
+            }
+          },
+          "status": "unverified"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1150 @@
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'ai-video-calc-v2-settings';
+  const PROJECT_KEY = 'ai-video-calc-v2-project';
+  const PROJECT_META_KEY = 'ai-video-calc-v2-project-meta';
+  const ACTUAL_KEY = 'ai-video-calc-v2-actual';
+  let pricing = null;
+  let pricingSource = '—';
+  let currentProvider = 'kling';
+  let projectItems = [];
+  let actualItems = [];
+  let projectMeta = defaultProjectMeta();
+  let actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
+  let showWorkPrice = false;
+
+  let settings = {
+    usdRub: 75.05,
+    klingPackageUsd: 10,
+    klingPackageCredits: 660,
+    syntexPackageRub: 1690,
+    syntexPackageTokens: 680,
+    syntexManualUnits: {},
+    lastPricingCheck: ''
+  };
+
+  const $ = id => document.getElementById(id);
+  const fmtRub = n => Number(n).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽';
+  const fmtRub0 = n => Number(n).toLocaleString('ru-RU', { maximumFractionDigits: 0 }) + ' ₽';
+  const fmtUsd = n => Number(n).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
+  const fmtNum = (n, d = 2) => Number(n).toLocaleString('ru-RU', { maximumFractionDigits: d });
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function defaultProjectMeta() {
+    return {
+      retryPercent: 30,
+      deliverableVideos: 1,
+      laborPerVideoRub: 250,
+      includeImages: false,
+      plannedImages: 0,
+      actualImages: 0,
+      imageUnitRub: 5
+    };
+  }
+
+  function loadLocal() {
+    let oldSettings = {};
+    try {
+      const savedV2 = localStorage.getItem(STORAGE_KEY);
+      oldSettings = JSON.parse(savedV2 || '{}') || {};
+      if (!savedV2) {
+        const legacy = JSON.parse(localStorage.getItem('ai-price-calculator-user-data') || localStorage.getItem('video-cost-calculator-v05') || 'null');
+        if (legacy && typeof legacy === 'object') {
+          oldSettings = {
+            usdRub: Number(legacy.usdRub) || settings.usdRub,
+            klingPackageUsd: Number(legacy.tariffs?.klingUsd) || settings.klingPackageUsd,
+            klingPackageCredits: Number(legacy.tariffs?.klingTokens) || settings.klingPackageCredits,
+            syntexPackageRub: Number(legacy.tariffs?.syntexRub) || settings.syntexPackageRub,
+            syntexPackageTokens: Number(legacy.tariffs?.syntexTokens) || settings.syntexPackageTokens
+          };
+        }
+      }
+      settings = { ...settings, ...oldSettings };
+      if (!settings.syntexManualUnits || typeof settings.syntexManualUnits !== 'object') settings.syntexManualUnits = {};
+    } catch (_) {}
+
+    try {
+      projectItems = JSON.parse(localStorage.getItem(PROJECT_KEY) || '[]') || [];
+    } catch (_) {
+      projectItems = [];
+    }
+
+    try {
+      const savedMeta = JSON.parse(localStorage.getItem(PROJECT_META_KEY) || 'null');
+      projectMeta = { ...defaultProjectMeta(), ...(savedMeta || {}) };
+      if (savedMeta && !Object.prototype.hasOwnProperty.call(savedMeta, 'retryPercent') && settings.retryPercent != null) {
+        projectMeta.retryPercent = settings.retryPercent;
+      }
+    } catch (_) {
+      projectMeta = defaultProjectMeta();
+    }
+
+    try {
+      actualItems = JSON.parse(localStorage.getItem(ACTUAL_KEY) || '[]') || [];
+      if (!Array.isArray(actualItems)) actualItems = [];
+    } catch (_) {
+      actualItems = [];
+    }
+
+    projectItems = projectItems.map(item => ({
+      ...item,
+      qty: Math.max(1, Math.round(Number(item.qty) || 1))
+    }));
+
+    projectMeta.retryPercent = Math.max(0, Math.min(500, Number(projectMeta.retryPercent ?? settings.retryPercent) || 0));
+    projectMeta.deliverableVideos = Math.max(1, Math.round(Number(projectMeta.deliverableVideos) || 1));
+    projectMeta.laborPerVideoRub = Math.max(0, Number(projectMeta.laborPerVideoRub) || 250);
+    projectMeta.includeImages = Boolean(projectMeta.includeImages);
+    projectMeta.plannedImages = Math.max(0, Math.round(Number(projectMeta.plannedImages) || 0));
+    projectMeta.actualImages = Math.max(0, Math.round(Number(projectMeta.actualImages) || 0));
+    projectMeta.imageUnitRub = Math.max(0, Number(projectMeta.imageUnitRub) || 5);
+
+    actualItems = actualItems.map(item => ({
+      ...item,
+      rub: Math.max(0, Number(item.rub) || 0),
+      duration: Math.max(0, Number(item.duration) || 0),
+      units: Math.max(0, Number(item.units) || 0)
+    }));
+
+    if ('retryPercent' in settings) delete settings.retryPercent;
+    if ('retryGenerations' in settings) delete settings.retryGenerations;
+  }
+
+  function saveLocal() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      localStorage.setItem(PROJECT_KEY, JSON.stringify(projectItems));
+      localStorage.setItem(PROJECT_META_KEY, JSON.stringify(projectMeta));
+      localStorage.setItem(ACTUAL_KEY, JSON.stringify(actualItems));
+    } catch (_) {}
+  }
+
+  async function init() {
+    loadLocal();
+    bind();
+    hydrateSettings();
+    renderHeadlineRate();
+
+    const loaded = await window.AIVideoPricing.loadPricing(false);
+    pricing = loaded.data;
+    pricingSource = loaded.source;
+    renderDataStatus(loaded.warning);
+    renderSourceLinks();
+    setProvider('kling');
+    renderProject();
+    runPricingCheck(false);
+
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    // При открытии пытаемся освежить курс. Если сеть недоступна, остаётся последнее сохранённое значение.
+    refreshRate(true);
+  }
+
+  function bind() {
+    document.querySelectorAll('.provider-tab').forEach(btn => btn.addEventListener('click', () => setProvider(btn.dataset.provider)));
+    $('modelSelect').addEventListener('change', () => { renderVariants(); renderDuration(); renderManualUnits(); renderResult(); });
+    $('variantSelect').addEventListener('change', () => { renderDuration(); renderManualUnits(); renderResult(); });
+    $('durationRange').addEventListener('input', () => { $('durationNumber').value = $('durationRange').value; renderManualUnits(); renderResult(); });
+    $('durationNumber').addEventListener('input', () => { $('durationRange').value = $('durationNumber').value; renderManualUnits(); renderResult(); });
+    $('manualUnits').addEventListener('input', () => { setStoredManualUnits($('manualUnits').value); renderResult(); });
+
+    $('createProject').addEventListener('click', createNewProject);
+    $('addProjectLine').addEventListener('click', () => { projectItems.push(defaultProjectItem()); saveLocal(); renderProject(); });
+    $('calculateWorkPrice').addEventListener('click', () => { showWorkPrice = true; renderTotals(); });
+
+    ['deliverableVideos', 'laborPerVideoRub', 'plannedImages', 'actualImages', 'imageUnitRub'].forEach(id => {
+      $(id).addEventListener('input', () => {
+        if (id === 'deliverableVideos') projectMeta.deliverableVideos = Math.max(1, Math.round(Number($(id).value) || 1));
+        if (id === 'laborPerVideoRub') projectMeta.laborPerVideoRub = Math.max(0, Number($(id).value) || 0);
+        if (id === 'plannedImages') projectMeta.plannedImages = Math.max(0, Math.round(Number($(id).value) || 0));
+        if (id === 'actualImages') projectMeta.actualImages = Math.max(0, Math.round(Number($(id).value) || 0));
+        if (id === 'imageUnitRub') projectMeta.imageUnitRub = Math.max(0, Number($(id).value) || 0);
+        if (id !== 'actualImages') showWorkPrice = false;
+        saveLocal();
+        renderTotals();
+      });
+    });
+    $('retryPercentPreset').addEventListener('change', () => {
+      if ($('retryPercentPreset').value !== 'custom') {
+        projectMeta.retryPercent = Number($('retryPercentPreset').value);
+        $('retryPercent').value = projectMeta.retryPercent;
+        showWorkPrice = false;
+        saveLocal();
+        renderTotals();
+      } else {
+        $('retryPercent').focus();
+      }
+    });
+    $('retryPercent').addEventListener('input', () => {
+      projectMeta.retryPercent = Math.max(0, Math.min(500, Number($('retryPercent').value) || 0));
+      const preset = ['0', '10', '20', '30', '50'].includes(String(projectMeta.retryPercent)) ? String(projectMeta.retryPercent) : 'custom';
+      $('retryPercentPreset').value = preset;
+      showWorkPrice = false;
+      saveLocal();
+      renderTotals();
+    });
+    $('includeImages').addEventListener('change', () => {
+      projectMeta.includeImages = $('includeImages').checked;
+      showWorkPrice = false;
+      saveLocal();
+      renderProjectMeta();
+      renderTotals();
+    });
+
+    $('actualProvider').addEventListener('change', () => {
+      actualDraft.provider = $('actualProvider').value;
+      actualDraft.modelId = '';
+      actualDraft.variantId = '';
+      actualDraft.manualUnits = '';
+      renderActualDraft();
+    });
+    $('actualModel').addEventListener('change', () => {
+      actualDraft.modelId = $('actualModel').value;
+      actualDraft.variantId = '';
+      actualDraft.manualUnits = '';
+      renderActualDraft();
+    });
+    $('actualVariant').addEventListener('change', () => {
+      actualDraft.variantId = $('actualVariant').value;
+      actualDraft.manualUnits = '';
+      renderActualDraft();
+    });
+    $('actualDurationRange').addEventListener('input', () => {
+      actualDraft.duration = durationFromSlider($('actualDurationRange'));
+      $('actualDurationValue').textContent = `${actualDraft.duration} сек`;
+      actualDraft.manualUnits = '';
+      syncActualManualFromStored();
+      renderActualDraftResult();
+    });
+    $('actualManualUnits').addEventListener('input', () => {
+      const n = Number(String($('actualManualUnits').value).replace(',', '.'));
+      actualDraft.manualUnits = n > 0 ? n : '';
+      renderActualDraftResult();
+    });
+    $('addActualGeneration').addEventListener('click', addActualGeneration);
+
+    ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens'].forEach(id => {
+      $(id).addEventListener('input', () => {
+        settings[id] = Number($(id).value) || 0;
+        saveLocal();
+        renderHeadlineRate();
+        renderResult();
+        renderProject();
+        renderUnitPrices();
+      });
+    });
+
+    $('refreshPricing').addEventListener('click', refreshPricing);
+    $('checkPricing').addEventListener('click', () => runPricingCheck(true));
+    $('refreshRate').addEventListener('click', () => refreshRate(false));
+    $('quickRefreshRate').addEventListener('click', () => refreshRate(false));
+    $('exportData').addEventListener('click', exportData);
+    $('importData').addEventListener('click', () => $('importFile').click());
+    $('importFile').addEventListener('change', importData);
+    $('resetData').addEventListener('click', resetData);
+  }
+
+  function hydrateSettings() {
+    ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens'].forEach(k => {
+      if ($(k)) $(k).value = settings[k];
+    });
+  }
+
+  function renderHeadlineRate() {
+    if ($('headlineRate')) $('headlineRate').textContent = `1 $ = ${fmtNum(settings.usdRub, 2)} ₽`;
+  }
+
+  function modelsForProvider(provider) {
+    return pricing.models.filter(model => model.provider === provider);
+  }
+
+  function setProvider(provider) {
+    currentProvider = provider;
+    document.querySelectorAll('.provider-tab').forEach(button => button.classList.toggle('active', button.dataset.provider === provider));
+    renderModels();
+  }
+
+  function renderModels() {
+    const models = modelsForProvider(currentProvider);
+    $('modelSelect').innerHTML = models.map(model => `<option value="${esc(model.id)}">${esc(model.name)}</option>`).join('');
+    renderVariants();
+    renderDuration();
+    renderManualUnits();
+    renderResult();
+  }
+
+  function currentModel() {
+    return pricing.models.find(model => model.id === $('modelSelect').value) || modelsForProvider(currentProvider)[0];
+  }
+
+  function currentVariant() {
+    const model = currentModel();
+    return model?.variants.find(variant => variant.id === $('variantSelect').value) || model?.variants[0];
+  }
+
+  function renderVariants() {
+    const model = currentModel();
+    if (!model) return;
+    $('variantSelect').innerHTML = model.variants.map(variant => `<option value="${esc(variant.id)}">${esc(variant.label)}</option>`).join('');
+    $('variantField').classList.toggle('hidden', model.variants.length === 1 && /^(Стандартный режим|Hailuo MiniMax|Pika|Topaz AI 2\.5|Lip Sync|Act-One|Аватар)$/.test(model.variants[0].label));
+  }
+
+  function initialDurationForVariant(variant, preferred = 5) {
+    const billing = variant?.billing || {};
+    if (Array.isArray(billing.allowedDurations) && billing.allowedDurations.length) {
+      return billing.allowedDurations.includes(Number(preferred)) ? Number(preferred) : Number(billing.allowedDurations[0]);
+    }
+    const range = billing.durationRange || { min: 1, max: 60, step: 1 };
+    return Math.min(Number(range.max), Math.max(Number(range.min), Number(preferred) || 5));
+  }
+
+  function configureDurationSlider(input, output, variant, preferred = 5) {
+    const billing = variant?.billing || {};
+    const next = initialDurationForVariant(variant, preferred);
+    if (Array.isArray(billing.allowedDurations) && billing.allowedDurations.length) {
+      const values = billing.allowedDurations.map(Number);
+      const index = Math.max(0, values.indexOf(Number(next)));
+      input.min = 0;
+      input.max = Math.max(0, values.length - 1);
+      input.step = 1;
+      input.value = index;
+      input.dataset.values = JSON.stringify(values);
+      if (output) output.textContent = `${values[index]} сек`;
+      return values[index];
+    }
+    const range = billing.durationRange || { min: 1, max: 60, step: 1 };
+    input.min = range.min;
+    input.max = range.max;
+    input.step = range.step;
+    input.value = next;
+    delete input.dataset.values;
+    if (output) output.textContent = `${next} сек`;
+    return next;
+  }
+
+  function durationFromSlider(input) {
+    if (input.dataset.values) {
+      try {
+        const values = JSON.parse(input.dataset.values);
+        return Number(values[Math.max(0, Math.min(values.length - 1, Math.round(Number(input.value) || 0)))]) || 5;
+      } catch (_) {}
+    }
+    return Number(input.value) || 5;
+  }
+
+  function renderDuration() {
+    const variant = currentVariant();
+    if (!variant) return;
+    const billing = variant.billing;
+    const chips = $('durationChips');
+    const rangeWrap = $('durationRangeWrap');
+    const hint = $('durationHint');
+    chips.innerHTML = '';
+    hint.classList.add('hidden');
+    hint.textContent = '';
+
+    if (Array.isArray(billing.allowedDurations)) {
+      rangeWrap.classList.add('hidden');
+      chips.classList.remove('hidden');
+      billing.allowedDurations.forEach((duration, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'duration-chip' + (index === 0 ? ' active' : '');
+        button.textContent = duration + ' сек';
+        button.dataset.duration = duration;
+        button.onclick = () => {
+          chips.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+          button.classList.add('active');
+          renderManualUnits();
+          renderResult();
+        };
+        chips.appendChild(button);
+      });
+    } else {
+      chips.classList.add('hidden');
+      rangeWrap.classList.remove('hidden');
+      const range = billing.durationRange || { min: 1, max: 60, step: 1 };
+      $('durationRange').min = range.min;
+      $('durationRange').max = range.max;
+      $('durationRange').step = range.step;
+      const next = initialDurationForVariant(variant, $('durationNumber').value);
+      $('durationRange').value = next;
+      $('durationNumber').value = next;
+      $('durationNumber').min = range.min;
+      $('durationNumber').max = range.max;
+      $('durationNumber').step = range.step;
+      if (range.generic) {
+        hint.textContent = 'Диапазон длительности здесь служебный для расчёта. Допустимую длину выбранного режима проверь в SYNTX.';
+        hint.classList.remove('hidden');
+      }
+    }
+  }
+
+  function currentDuration() {
+    const active = $('durationChips').querySelector('.active');
+    return active ? Number(active.dataset.duration) : Number($('durationNumber').value) || 5;
+  }
+
+  function manualKeyFor(modelId, variantId, duration) {
+    return `${modelId}::${variantId}::${duration}`;
+  }
+
+  function manualKey() {
+    const model = currentModel();
+    const variant = currentVariant();
+    return model && variant ? manualKeyFor(model.id, variant.id, currentDuration()) : '';
+  }
+
+  function getStoredManualUnits() {
+    return settings.syntexManualUnits?.[manualKey()] ?? '';
+  }
+
+  function setStoredManualUnits(value) {
+    const key = manualKey();
+    if (!key) return;
+    const n = Number(String(value).replace(',', '.'));
+    if (n > 0) settings.syntexManualUnits[key] = n;
+    else delete settings.syntexManualUnits[key];
+    saveLocal();
+  }
+
+  function renderManualUnits() {
+    const variant = currentVariant();
+    if (!variant) return;
+    const needed = variant.billing.type === 'manual_required';
+    $('manualUnitsField').classList.toggle('hidden', !needed);
+    $('manualUnits').value = needed ? getStoredManualUnits() : '';
+  }
+
+  function calculate() {
+    return window.AIVideoCalculator.calculateSelection(pricing, settings, currentModel().id, currentVariant().id, currentDuration(), getStoredManualUnits());
+  }
+
+  function effectiveStatus(result) {
+    return result.variant.status || result.model.status || 'manual';
+  }
+
+  function renderResult() {
+    if (!pricing || !currentModel() || !currentVariant()) return;
+    let result;
+    try {
+      result = calculate();
+    } catch (error) {
+      $('resultPrice').textContent = '—';
+      $('calculatorSummaryPrice').textContent = '—';
+      $('resultMeta').innerHTML = `<span>${esc(error.message)}</span><span>Модель присутствует в каталоге, но расход токенов нужно подтвердить.</span>`;
+      $('resultStatus').className = 'status unverified';
+      $('resultStatus').textContent = '⚠ тариф не внесён';
+      return;
+    }
+
+    $('resultPrice').textContent = fmtRub(result.rub);
+    $('calculatorSummaryPrice').textContent = fmtRub(result.rub);
+    const unitName = pricing.providers[result.model.provider].unit === 'credits' ? 'credits' : 'токенов';
+    $('resultMeta').innerHTML = `<span>${fmtNum(result.units, 2)} ${unitName}</span>${result.usd !== null ? `<span>≈ ${fmtUsd(result.usd)}</span>` : ''}<span>1 ${result.model.provider === 'kling' ? 'credit' : 'токен'} = ${fmtRub(result.unitRub)}</span><span>Курс: ${fmtNum(settings.usdRub, 2)} ₽/$</span><span>Тарифная база: ${esc(pricing.updated)}</span>`;
+    const status = effectiveStatus(result);
+    $('resultStatus').className = 'status ' + status;
+    $('resultStatus').textContent = status === 'verified' ? '✓ verified' : status === 'unverified' ? '⚠ unverified' : '● manual';
+  }
+
+  function createNewProject() {
+    if ((projectItems.length || actualItems.length) && !confirm('Создать новый проект? Текущая смета и фактический журнал будут удалены.')) return;
+    projectItems = [defaultProjectItem()];
+    actualItems = [];
+    projectMeta = defaultProjectMeta();
+    actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
+    showWorkPrice = false;
+    saveLocal();
+    renderProject();
+  }
+
+  function defaultProjectItem(provider = 'kling') {
+    const models = modelsForProvider(provider);
+    const model = models[0];
+    const variant = model?.variants?.[0];
+    return {
+      id: 'p-' + Date.now() + '-' + Math.random().toString(16).slice(2),
+      provider,
+      modelId: model?.id || '',
+      variantId: variant?.id || '',
+      duration: variant ? initialDurationForVariant(variant, 5) : 5,
+      manualUnits: '',
+      qty: 1,
+      rub: 0,
+      units: 0
+    };
+  }
+
+  function getProjectModel(item) {
+    return pricing.models.find(model => model.id === item.modelId && model.provider === item.provider) || modelsForProvider(item.provider)[0];
+  }
+
+  function getProjectVariant(item, model = getProjectModel(item)) {
+    return model?.variants.find(variant => variant.id === item.variantId) || model?.variants?.[0];
+  }
+
+  function normalizeProjectItem(item) {
+    if (!['kling', 'syntex'].includes(item.provider)) item.provider = 'kling';
+    const model = getProjectModel(item);
+    if (!model) return item;
+    item.modelId = model.id;
+    const variant = getProjectVariant(item, model);
+    if (!variant) return item;
+    item.variantId = variant.id;
+    item.duration = initialDurationForVariant(variant, item.duration);
+    item.qty = Math.max(1, Math.round(Number(item.qty) || 1));
+    if (variant.billing.type === 'manual_required' && !(Number(item.manualUnits) > 0)) {
+      const saved = settings.syntexManualUnits?.[manualKeyFor(model.id, variant.id, item.duration)];
+      if (Number(saved) > 0) item.manualUnits = Number(saved);
+    }
+    return item;
+  }
+
+  function recalcProjectItem(item) {
+    normalizeProjectItem(item);
+    item.calcError = '';
+    try {
+      const result = window.AIVideoCalculator.calculateSelection(pricing, settings, item.modelId, item.variantId, item.duration, item.manualUnits);
+      item.rub = result.rub;
+      item.units = result.units;
+      item.name = result.model.name;
+      item.variant = result.variant.label;
+    } catch (error) {
+      item.rub = 0;
+      item.units = 0;
+      item.calcError = error.message;
+    }
+    return item;
+  }
+
+  function projectDurationControl(item, variant) {
+    const billing = variant.billing || {};
+    if (Array.isArray(billing.allowedDurations) && billing.allowedDurations.length) {
+      const values = billing.allowedDurations.map(Number);
+      const normalized = initialDurationForVariant(variant, item.duration);
+      const index = Math.max(0, values.indexOf(Number(normalized)));
+      return `<div class="project-duration-slider"><input class="project-duration-range" type="range" min="0" max="${Math.max(0, values.length - 1)}" step="1" value="${index}" data-values="${esc(JSON.stringify(values))}"><output class="project-duration-value">${esc(values[index])} сек</output></div>`;
+    }
+    const range = billing.durationRange || { min: 1, max: 60, step: 1 };
+    const normalized = initialDurationForVariant(variant, item.duration);
+    return `<div class="project-duration-slider"><input class="project-duration-range" type="range" min="${esc(range.min)}" max="${esc(range.max)}" step="${esc(range.step)}" value="${esc(normalized)}"><output class="project-duration-value">${esc(normalized)} сек</output></div>`;
+  }
+
+  function projectRow(item, index) {
+    normalizeProjectItem(item);
+    const model = getProjectModel(item);
+    const variant = getProjectVariant(item, model);
+    const providerModels = modelsForProvider(item.provider);
+    const manualNeeded = variant?.billing?.type === 'manual_required';
+    const rowBase = item.rub * item.qty;
+
+    const row = document.createElement('article');
+    row.className = 'project-editor';
+    row.dataset.id = item.id;
+    row.innerHTML = `
+      <div class="project-editor-head">
+        <strong>Позиция ${index + 1}</strong>
+        <button class="remove" type="button" aria-label="Удалить позицию">×</button>
+      </div>
+      <div class="project-editor-grid">
+        <div class="field">
+          <label>Провайдер</label>
+          <select class="project-provider">
+            <option value="kling" ${item.provider === 'kling' ? 'selected' : ''}>KLING AI</option>
+            <option value="syntex" ${item.provider === 'syntex' ? 'selected' : ''}>SYNTX</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Модель</label>
+          <select class="project-model">${providerModels.map(m => `<option value="${esc(m.id)}" ${m.id === model.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select>
+        </div>
+        <div class="field project-wide">
+          <label>Режим / качество</label>
+          <select class="project-variant">${model.variants.map(v => `<option value="${esc(v.id)}" ${v.id === variant.id ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
+        </div>
+        <div class="field">
+          <label>Длительность</label>
+          ${projectDurationControl(item, variant)}
+        </div>
+        <div class="field">
+          <label>Основных генераций</label>
+          <input class="project-qty" type="number" min="1" step="1" value="${esc(item.qty)}">
+        </div>
+        <div class="field ${manualNeeded ? '' : 'hidden'} project-manual-field">
+          <label>Токенов SYNTX / генерацию</label>
+          <input class="project-manual" type="number" min="0.01" step="0.01" value="${manualNeeded ? esc(item.manualUnits || '') : ''}" placeholder="Указать расход">
+        </div>
+      </div>
+      <div class="project-line-result ${item.calcError ? 'has-error' : ''}">
+        ${item.calcError
+          ? `<span>⚠ ${esc(item.calcError)}</span>`
+          : `<span>${fmtRub(item.rub)} / генерация</span><span>${item.qty} шт.</span><strong>Итого по позиции: ${fmtRub(rowBase)}</strong>`}
+      </div>`;
+
+    row.querySelector('.remove').addEventListener('click', () => {
+      projectItems = projectItems.filter(x => x.id !== item.id);
+      showWorkPrice = false;
+      saveLocal();
+      renderProject();
+    });
+
+    row.querySelector('.project-provider').addEventListener('change', event => {
+      item.provider = event.target.value;
+      const nextModel = modelsForProvider(item.provider)[0];
+      item.modelId = nextModel.id;
+      item.variantId = nextModel.variants[0].id;
+      item.duration = initialDurationForVariant(nextModel.variants[0], 5);
+      item.manualUnits = '';
+      showWorkPrice = false;
+      saveLocal();
+      renderProject();
+    });
+
+    row.querySelector('.project-model').addEventListener('change', event => {
+      item.modelId = event.target.value;
+      const nextModel = getProjectModel(item);
+      item.variantId = nextModel.variants[0].id;
+      item.duration = initialDurationForVariant(nextModel.variants[0], 5);
+      item.manualUnits = '';
+      showWorkPrice = false;
+      saveLocal();
+      renderProject();
+    });
+
+    row.querySelector('.project-variant').addEventListener('change', event => {
+      item.variantId = event.target.value;
+      const nextVariant = getProjectVariant(item);
+      item.duration = initialDurationForVariant(nextVariant, 5);
+      item.manualUnits = '';
+      showWorkPrice = false;
+      saveLocal();
+      renderProject();
+    });
+
+    const durationRange = row.querySelector('.project-duration-range');
+    const durationOutput = row.querySelector('.project-duration-value');
+    durationRange.addEventListener('input', event => {
+      item.duration = durationFromSlider(event.target);
+      durationOutput.textContent = `${item.duration} сек`;
+      const saved = settings.syntexManualUnits?.[manualKeyFor(item.modelId, item.variantId, item.duration)];
+      item.manualUnits = Number(saved) > 0 ? Number(saved) : '';
+      const manual = row.querySelector('.project-manual');
+      if (manual) manual.value = item.manualUnits || '';
+      showWorkPrice = false;
+      recalcProjectItem(item);
+      saveLocal();
+      renderTotals();
+      updateProjectLineResult(row, item);
+    });
+
+    row.querySelector('.project-qty').addEventListener('input', event => {
+      item.qty = Math.max(1, Math.round(Number(event.target.value) || 1));
+      showWorkPrice = false;
+      saveLocal();
+      recalcProjectItem(item);
+      renderTotals();
+      updateProjectLineResult(row, item);
+    });
+
+    const manualInput = row.querySelector('.project-manual');
+    if (manualInput) {
+      manualInput.addEventListener('change', event => {
+        const n = Number(String(event.target.value).replace(',', '.'));
+        item.manualUnits = n > 0 ? n : '';
+        if (n > 0) settings.syntexManualUnits[manualKeyFor(item.modelId, item.variantId, item.duration)] = n;
+        showWorkPrice = false;
+        saveLocal();
+        renderProject();
+      });
+    }
+
+    return row;
+  }
+
+  function updateProjectLineResult(row, item) {
+    const box = row.querySelector('.project-line-result');
+    if (!box) return;
+    if (item.calcError) {
+      box.className = 'project-line-result has-error';
+      box.innerHTML = `<span>⚠ ${esc(item.calcError)}</span>`;
+      return;
+    }
+    box.className = 'project-line-result';
+    const rowBase = item.rub * item.qty;
+    box.innerHTML = `<span>${fmtRub(item.rub)} / генерация</span><span>${item.qty} шт.</span><strong>Итого по позиции: ${fmtRub(rowBase)}</strong>`;
+  }
+
+  function renderProjectMeta() {
+    if (!$('deliverableVideos')) return;
+    $('retryPercent').value = projectMeta.retryPercent;
+    $('retryPercentPreset').value = ['0', '10', '20', '30', '50'].includes(String(projectMeta.retryPercent)) ? String(projectMeta.retryPercent) : 'custom';
+    $('deliverableVideos').value = projectMeta.deliverableVideos;
+    $('laborPerVideoRub').value = projectMeta.laborPerVideoRub;
+    $('includeImages').checked = projectMeta.includeImages;
+    $('plannedImages').value = projectMeta.plannedImages;
+    $('actualImages').value = projectMeta.actualImages;
+    $('imageUnitRub').value = projectMeta.imageUnitRub;
+    $('imageEstimateFields').classList.toggle('hidden', !projectMeta.includeImages);
+    $('actualImageFields').classList.toggle('hidden', !projectMeta.includeImages);
+  }
+
+  function actualModelForDraft() {
+    const models = modelsForProvider(actualDraft.provider);
+    return models.find(model => model.id === actualDraft.modelId) || models[0];
+  }
+
+  function actualVariantForDraft(model = actualModelForDraft()) {
+    return model?.variants.find(variant => variant.id === actualDraft.variantId) || model?.variants?.[0];
+  }
+
+  function syncActualManualFromStored() {
+    const model = actualModelForDraft();
+    const variant = actualVariantForDraft(model);
+    if (!model || !variant) return;
+    const needed = variant.billing?.type === 'manual_required';
+    $('actualManualField').classList.toggle('hidden', !needed);
+    if (!needed) {
+      actualDraft.manualUnits = '';
+      $('actualManualUnits').value = '';
+      return;
+    }
+    const saved = settings.syntexManualUnits?.[manualKeyFor(model.id, variant.id, actualDraft.duration)];
+    if (!(Number(actualDraft.manualUnits) > 0)) actualDraft.manualUnits = Number(saved) > 0 ? Number(saved) : '';
+    $('actualManualUnits').value = actualDraft.manualUnits || '';
+  }
+
+  function renderActualDraft() {
+    if (!pricing || !$('actualProvider')) return;
+    if (!['kling', 'syntex'].includes(actualDraft.provider)) actualDraft.provider = 'kling';
+    $('actualProvider').value = actualDraft.provider;
+
+    const models = modelsForProvider(actualDraft.provider);
+    const model = models.find(item => item.id === actualDraft.modelId) || models[0];
+    if (!model) return;
+    actualDraft.modelId = model.id;
+    $('actualModel').innerHTML = models.map(item => `<option value="${esc(item.id)}" ${item.id === model.id ? 'selected' : ''}>${esc(item.name)}</option>`).join('');
+
+    const variant = model.variants.find(item => item.id === actualDraft.variantId) || model.variants[0];
+    actualDraft.variantId = variant.id;
+    $('actualVariant').innerHTML = model.variants.map(item => `<option value="${esc(item.id)}" ${item.id === variant.id ? 'selected' : ''}>${esc(item.label)}</option>`).join('');
+
+    actualDraft.duration = configureDurationSlider($('actualDurationRange'), $('actualDurationValue'), variant, actualDraft.duration || 5);
+    syncActualManualFromStored();
+    renderActualDraftResult();
+  }
+
+  function renderActualDraftResult() {
+    if (!pricing || !$('actualDraftResult')) return;
+    const model = actualModelForDraft();
+    const variant = actualVariantForDraft(model);
+    if (!model || !variant) return;
+    try {
+      const result = window.AIVideoCalculator.calculateSelection(pricing, settings, model.id, variant.id, actualDraft.duration, actualDraft.manualUnits);
+      const unitName = pricing.providers[model.provider].unit === 'credits' ? 'credits' : 'токенов';
+      $('actualDraftResult').className = 'actual-draft-result ready';
+      $('actualDraftResult').innerHTML = `<span>${fmtNum(result.units, 2)} ${unitName} · ${actualDraft.duration} сек</span><strong>${fmtRub(result.rub)}</strong>`;
+      $('addActualGeneration').disabled = false;
+    } catch (error) {
+      $('actualDraftResult').className = 'actual-draft-result has-error';
+      $('actualDraftResult').textContent = '⚠ ' + error.message;
+      $('addActualGeneration').disabled = true;
+    }
+  }
+
+  function addActualGeneration() {
+    const model = actualModelForDraft();
+    const variant = actualVariantForDraft(model);
+    if (!model || !variant) return;
+    try {
+      const result = window.AIVideoCalculator.calculateSelection(pricing, settings, model.id, variant.id, actualDraft.duration, actualDraft.manualUnits);
+      if (variant.billing?.type === 'manual_required' && Number(actualDraft.manualUnits) > 0) {
+        settings.syntexManualUnits[manualKeyFor(model.id, variant.id, actualDraft.duration)] = Number(actualDraft.manualUnits);
+      }
+      actualItems.push({
+        id: 'a-' + Date.now() + '-' + Math.random().toString(16).slice(2),
+        provider: model.provider,
+        modelId: model.id,
+        modelName: model.name,
+        variantId: variant.id,
+        variantLabel: variant.label,
+        duration: result.duration,
+        units: result.units,
+        unitRub: result.unitRub,
+        rub: result.rub,
+        usdRub: settings.usdRub,
+        recordedAt: new Date().toISOString()
+      });
+      saveLocal();
+      renderActualList();
+      renderTotals();
+    } catch (error) {
+      $('actualDraftResult').className = 'actual-draft-result has-error';
+      $('actualDraftResult').textContent = '⚠ ' + error.message;
+    }
+  }
+
+  function renderActualList() {
+    if (!$('actualList')) return;
+    $('actualEmpty').classList.toggle('hidden', actualItems.length > 0);
+    const unitFor = provider => provider === 'kling' ? 'credits' : 'токенов';
+    $('actualList').innerHTML = actualItems.map((item, index) => `
+      <article class="actual-item" data-id="${esc(item.id)}">
+        <div class="actual-index">${index + 1}</div>
+        <div class="actual-copy">
+          <strong>${esc(item.modelName || item.modelId)}</strong>
+          <span>${esc(item.variantLabel || item.variantId)} · ${fmtNum(item.duration, 2)} сек</span>
+          <small>${fmtNum(item.units, 2)} ${unitFor(item.provider)} · стоимость зафиксирована при записи</small>
+        </div>
+        <div class="actual-cost">${fmtRub(item.rub)}</div>
+        <button class="remove actual-remove" type="button" aria-label="Удалить фактическую генерацию">×</button>
+      </article>`).join('');
+
+    $('actualList').querySelectorAll('.actual-remove').forEach(button => {
+      button.addEventListener('click', () => {
+        const id = button.closest('.actual-item')?.dataset.id;
+        actualItems = actualItems.filter(item => item.id !== id);
+        saveLocal();
+        renderActualList();
+        renderTotals();
+      });
+    });
+  }
+
+  function renderProject() {
+    if (!pricing) return;
+    projectItems = projectItems.map(recalcProjectItem);
+    saveLocal();
+
+    const hasProject = projectItems.length > 0 || actualItems.length > 0;
+    $('projectEmpty').classList.toggle('hidden', hasProject);
+    $('projectBuilder').classList.toggle('hidden', !hasProject);
+    $('createProject').textContent = hasProject ? 'Новый проект' : 'Создать проект';
+
+    if (!hasProject) return;
+    renderProjectMeta();
+    const list = $('projectList');
+    list.innerHTML = '';
+    projectItems.forEach((item, index) => list.appendChild(projectRow(item, index)));
+    renderActualDraft();
+    renderActualList();
+    renderTotals();
+  }
+
+  function renderTotals() {
+    if (!pricing) return;
+    const totals = window.AIVideoCalculator.calculateProject(projectItems, projectMeta, actualItems);
+    $('baseTotal').textContent = fmtRub(totals.base);
+    $('retryTotal').textContent = fmtRub(totals.reserve);
+    $('grandTotal').textContent = fmtRub(totals.estimateCost);
+    $('baseCount').textContent = `${totals.plannedGenerations} шт.`;
+    $('retryCount').textContent = `${fmtNum(totals.retryPercent, 2)}%`;
+    $('grandCount').textContent = `${totals.plannedGenerations} основных генераций`;
+    $('estimateSummary').textContent = fmtRub(totals.estimateCost);
+
+    $('plannedImageCost').textContent = fmtRub(totals.plannedImageCost);
+    $('estimateImageTotal').textContent = fmtRub(totals.plannedImageCost);
+    $('estimateImageCount').textContent = totals.includeImages ? `${totals.plannedImages} × ${fmtRub(projectMeta.imageUnitRub)}` : 'выключено';
+
+    if (showWorkPrice && totals.estimateCost >= 0) {
+      $('workPriceResult').classList.remove('hidden');
+      $('workPrice').textContent = fmtRub(totals.quotedPrice);
+      $('workPriceMeta').textContent = `Себестоимость ${fmtRub(totals.estimateCost)} + ${totals.deliverableVideos} готовых видео × ${fmtRub(totals.laborPerVideoRub)} = ${fmtRub(totals.quotedPrice)}.`;
+    } else {
+      $('workPriceResult').classList.add('hidden');
+    }
+
+    $('actualSummary').textContent = fmtRub(totals.actualCost);
+    $('actualVideoTotal').textContent = fmtRub(totals.actualVideoCost);
+    $('actualVideoCount').textContent = `${totals.actualVideoGenerations} шт.`;
+    $('actualImageCost').textContent = fmtRub(totals.actualImageCost);
+    $('actualImagesTotal').textContent = fmtRub(totals.actualImageCost);
+    $('actualImagesCount').textContent = totals.includeImages ? `${totals.actualImages} × ${fmtRub(projectMeta.imageUnitRub)}` : 'выключено';
+    $('actualTotal').textContent = fmtRub(totals.actualCost);
+
+    $('compareEstimate').textContent = fmtRub(totals.estimateCost);
+    $('compareActual').textContent = fmtRub(totals.actualCost);
+    $('plannedProfit').textContent = fmtRub(totals.plannedProfit);
+    const hasActual = totals.actualVideoGenerations > 0 || (totals.includeImages && totals.actualImages > 0);
+    if (!hasActual) {
+      $('varianceLabel').textContent = 'Отклонение';
+      $('varianceValue').textContent = '—';
+      $('varianceValue').className = '';
+      $('actualProfit').textContent = '—';
+      $('actualProfit').className = '';
+      $('actualProfitMeta').textContent = 'Добавь фактические генерации, чтобы сравнить план и факт.';
+      return;
+    }
+
+    const varianceAbs = Math.abs(totals.variance);
+    if (totals.variance > 0.005) {
+      $('varianceLabel').textContent = 'Перерасход';
+      $('varianceValue').textContent = fmtRub(varianceAbs);
+      $('varianceValue').className = 'negative-value';
+    } else if (totals.variance < -0.005) {
+      $('varianceLabel').textContent = 'Экономия (пока)';
+      $('varianceValue').textContent = fmtRub(varianceAbs);
+      $('varianceValue').className = 'positive-value';
+    } else {
+      $('varianceLabel').textContent = 'Отклонение';
+      $('varianceValue').textContent = fmtRub(0);
+      $('varianceValue').className = '';
+    }
+    $('actualProfit').textContent = fmtRub(totals.actualProfit);
+    $('actualProfit').className = totals.actualProfit < 0 ? 'negative-value' : 'positive-value';
+    $('actualProfitMeta').textContent = `Сметная цена ${fmtRub(totals.quotedPrice)} − текущий фактический расход ${fmtRub(totals.actualCost)}. До завершения проекта результат предварительный.`;
+  }
+
+  function renderUnitPrices() {
+    if (!pricing) return;
+    $('klingUnitPrice').textContent = fmtRub(window.AIVideoCalculator.unitPriceRub('kling', settings, pricing));
+    $('syntexUnitPrice').textContent = fmtRub(window.AIVideoCalculator.unitPriceRub('syntex', settings, pricing));
+  }
+
+  function renderDataStatus(warning) {
+    if (!pricing) return;
+    $('dataStatus').textContent = `pricing.json: ${pricing.dataVersion} · ${pricing.updated} · источник загрузки: ${pricingSource}${warning ? ' · fallback: ' + warning : ''}`;
+    renderUnitPrices();
+  }
+
+  function renderSourceLinks() {
+    const box = $('sourceLinks');
+    if (!pricing?.verification?.sources) {
+      box.innerHTML = '';
+      return;
+    }
+    box.innerHTML = pricing.verification.sources.map(source => `<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.title)}</a>`).join('');
+  }
+
+  function addCheck(rows, type, title, detail) {
+    rows.push({ type, title, detail });
+  }
+
+  function ageDays(dateText) {
+    const t = Date.parse(dateText + 'T00:00:00Z');
+    return Number.isFinite(t) ? Math.floor((Date.now() - t) / 86400000) : 9999;
+  }
+
+  function localPricingChecks() {
+    const rows = [];
+    const verification = pricing.verification || {};
+    const age = ageDays(pricing.updated);
+    addCheck(rows, age <= 30 ? 'pass' : 'warn', 'Дата тарифной базы', `${pricing.updated} · ${age < 0 ? 0 : age} дн. назад`);
+
+    const kling = pricing.models.find(model => model.id === 'kling-30');
+    const expected = verification.kling30Rates || [];
+    let klingOk = !!kling;
+    for (const ref of expected) {
+      const variant = kling?.variants.find(x => x.id === ref.variantId);
+      if (!variant || Number(variant.billing?.unitsPerSecond) !== Number(ref.unitsPerSecond)) klingOk = false;
+    }
+    addCheck(rows, klingOk ? 'pass' : 'fail', 'Kling 3.0 · контрольные ставки', klingOk ? '720p/1080p совпадают с контрольным официальным снимком от 19.08.2026.' : 'Есть расхождение с контрольными значениями.');
+
+    const ids = new Set(pricing.models.filter(model => model.provider === 'syntex').map(model => model.id));
+    const required = verification.requiredSyntexModelIds || [];
+    const missing = required.filter(id => !ids.has(id));
+    addCheck(rows, missing.length ? 'fail' : 'pass', 'Каталог SYNTX', missing.length ? `Не хватает ${missing.length} групп: ${missing.join(', ')}` : `В базе ${ids.size} групп видеомоделей/инструментов; контрольный список присутствует полностью.`);
+
+    const unpriced = pricing.models.filter(model => model.provider === 'syntex').flatMap(model => model.variants.map(variant => ({ model, variant }))).filter(x => x.variant.billing?.type === 'manual_required').length;
+    addCheck(rows, 'info', 'Неподтверждённые цены SYNTX', `${unpriced} режимов находятся в каталоге, но требуют фактического расхода токенов; приложение их не выдумывает.`);
+    return rows;
+  }
+
+  async function probeSource(source) {
+    try {
+      const readable = await fetch(source.url, { cache: 'no-store' });
+      if (!readable.ok) throw new Error('HTTP ' + readable.status);
+      const text = await readable.text();
+      if (source.id === 'syntx-status') {
+        const needles = ['Kling', 'Veo 3.1', 'Seedance TWO', 'Wan 2.7', 'Happy Horse', 'FLUX 3'];
+        const missing = needles.filter(x => !text.includes(x));
+        return { type: missing.length ? 'warn' : 'pass', title: source.title, detail: missing.length ? `Источник прочитан, но не найдены: ${missing.join(', ')}.` : 'Источник прочитан: контрольные текущие семейства/режимы найдены.' };
+      }
+      if (source.id === 'syntx-video-docs') {
+        const needles = ['KLING', 'Seedance', 'RUNWAY', 'Higgsfield', 'Hailuo MiniMax', 'Veo'];
+        const missing = needles.filter(x => !text.toLowerCase().includes(x.toLowerCase()));
+        return { type: missing.length ? 'warn' : 'pass', title: source.title, detail: missing.length ? `Каталог прочитан, но часть контрольных названий не найдена: ${missing.join(', ')}.` : 'Каталог SYNTX прочитан и содержит контрольные видеомодели.' };
+      }
+      if (source.id === 'kling-3-official-guide') {
+        const normalized = text.replace(/\s+/g, ' ');
+        const ok = /8\s*credits/i.test(normalized) && /12\s*credits/i.test(normalized);
+        return { type: ok ? 'pass' : 'info', title: source.title, detail: ok ? 'Официальная страница прочитана; контрольные 8 и 12 credits найдены.' : 'Официальная страница доступна, но автоматический поиск ставок в её HTML не дал надёжного результата.' };
+      }
+      return { type: 'pass', title: source.title, detail: 'Источник доступен и читается браузером.' };
+    } catch (readError) {
+      try {
+        await fetch(source.url, { mode: 'no-cors', cache: 'no-store' });
+        return { type: 'info', title: source.title, detail: 'Источник доступен по сети, но браузер не разрешил прочитать содержимое (CORS). Полная сверка будет выполняться через GitHub Actions.' };
+      } catch (error) {
+        return { type: 'warn', title: source.title, detail: 'Источник не удалось проверить из локального браузера: ' + error.message };
+      }
+    }
+  }
+
+  function renderCheckRows(rows) {
+    $('checkList').innerHTML = rows.map(row => `<div class="check-row ${esc(row.type)}"><div class="icon">${row.type === 'pass' ? '✓' : row.type === 'fail' ? '×' : row.type === 'warn' ? '!' : 'i'}</div><div><strong>${esc(row.title)}</strong><small>${esc(row.detail)}</small></div></div>`).join('');
+  }
+
+  async function runPricingCheck(withNetwork) {
+    if (!pricing) return;
+    const button = $('checkPricing');
+    if (withNetwork) {
+      button.disabled = true;
+      button.textContent = 'Проверяю…';
+    }
+
+    const rows = localPricingChecks();
+    renderCheckRows(rows);
+    $('checkSummary').textContent = 'Локальная проверка базы выполнена.';
+
+    if (withNetwork) {
+      const sources = (pricing.verification?.sources || []).filter(source => ['official-rate', 'catalog', 'catalog-status'].includes(source.kind));
+      const probes = await Promise.all(sources.map(probeSource));
+      rows.push(...probes);
+      renderCheckRows(rows);
+      settings.lastPricingCheck = new Date().toISOString();
+      saveLocal();
+      const problems = rows.filter(row => row.type === 'fail').length;
+      const warnings = rows.filter(row => row.type === 'warn').length;
+      $('checkSummary').textContent = `Проверено ${new Date().toLocaleString('ru-RU')}: критических расхождений ${problems}, предупреждений ${warnings}.`;
+      button.disabled = false;
+      button.textContent = 'Проверить сейчас';
+    } else if (settings.lastPricingCheck) {
+      $('checkSummary').textContent = `Локальная проверка базы выполнена. Последняя сетевая попытка: ${new Date(settings.lastPricingCheck).toLocaleString('ru-RU')}.`;
+    }
+  }
+
+  async function refreshPricing() {
+    const button = $('refreshPricing');
+    button.disabled = true;
+    button.textContent = 'Обновляю…';
+    try {
+      const loaded = await window.AIVideoPricing.loadPricing(true);
+      pricing = loaded.data;
+      pricingSource = loaded.source;
+      renderDataStatus(loaded.warning);
+      renderSourceLinks();
+      renderModels();
+      renderProject();
+      runPricingCheck(false);
+    } catch (error) {
+      $('dataStatus').textContent = 'Не удалось обновить тарифы: ' + error.message;
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Обновить pricing.json';
+    }
+  }
+
+  async function refreshRate(silent = false) {
+    const button = $('refreshRate');
+    const quick = $('quickRefreshRate');
+    if (!silent) {
+      button.disabled = true;
+      quick.disabled = true;
+      button.textContent = 'Обновляю…';
+      quick.textContent = '…';
+      $('rateStatus').textContent = 'Запрашиваю USD/RUB…';
+    }
+
+    let lastError = null;
+    for (const fn of [fetchMarketRate, fetchCbrRate]) {
+      try {
+        const result = await fn();
+        if (!Number.isFinite(result.rate)) throw new Error('Некорректный курс');
+        settings.usdRub = Number(result.rate.toFixed(4));
+        $('usdRub').value = settings.usdRub;
+        saveLocal();
+        renderHeadlineRate();
+        renderResult();
+        renderProject();
+        renderUnitPrices();
+        $('rateStatus').textContent = `Курс обновлён: ${result.source}${result.date ? ' · ' + result.date : ''}`;
+        button.disabled = false;
+        quick.disabled = false;
+        button.textContent = 'Обновить курс автоматически';
+        quick.textContent = '↻';
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!silent) $('rateStatus').textContent = 'Не удалось обновить курс. Используется сохранённое значение. ' + (lastError ? lastError.message : '');
+    button.disabled = false;
+    quick.disabled = false;
+    button.textContent = 'Обновить курс автоматически';
+    quick.textContent = '↻';
+    renderHeadlineRate();
+  }
+
+  async function fetchMarketRate() {
+    const response = await fetch('https://open.er-api.com/v6/latest/USD', { cache: 'no-store' });
+    if (!response.ok) throw new Error('open.er-api недоступен');
+    const data = await response.json();
+    return { rate: Number(data?.rates?.RUB), source: 'open.er-api', date: data?.time_last_update_utc || '' };
+  }
+
+  async function fetchCbrRate() {
+    const response = await fetch('https://www.cbr-xml-daily.ru/daily_json.js', { cache: 'no-store' });
+    if (!response.ok) throw new Error('cbr-xml-daily недоступен');
+    const data = await response.json();
+    return { rate: Number(data?.Valute?.USD?.Value), source: 'ЦБ РФ / cbr-xml-daily', date: data?.Date || '' };
+  }
+
+  function exportData() {
+    const payload = {
+      app: 'AI VIDEO CALC v2.3',
+      exportedAt: new Date().toISOString(),
+      settings,
+      projectMeta,
+      projectItems,
+      actualItems
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'ai-video-calc-v2-data.json';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 500);
+  }
+
+  async function importData(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      settings = { ...settings, ...(data.settings || {}) };
+      if (!settings.syntexManualUnits) settings.syntexManualUnits = {};
+      projectMeta = { ...defaultProjectMeta(), ...(data.projectMeta || {}) };
+      projectItems = Array.isArray(data.projectItems) ? data.projectItems : [];
+      actualItems = Array.isArray(data.actualItems) ? data.actualItems : [];
+      projectItems = projectItems.map(item => ({ ...item, qty: Math.max(1, Math.round(Number(item.qty) || 1)) }));
+      showWorkPrice = false;
+      saveLocal();
+      hydrateSettings();
+      renderHeadlineRate();
+      renderManualUnits();
+      renderResult();
+      renderProject();
+      renderUnitPrices();
+    } catch (error) {
+      alert('Не удалось импортировать JSON: ' + error.message);
+    }
+    event.target.value = '';
+  }
+
+  function resetData() {
+    if (!confirm('Сбросить локальные настройки, смету и фактический журнал?')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PROJECT_KEY);
+    localStorage.removeItem(PROJECT_META_KEY);
+    localStorage.removeItem(ACTUAL_KEY);
+    location.reload();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => init().catch(error => {
+    $('dataStatus').textContent = 'Ошибка запуска: ' + error.message;
+  }));
+})();
