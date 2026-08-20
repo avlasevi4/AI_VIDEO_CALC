@@ -1,0 +1,9 @@
+{
+  "name": "ai-video-calc",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node tests/calculator.test.mjs && node tests/projects.test.mjs && node tests/cloud.test.mjs",
+    "check": "node --check js/calculator.js && node --check js/pricing.js && node --check js/projects.js && node --check js/cloud-config.js && node --check js/cloud.js && node --check js/app.js && node scripts/validate-pricing.mjs && npm test"
+  }
+}
