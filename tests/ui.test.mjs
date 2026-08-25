@@ -19,6 +19,8 @@ assert.ok(completionButton > comparisonStart, 'completion action follows actual 
 assert.ok(completionButton < workspaceEnd, 'completion action stays inside the project workspace');
 assert.equal((html.match(/id="completeProject"/g) || []).length, 1, 'completion action is unique');
 assert.match(html, /id="projectHistory" class="project-history"/, 'project library is a separate disclosure');
+assert.match(html, /id="projects" class="card project-card"/, 'Android shell can navigate directly to projects');
+assert.match(html, /id="actualExpenses" class="project-subdetails actual-details"/, 'Android shell can navigate directly to actual expenses');
 assert.match(css, /\.project-workspace\s*\{/, 'active project has a distinct visual workspace');
 assert.match(css, /\.project-completion-panel\s*\{/, 'completion has a dedicated visual panel');
 

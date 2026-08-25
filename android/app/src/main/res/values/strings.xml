@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI VIDEO CALC</string>
+    <string name="app_logo">Логотип AI VIDEO CALC</string>
+    <string name="refresh">Обновить</string>
+    <string name="status_loading">Загрузка…</string>
+    <string name="status_online">Соединение установлено</string>
+    <string name="status_synced">Облачная история подключена</string>
+    <string name="status_offline">Нет подключения</string>
+    <string name="offline_title">Нет интернета</string>
+    <string name="offline_message">Подключитесь к сети, чтобы синхронизировать проекты и загрузить актуальные тарифы.</string>
+    <string name="retry">Попробовать снова</string>
+    <string name="network_settings">Настройки сети</string>
+    <string name="nav_calculator">Расчёт</string>
+    <string name="nav_projects">Проекты</string>
+    <string name="nav_refresh">Обновить</string>
+    <string name="nav_back">Назад</string>
+    <string name="file_picker_unavailable">На устройстве не найден выбор файлов.</string>
+    <string name="browser_unavailable">На устройстве не найден браузер.</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="app_background">#050C15</color>
+    <color name="surface_raised">#14263A</color>
+    <color name="text_primary">#F3F7FB</color>
+    <color name="text_secondary">#8DA1B5</color>
+    <color name="accent_cyan">#72D8EE</color>
+    <color name="accent_green">#64E6AA</color>
+    <color name="accent_purple">#9A77FF</color>
+    <color name="button_text">#06131B</color>
+    <color name="launcher_background">#101859</color>
+</resources>

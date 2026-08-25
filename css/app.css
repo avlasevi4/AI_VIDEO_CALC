@@ -374,6 +374,15 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:3px solid #0b1
 .footer{text-align:center;padding:10px;color:#667b90;font-size:9px}
 .hidden{display:none!important}.top-gap{margin-top:9px}.top-gap-small{margin-top:7px}
 
+/* Android APK shell removes duplicated browser chrome. */
+html.android-app{scroll-padding-top:10px}
+html.android-app .app{width:100%;margin:0 0 18px}
+html.android-app .hero,html.android-app .footer{display:none}
+html.android-app .card{border-left:0;border-right:0;border-radius:0;box-shadow:none}
+html.android-app .calculator-card{margin-top:0}
+html.android-app .project-workspace{border-radius:18px}
+html.android-app .project-card>.section-head{padding-top:4px}
+
 /* Project workspace — clear hierarchy for plan, actuals and completion */
 .project-card{padding:24px}
 .project-card>.section-head{align-items:center;margin-bottom:18px}
@@ -534,6 +543,8 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:3px solid #0b1
   .comparison-head{display:block}.comparison-head span{display:block;margin-top:2px}
   .project-completion-panel{padding:15px;gap:15px}.project-completion-panel strong{font-size:18px}.project-completion-panel p{font-size:11.5px}.complete-project-btn{min-width:0}
   .source-links a{flex:1 1 auto;text-align:center}
+  html.android-app .app{width:100%;margin-top:0}
+  html.android-app .project-card{padding-inline:10px}
 }
 
 @media(max-width:360px){
