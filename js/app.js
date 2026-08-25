@@ -602,6 +602,7 @@
       projects.unshift(project);
       activeProjectId = project.id;
       loadActiveProjectState();
+      $('projectHistory').open = false;
     }
 
     actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
@@ -619,6 +620,7 @@
     actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
     showWorkPrice = false;
     window.AIVideoProjectStore.save(projects, activeProjectId);
+    $('projectHistory').open = false;
     renderProject();
   }
 
@@ -648,6 +650,7 @@
       activeProjectId = '';
       loadActiveProjectState();
       window.AIVideoProjectStore.save(projects, activeProjectId);
+      $('projectHistory').open = true;
     }
     renderProject();
   }
@@ -1090,7 +1093,12 @@
       : `Изменён ${formatProjectDate(project.updatedAt)}`;
     $('renameProject').classList.toggle('hidden', completed);
     $('completeProject').textContent = completed ? 'Вернуть в работу' : 'Завершить проект';
-    $('completeProject').className = completed ? 'btn secondary' : 'btn primary';
+    $('completeProject').className = completed ? 'btn secondary complete-project-btn' : 'btn complete-project-btn';
+    $('completionPanelKicker').textContent = completed ? 'Проект сохранён' : 'Финальный шаг';
+    $('completionPanelTitle').textContent = completed ? 'Проект завершён' : 'Завершить проект';
+    $('completionPanelText').textContent = completed
+      ? 'Расчёт находится в истории и защищён от изменений. При необходимости верните проект в работу.'
+      : 'Проверьте фактические расходы. После завершения проект сохранится в истории и будет доступен только для просмотра.';
 
     if (completed) {
       builder.querySelectorAll('input, select, button').forEach(control => {
@@ -1122,6 +1130,7 @@
     $('completedProjectCount').textContent = String(completedProjects.length);
     $('activeProjectsGroup').classList.toggle('hidden', activeProjects.length === 0);
     $('completedProjectsGroup').classList.toggle('hidden', completedProjects.length === 0);
+    if (!activeProject() && projects.length) $('projectHistory').open = true;
 
     const renderGroup = (listId, group) => {
       const list = $(listId);
