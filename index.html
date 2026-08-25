@@ -102,8 +102,11 @@
     </div>
 
     <div id="projectPrivateContent" class="hidden">
-    <div id="projectHistory" class="project-history">
-      <div class="history-head"><strong>История проектов</strong><span id="projectCount">0 проектов</span></div>
+    <details id="projectHistory" class="project-history">
+      <summary class="history-summary">
+        <span><strong>Все проекты</strong><small>Активные проекты и завершённые расчёты</small></span>
+        <span id="projectCount" class="history-count">0 проектов</span>
+      </summary>
       <div class="history-groups">
         <section id="activeProjectsGroup" class="history-group">
           <div class="history-group-head"><strong>Активные</strong><span id="activeProjectCount">0</span></div>
@@ -114,20 +117,30 @@
           <div id="completedProjectList" class="project-history-list"></div>
         </section>
       </div>
-    </div>
+    </details>
 
     <div id="projectEmpty" class="project-empty">Сохранённых проектов пока нет. Нажми «Новый проект», введи название и начни расчёт.</div>
-    <div id="projectBuilder" class="hidden">
+    <section id="projectBuilder" class="project-workspace hidden">
       <div class="active-project-bar">
-        <div><span id="activeProjectStatus">Текущий проект</span><strong id="activeProjectName">—</strong><small id="activeProjectUpdated">—</small></div>
+        <div class="active-project-identity">
+          <span id="activeProjectStatus">Текущий проект</span>
+          <strong id="activeProjectName">—</strong>
+          <small id="activeProjectUpdated">—</small>
+        </div>
         <div class="active-project-actions">
           <button id="renameProject" class="btn secondary" type="button">Переименовать</button>
-          <button id="completeProject" class="btn primary" type="button">Завершить проект</button>
         </div>
       </div>
-      <details class="project-subdetails" open>
+
+      <div class="project-flow" aria-label="Этапы работы с проектом">
+        <div class="project-flow-step estimate-step"><span>1</span><div><strong>Составить смету</strong><small>Запланировать объём и цену работы</small></div></div>
+        <div class="project-flow-line" aria-hidden="true"></div>
+        <div class="project-flow-step actual-step"><span>2</span><div><strong>Записать факт</strong><small>Внести реальные расходы и завершить проект</small></div></div>
+      </div>
+
+      <details class="project-subdetails estimate-details" open>
         <summary>
-          <span><strong>Смета проекта</strong><small>Планируемые видео, резерв и изображения</small></span>
+          <span class="project-stage-title"><b>1</b><span><strong>Смета проекта</strong><small>Планируемые видео, дополнительные генерации и изображения</small></span></span>
           <strong id="estimateSummary" class="summary-price">0 ₽</strong>
         </summary>
         <div class="project-subbody">
@@ -179,9 +192,9 @@
         </div>
       </details>
 
-      <details class="project-subdetails actual-details">
+      <details class="project-subdetails actual-details" open>
         <summary>
-          <span><strong>Фактический расход</strong><small>Записывай каждую выполненную генерацию поштучно</small></span>
+          <span class="project-stage-title"><b>2</b><span><strong>Фактические расходы</strong><small>Записывайте каждую выполненную генерацию по мере работы</small></span></span>
           <strong id="actualSummary" class="summary-price">0 ₽</strong>
         </summary>
         <div class="project-subbody">
@@ -246,9 +259,18 @@
               <div class="metric total-main"><span>Фактическая прибыль</span><strong id="actualProfit">0 ₽</strong><small id="actualProfitMeta"></small></div>
             </div>
           </div>
+
+          <div class="project-completion-panel">
+            <div>
+              <span id="completionPanelKicker">Финальный шаг</span>
+              <strong id="completionPanelTitle">Завершить проект</strong>
+              <p id="completionPanelText">Проверьте фактические расходы. После завершения проект сохранится в истории и будет доступен только для просмотра.</p>
+            </div>
+            <button id="completeProject" class="btn complete-project-btn" type="button">Завершить проект</button>
+          </div>
         </div>
       </details>
-    </div>
+    </section>
     </div>
   </section>
 
@@ -307,7 +329,7 @@
     <div id="dataStatus" class="data-status">Загрузка тарифной базы…</div>
   </details>
 
-  <footer class="footer">AI VIDEO CALC v2 · 20.08.2026</footer>
+  <footer class="footer">AI VIDEO CALC v2 · 25.08.2026</footer>
 </main>
 
 <dialog id="projectNameDialog" class="project-dialog" aria-labelledby="projectNameTitle">
