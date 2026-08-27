@@ -11,13 +11,13 @@
   <title>AI VIDEO CALC v2</title>
 </head>
 <body>
-<main class="app">
+<main class="app" data-active-view="calculator">
   <header class="hero">
     <img class="brand-logo" src="./icons/ai-calc-logo.png" alt="Логотип AI VIDEO CALC" width="104" height="104">
     <div class="hero-copy">
       <div class="eyebrow">production cost calculator</div>
       <h1>AI VIDEO CALC</h1>
-      <p>Себестоимость генерации видео в Kling AI и через SYNTX. Тарифы отделены от интерфейса и могут обновляться независимо.</p>
+      <p>Расчёт себестоимости видео, сметы проектов и фиксация фактических расходов.</p>
     </div>
     <div class="hero-tools">
       <div class="version">v2</div>
@@ -29,13 +29,20 @@
     </div>
   </header>
 
-  <details class="card calculator-card" id="calculatorDetails" open>
+  <nav class="app-tabs" aria-label="Основные разделы">
+    <button class="app-tab active" type="button" data-app-view="calculator" aria-controls="calculatorDetails" aria-selected="true">Одна генерация</button>
+    <button class="app-tab" type="button" data-app-view="projects" aria-controls="projects" aria-selected="false">Мои проекты</button>
+    <button class="app-tab" type="button" data-app-view="tariffs" aria-controls="tariffs" aria-selected="false">Тарифы</button>
+  </nav>
+
+  <details class="card calculator-card view-panel" id="calculatorDetails" data-view="calculator">
     <summary class="card-summary">
       <span>
         <strong>Калькулятор одной генерации</strong>
-        <small>Быстрый расчёт отдельного ролика</small>
+        <small>Нажмите, чтобы открыть быстрый расчёт отдельного ролика</small>
       </span>
       <span id="calculatorSummaryPrice" class="summary-price">—</span>
+      <span class="summary-action">Открыть</span>
     </summary>
     <div class="details-body">
       <div class="provider-tabs" role="tablist" aria-label="Провайдер генерации">
@@ -76,7 +83,7 @@
     </div>
   </details>
 
-  <section id="projects" class="card project-card">
+  <section id="projects" class="card project-card view-panel hidden" data-view="projects">
     <div class="section-head">
       <div>
         <h2>Мои проекты</h2>
@@ -128,6 +135,7 @@
           <small id="activeProjectUpdated">—</small>
         </div>
         <div class="active-project-actions">
+          <button id="closeProject" class="btn secondary" type="button">К проектам</button>
           <button id="renameProject" class="btn secondary" type="button">Переименовать</button>
         </div>
       </div>
@@ -138,7 +146,7 @@
         <div class="project-flow-step actual-step"><span>2</span><div><strong>Записать факт</strong><small>Внести реальные расходы и завершить проект</small></div></div>
       </div>
 
-      <details class="project-subdetails estimate-details" open>
+      <details id="estimateDetails" class="project-subdetails estimate-details" open>
         <summary>
           <span class="project-stage-title"><b>1</b><span><strong>Смета проекта</strong><small>Планируемые видео, дополнительные генерации и изображения</small></span></span>
           <strong id="estimateSummary" class="summary-price">0 ₽</strong>
@@ -146,8 +154,8 @@
         <div class="project-subbody">
           <div class="project-meta-grid">
             <div class="field">
-              <label for="laborPerVideoRub">Работа за 1 готовое видео, ₽</label>
-              <input id="laborPerVideoRub" type="number" min="0" step="10" value="250">
+              <label for="laborPerVideoRub">Доплата за 1 готовое видео, ₽</label>
+              <input id="laborPerVideoRub" type="number" min="0" step="10" inputmode="decimal" value="250">
             </div>
           </div>
 
@@ -177,22 +185,38 @@
             <div class="metric total-main"><span>Сметная себестоимость</span><strong id="grandTotal">0 ₽</strong><small id="grandCount">0 генераций</small></div>
           </div>
 
-          <div class="work-price-box">
-            <div>
-              <strong>Цена работы</strong>
-              <div class="tiny">Сметная себестоимость + ставка за каждое готовое видео. По умолчанию 250 ₽; ставку можно изменить выше.</div>
+          <div class="work-price-box" aria-labelledby="workPriceHeading">
+            <div class="work-price-heading">
+              <strong id="workPriceHeading">Цена для заказчика</strong>
+              <div class="tiny">Используйте расчётную цену или укажите сумму, которую согласовали с заказчиком.</div>
             </div>
-            <button id="calculateWorkPrice" class="btn primary" type="button">Рассчитать цену работы</button>
+            <div class="price-mode" role="radiogroup" aria-label="Источник цены для заказчика">
+              <label class="choice-control"><input id="priceModeCalculated" name="priceMode" type="radio" value="calculated" checked><span>По смете</span></label>
+              <label class="choice-control"><input id="priceModeCustom" name="priceMode" type="radio" value="custom"><span>Своя цена</span></label>
+            </div>
+            <div id="customPriceField" class="field hidden">
+              <label for="customQuotedPrice">Согласованная цена, ₽</label>
+              <input id="customQuotedPrice" type="number" min="0" step="100" inputmode="decimal" placeholder="Например, 15 000">
+            </div>
+            <div class="field">
+              <label for="priceRounding">Округление цены</label>
+              <select id="priceRounding">
+                <option value="none">Не округлять</option>
+                <option value="up">Вверх до 100 ₽</option>
+                <option value="down">Вниз до 100 ₽</option>
+              </select>
+            </div>
+            <button id="calculateWorkPrice" class="btn primary" type="button">Показать цену</button>
           </div>
           <div id="workPriceResult" class="work-price-result hidden">
-            <span>Сметная цена проекта</span>
+            <span id="workPriceLabel">Расчётная цена проекта</span>
             <strong id="workPrice">—</strong>
             <small id="workPriceMeta"></small>
           </div>
         </div>
       </details>
 
-      <details id="actualExpenses" class="project-subdetails actual-details" open>
+      <details id="actualExpenses" class="project-subdetails actual-details">
         <summary>
           <span class="project-stage-title"><b>2</b><span><strong>Фактические расходы</strong><small>Записывайте каждую выполненную генерацию по мере работы</small></span></span>
           <strong id="actualSummary" class="summary-price">0 ₽</strong>
@@ -274,6 +298,7 @@
     </div>
   </section>
 
+  <section id="tariffs" class="view-panel hidden" data-view="tariffs">
   <details class="card checker-card">
     <summary class="card-summary compact-summary">
       <span>
@@ -328,6 +353,7 @@
     </div>
     <div id="dataStatus" class="data-status">Загрузка тарифной базы…</div>
   </details>
+  </section>
 
   <footer class="footer">AI VIDEO CALC v2 · 25.08.2026</footer>
 </main>

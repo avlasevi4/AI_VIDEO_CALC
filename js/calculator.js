@@ -84,7 +84,16 @@
     const readyVideos = plannedGenerations;
     const laborPerVideoRub = Math.max(0, safeNumber(meta.laborPerVideoRub, 250));
     const laborCost = readyVideos * laborPerVideoRub;
-    const quotedPrice = estimateCost + laborCost;
+    const calculatedPrice = estimateCost + laborCost;
+    const priceMode = meta.priceMode === 'custom' ? 'custom' : 'calculated';
+    const customQuotedPrice = Math.max(0, safeNumber(meta.customQuotedPrice, 0));
+    const priceBeforeRounding = priceMode === 'custom' && customQuotedPrice > 0 ? customQuotedPrice : calculatedPrice;
+    const priceRounding = ['up', 'down'].includes(meta.priceRounding) ? meta.priceRounding : 'none';
+    const quotedPrice = priceRounding === 'up'
+      ? Math.ceil(priceBeforeRounding / 100) * 100
+      : priceRounding === 'down'
+        ? Math.floor(priceBeforeRounding / 100) * 100
+        : priceBeforeRounding;
 
     const actualVideoCost = actualItems.reduce((sum, item) => sum + Math.max(0, safeNumber(item.rub, 0)), 0);
     const actualVideoGenerations = actualItems.length;
@@ -109,6 +118,11 @@
       readyVideos,
       laborPerVideoRub,
       laborCost,
+      calculatedPrice,
+      priceMode,
+      customQuotedPrice,
+      priceBeforeRounding,
+      priceRounding,
       quotedPrice,
       actualVideoCost,
       actualVideoGenerations,

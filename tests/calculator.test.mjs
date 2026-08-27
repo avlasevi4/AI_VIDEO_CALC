@@ -38,4 +38,17 @@ assert.equal(project.readyVideos, 6);
 assert.equal(project.laborCost, 1500);
 assert.equal(project.quotedPrice, 3300);
 
+const customPrice = calc.calculateProject([
+  { rub: 100, qty: 6, generationsPerVideo: 3 }
+], { laborPerVideoRub: 250, priceMode: 'custom', customQuotedPrice: 3333, priceRounding: 'up' });
+assert.equal(customPrice.calculatedPrice, 3300);
+assert.equal(customPrice.priceBeforeRounding, 3333);
+assert.equal(customPrice.quotedPrice, 3400);
+assert.equal(customPrice.actualProfit, 3400);
+
+const roundedDown = calc.calculateProject([
+  { rub: 100, qty: 1, generationsPerVideo: 1 }
+], { laborPerVideoRub: 250, priceRounding: 'down' });
+assert.equal(roundedDown.quotedPrice, 300);
+
 console.log('calculator tests OK');

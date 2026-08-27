@@ -25,6 +25,8 @@
     syntexPackageRub: 1690,
     syntexPackageTokens: 680,
     syntexManualUnits: {},
+    lastProjectModelByProvider: { kling: 'kling-30' },
+    lastCalculatorModelByProvider: { kling: 'kling-30' },
     lastPricingCheck: ''
   };
 
@@ -38,6 +40,9 @@
   function defaultProjectMeta() {
     return {
       laborPerVideoRub: 250,
+      priceMode: 'calculated',
+      customQuotedPrice: 0,
+      priceRounding: 'none',
       includeImages: false,
       plannedImages: 0,
       actualImages: 0,
@@ -64,6 +69,8 @@
       }
       settings = { ...settings, ...oldSettings };
       if (!settings.syntexManualUnits || typeof settings.syntexManualUnits !== 'object') settings.syntexManualUnits = {};
+      if (!settings.lastProjectModelByProvider || typeof settings.lastProjectModelByProvider !== 'object') settings.lastProjectModelByProvider = { kling: 'kling-30' };
+      if (!settings.lastCalculatorModelByProvider || typeof settings.lastCalculatorModelByProvider !== 'object') settings.lastCalculatorModelByProvider = { kling: 'kling-30' };
     } catch (_) {}
 
     const library = window.AIVideoProjectStore.load(defaultProjectMeta());
@@ -82,6 +89,9 @@
     delete projectMeta.retryGenerations;
     delete projectMeta.deliverableVideos;
     projectMeta.laborPerVideoRub = Math.max(0, Number(projectMeta.laborPerVideoRub) || 250);
+    projectMeta.priceMode = projectMeta.priceMode === 'custom' ? 'custom' : 'calculated';
+    projectMeta.customQuotedPrice = Math.max(0, Number(projectMeta.customQuotedPrice) || 0);
+    projectMeta.priceRounding = ['none', 'up', 'down'].includes(projectMeta.priceRounding) ? projectMeta.priceRounding : 'none';
     projectMeta.includeImages = Boolean(projectMeta.includeImages);
     projectMeta.plannedImages = Math.max(0, Math.round(Number(projectMeta.plannedImages) || 0));
     projectMeta.actualImages = Math.max(0, Math.round(Number(projectMeta.actualImages) || 0));
@@ -137,6 +147,7 @@
   async function init() {
     loadLocal();
     bind();
+    setView(viewFromLocation(), false);
     hydrateSettings();
     renderHeadlineRate();
 
@@ -158,15 +169,45 @@
     refreshRate(true);
   }
 
+  function viewFromLocation() {
+    const hash = String(location.hash || '').replace('#', '').toLowerCase();
+    if (hash === 'projects' || hash === 'actualexpenses') return 'projects';
+    if (hash === 'tariffs' || hash === 'settings') return 'tariffs';
+    return 'calculator';
+  }
+
+  function setView(view, updateHash = true) {
+    const allowed = ['calculator', 'projects', 'tariffs'];
+    const next = allowed.includes(view) ? view : 'calculator';
+    document.querySelectorAll('.view-panel').forEach(panel => panel.classList.toggle('hidden', panel.dataset.view !== next));
+    document.querySelectorAll('.app-tab').forEach(button => {
+      const active = button.dataset.appView === next;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+    document.querySelector('.app')?.setAttribute('data-active-view', next);
+    if (updateHash) {
+      const nextHash = next === 'calculator' ? '' : '#' + next;
+      if (location.hash !== nextHash) history.replaceState(null, '', location.pathname + location.search + nextHash);
+    }
+  }
+
   function bind() {
+    document.querySelectorAll('.app-tab').forEach(button => button.addEventListener('click', () => setView(button.dataset.appView)));
+    window.addEventListener('hashchange', () => setView(viewFromLocation(), false));
     document.querySelectorAll('.provider-tab').forEach(btn => btn.addEventListener('click', () => setProvider(btn.dataset.provider)));
-    $('modelSelect').addEventListener('change', () => { renderVariants(); renderDuration(); renderManualUnits(); renderResult(); });
+    $('modelSelect').addEventListener('change', () => {
+      settings.lastCalculatorModelByProvider[currentProvider] = $('modelSelect').value;
+      saveLocal();
+      renderVariants(); renderDuration(); renderManualUnits(); renderResult();
+    });
     $('variantSelect').addEventListener('change', () => { renderDuration(); renderManualUnits(); renderResult(); });
     $('durationRange').addEventListener('input', () => { $('durationNumber').value = $('durationRange').value; renderManualUnits(); renderResult(); });
     $('durationNumber').addEventListener('input', () => { $('durationRange').value = $('durationNumber').value; renderManualUnits(); renderResult(); });
     $('manualUnits').addEventListener('input', () => { setStoredManualUnits($('manualUnits').value); renderResult(); });
 
     $('createProject').addEventListener('click', createNewProject);
+    $('closeProject').addEventListener('click', closeActiveProject);
     $('renameProject').addEventListener('click', () => openProjectNameDialog('rename'));
     $('completeProject').addEventListener('click', toggleProjectCompletion);
     $('projectNameForm').addEventListener('submit', saveProjectName);
@@ -177,16 +218,30 @@
     $('addProjectLine').addEventListener('click', () => { projectItems.push(defaultProjectItem()); saveLocal(); renderProject(); });
     $('calculateWorkPrice').addEventListener('click', () => { showWorkPrice = true; renderTotals(); });
 
-    ['laborPerVideoRub', 'plannedImages', 'actualImages', 'imageUnitRub'].forEach(id => {
+    ['laborPerVideoRub', 'plannedImages', 'actualImages', 'imageUnitRub', 'customQuotedPrice'].forEach(id => {
       $(id).addEventListener('input', () => {
         if (id === 'laborPerVideoRub') projectMeta.laborPerVideoRub = Math.max(0, Number($(id).value) || 0);
         if (id === 'plannedImages') projectMeta.plannedImages = Math.max(0, Math.round(Number($(id).value) || 0));
         if (id === 'actualImages') projectMeta.actualImages = Math.max(0, Math.round(Number($(id).value) || 0));
         if (id === 'imageUnitRub') projectMeta.imageUnitRub = Math.max(0, Number($(id).value) || 0);
+        if (id === 'customQuotedPrice') projectMeta.customQuotedPrice = Math.max(0, Number($(id).value) || 0);
         if (id !== 'actualImages') showWorkPrice = false;
         saveLocal();
         renderTotals();
       });
+    });
+    document.querySelectorAll('input[name="priceMode"]').forEach(input => input.addEventListener('change', () => {
+      projectMeta.priceMode = input.value === 'custom' ? 'custom' : 'calculated';
+      showWorkPrice = false;
+      saveLocal();
+      renderProjectMeta();
+      renderTotals();
+    }));
+    $('priceRounding').addEventListener('change', () => {
+      projectMeta.priceRounding = ['up', 'down'].includes($('priceRounding').value) ? $('priceRounding').value : 'none';
+      showWorkPrice = false;
+      saveLocal();
+      renderTotals();
     });
     $('includeImages').addEventListener('change', () => {
       projectMeta.includeImages = $('includeImages').checked;
@@ -377,7 +432,10 @@
 
   function renderModels() {
     const models = modelsForProvider(currentProvider);
-    $('modelSelect').innerHTML = models.map(model => `<option value="${esc(model.id)}">${esc(model.name)}</option>`).join('');
+    const preferredId = settings.lastCalculatorModelByProvider?.[currentProvider]
+      || (currentProvider === 'kling' ? 'kling-30' : '');
+    const selected = models.find(model => model.id === preferredId) || models[0];
+    $('modelSelect').innerHTML = models.map(model => `<option value="${esc(model.id)}" ${model.id === selected?.id ? 'selected' : ''}>${esc(model.name)}</option>`).join('');
     renderVariants();
     renderDuration();
     renderManualUnits();
@@ -624,6 +682,18 @@
     renderProject();
   }
 
+  function closeActiveProject() {
+    if (!activeProject()) return;
+    syncActiveProjectState(false);
+    activeProjectId = '';
+    projectItems = [];
+    actualItems = [];
+    projectMeta = defaultProjectMeta();
+    window.AIVideoProjectStore.save(projects, activeProjectId);
+    $('projectHistory').open = true;
+    renderProject();
+  }
+
   async function toggleProjectCompletion() {
     const project = activeProject();
     if (!project) return;
@@ -678,7 +748,9 @@
 
   function defaultProjectItem(provider = 'kling') {
     const models = modelsForProvider(provider);
-    const model = models[0];
+    const preferredId = settings.lastProjectModelByProvider?.[provider]
+      || (provider === 'kling' ? 'kling-30' : '');
+    const model = models.find(item => item.id === preferredId) || models[0];
     const variant = model?.variants?.[0];
     return {
       id: 'p-' + Date.now() + '-' + Math.random().toString(16).slice(2),
@@ -792,11 +864,19 @@
         </div>
         <div class="field">
           <label>Готовых видео</label>
-          <input class="project-qty" type="number" min="1" step="1" value="${esc(item.qty)}">
+          <div class="stepper">
+            <button class="stepper-btn" type="button" data-stepper="qty" data-step="-1" aria-label="Уменьшить количество готовых видео">−</button>
+            <input class="project-qty" type="number" min="1" step="1" inputmode="numeric" value="${esc(item.qty)}" aria-label="Количество готовых видео">
+            <button class="stepper-btn" type="button" data-stepper="qty" data-step="1" aria-label="Увеличить количество готовых видео">+</button>
+          </div>
         </div>
         <div class="field">
           <label>Генераций на 1 готовое видео</label>
-          <input class="project-generations-per-video" type="number" min="1" max="30" step="1" value="${esc(item.generationsPerVideo)}">
+          <div class="stepper">
+            <button class="stepper-btn" type="button" data-stepper="generations" data-step="-1" aria-label="Уменьшить число генераций на видео">−</button>
+            <input class="project-generations-per-video" type="number" min="1" max="30" step="1" inputmode="numeric" value="${esc(item.generationsPerVideo)}" aria-label="Генераций на одно готовое видео">
+            <button class="stepper-btn" type="button" data-stepper="generations" data-step="1" aria-label="Увеличить число генераций на видео">+</button>
+          </div>
         </div>
         <div class="field ${manualNeeded ? '' : 'hidden'} project-manual-field">
           <label>Токенов SYNTX / генерацию</label>
@@ -818,7 +898,9 @@
 
     row.querySelector('.project-provider').addEventListener('change', event => {
       item.provider = event.target.value;
-      const nextModel = modelsForProvider(item.provider)[0];
+      const preferredId = settings.lastProjectModelByProvider?.[item.provider]
+        || (item.provider === 'kling' ? 'kling-30' : '');
+      const nextModel = modelsForProvider(item.provider).find(model => model.id === preferredId) || modelsForProvider(item.provider)[0];
       item.modelId = nextModel.id;
       item.variantId = nextModel.variants[0].id;
       item.duration = initialDurationForVariant(nextModel.variants[0], 5);
@@ -830,6 +912,7 @@
 
     row.querySelector('.project-model').addEventListener('change', event => {
       item.modelId = event.target.value;
+      settings.lastProjectModelByProvider[item.provider] = item.modelId;
       const nextModel = getProjectModel(item);
       item.variantId = nextModel.variants[0].id;
       item.duration = initialDurationForVariant(nextModel.variants[0], 5);
@@ -883,6 +966,22 @@
       updateProjectLineResult(row, item);
     });
 
+    row.querySelectorAll('.stepper-btn').forEach(button => button.addEventListener('click', () => {
+      const step = Number(button.dataset.step) || 0;
+      if (button.dataset.stepper === 'qty') {
+        item.qty = Math.max(1, item.qty + step);
+        row.querySelector('.project-qty').value = item.qty;
+      } else {
+        item.generationsPerVideo = Math.max(1, Math.min(30, item.generationsPerVideo + step));
+        row.querySelector('.project-generations-per-video').value = item.generationsPerVideo;
+      }
+      showWorkPrice = false;
+      recalcProjectItem(item);
+      saveLocal();
+      renderTotals();
+      updateProjectLineResult(row, item);
+    }));
+
     const manualInput = row.querySelector('.project-manual');
     if (manualInput) {
       manualInput.addEventListener('change', event => {
@@ -917,6 +1016,11 @@
   function renderProjectMeta() {
     if (!$('laborPerVideoRub')) return;
     $('laborPerVideoRub').value = projectMeta.laborPerVideoRub;
+    $('priceModeCalculated').checked = projectMeta.priceMode !== 'custom';
+    $('priceModeCustom').checked = projectMeta.priceMode === 'custom';
+    $('customQuotedPrice').value = projectMeta.customQuotedPrice || '';
+    $('priceRounding').value = projectMeta.priceRounding;
+    $('customPriceField').classList.toggle('hidden', projectMeta.priceMode !== 'custom');
     $('includeImages').checked = projectMeta.includeImages;
     $('plannedImages').value = projectMeta.plannedImages;
     $('actualImages').value = projectMeta.actualImages;
@@ -1101,8 +1205,10 @@
       : 'Проверьте фактические расходы. После завершения проект сохранится в истории и будет доступен только для просмотра.';
 
     if (completed) {
+      $('estimateDetails').open = false;
+      $('actualExpenses').open = false;
       builder.querySelectorAll('input, select, button').forEach(control => {
-        if (control.id === 'completeProject' || control.disabled) return;
+        if (control.id === 'completeProject' || control.id === 'closeProject' || control.disabled) return;
         control.disabled = true;
         control.dataset.completionDisabled = 'true';
       });
@@ -1184,7 +1290,12 @@
     if (showWorkPrice && totals.estimateCost >= 0) {
       $('workPriceResult').classList.remove('hidden');
       $('workPrice').textContent = fmtRub(totals.quotedPrice);
-      $('workPriceMeta').textContent = `Себестоимость ${fmtRub(totals.estimateCost)} + ${totals.readyVideos} готовых видео × ${fmtRub(totals.laborPerVideoRub)} = ${fmtRub(totals.quotedPrice)}.`;
+      $('workPriceLabel').textContent = totals.priceMode === 'custom' ? 'Цена для заказчика' : 'Расчётная цена проекта';
+      const source = totals.priceMode === 'custom'
+        ? `Своя цена ${fmtRub(totals.priceBeforeRounding)}`
+        : `Себестоимость ${fmtRub(totals.estimateCost)} + ${totals.readyVideos} готовых видео × ${fmtRub(totals.laborPerVideoRub)}`;
+      const rounding = totals.priceRounding === 'up' ? ' · округлено вверх до 100 ₽' : totals.priceRounding === 'down' ? ' · округлено вниз до 100 ₽' : '';
+      $('workPriceMeta').textContent = `${source} = ${fmtRub(totals.quotedPrice)}${rounding}.`;
     } else {
       $('workPriceResult').classList.add('hidden');
     }
@@ -1227,7 +1338,7 @@
     }
     $('actualProfit').textContent = fmtRub(totals.actualProfit);
     $('actualProfit').className = totals.actualProfit < 0 ? 'negative-value' : 'positive-value';
-    $('actualProfitMeta').textContent = `Сметная цена ${fmtRub(totals.quotedPrice)} − текущий фактический расход ${fmtRub(totals.actualCost)}. До завершения проекта результат предварительный.`;
+    $('actualProfitMeta').textContent = `${totals.priceMode === 'custom' ? 'Цена для заказчика' : 'Расчётная цена'} ${fmtRub(totals.quotedPrice)} − текущий фактический расход ${fmtRub(totals.actualCost)}. До завершения проекта результат предварительный.`;
   }
 
   function renderUnitPrices() {

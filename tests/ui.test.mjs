@@ -19,9 +19,17 @@ assert.ok(completionButton > comparisonStart, 'completion action follows actual 
 assert.ok(completionButton < workspaceEnd, 'completion action stays inside the project workspace');
 assert.equal((html.match(/id="completeProject"/g) || []).length, 1, 'completion action is unique');
 assert.match(html, /id="projectHistory" class="project-history"/, 'project library is a separate disclosure');
-assert.match(html, /id="projects" class="card project-card"/, 'Android shell can navigate directly to projects');
+assert.match(html, /id="projects" class="card project-card view-panel/, 'Android shell can navigate directly to projects');
 assert.match(html, /id="actualExpenses" class="project-subdetails actual-details"/, 'Android shell can navigate directly to actual expenses');
+assert.match(html, /class="app-tab active"[^>]*data-app-view="calculator"/, 'calculator has a primary navigation tab');
+assert.match(html, /data-app-view="projects"/, 'projects have a primary navigation tab');
+assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation tab');
+assert.match(html, /id="closeProject"/, 'opened project can be closed back to its list');
+assert.match(html, /id="customQuotedPrice"/, 'project can use a custom quoted price');
+assert.match(html, /id="priceRounding"/, 'project price supports rounding');
 assert.match(css, /\.project-workspace\s*\{/, 'active project has a distinct visual workspace');
 assert.match(css, /\.project-completion-panel\s*\{/, 'completion has a dedicated visual panel');
+assert.match(css, /\.app-tabs\s*\{/, 'primary navigation is styled');
+assert.match(css, /\.stepper\s*\{/, 'quantity stepper is styled');
 
 console.log('UI structure tests OK');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v2-android-shell-20260826';
+const CACHE_NAME = 'ai-video-calc-v2-desktop-ui-20260827';
 const ASSETS = [
   './',
   './index.html',

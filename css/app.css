@@ -556,3 +556,105 @@ html.android-app .project-card>.section-head{padding-top:4px}
   .project-duration-slider{grid-template-columns:minmax(0,1fr) 58px}
   .result-price{font-size:36px}
 }
+
+/* ПК-интерфейс: компактная навигация и рабочие формы вместо лендинга. */
+.app-tabs{display:flex;align-items:center;gap:6px;margin:0 0 16px;padding:6px;border:1px solid var(--line-soft);border-radius:16px;background:rgba(5,14,24,.68);box-shadow:var(--shadow-float)}
+.app-tab{min-height:42px;padding:0 16px;border:1px solid transparent;border-radius:11px;background:transparent;color:var(--muted);font-size:13px;font-weight:760;transition:background-color .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease)}
+.app-tab:hover{background:rgba(255,255,255,.035);color:var(--text)}
+.app-tab.active{border-color:rgba(114,216,238,.18);background:rgba(114,216,238,.10);color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.summary-action{margin-left:auto;color:var(--accent);font-size:11px;font-weight:760;white-space:nowrap}
+.calculator-card[open] .summary-action{display:none}
+
+.stepper{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;align-items:center;border:1px solid var(--line);border-radius:var(--r-control);overflow:hidden;background:var(--control)}
+.stepper input[type=number]{height:44px!important;min-width:0;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;text-align:center;box-shadow:none!important;appearance:textfield}
+.stepper input[type=number]::-webkit-outer-spin-button,.stepper input[type=number]::-webkit-inner-spin-button{margin:0;-webkit-appearance:none}
+.stepper-btn{width:42px;height:44px;padding:0;border:0;border-right:1px solid var(--line);background:transparent;color:var(--accent);font-size:22px;line-height:1;transition:background-color .16s var(--ease),color .16s var(--ease)}
+.stepper-btn:last-child{border-right:0;border-left:1px solid var(--line)}
+.stepper-btn:hover{background:rgba(114,216,238,.09);color:var(--text)}
+.stepper-btn:focus-visible{position:relative;z-index:1;outline:none;box-shadow:inset 0 0 0 2px var(--accent)}
+
+.price-mode{display:flex;gap:5px;padding:4px;border:1px solid var(--line);border-radius:13px;background:var(--control)}
+.choice-control{position:relative;display:flex;flex:1;align-items:center;justify-content:center;min-height:38px;padding:0 10px;border-radius:9px;color:var(--muted);font-size:11px;font-weight:750;cursor:pointer;transition:background-color .16s var(--ease),color .16s var(--ease)}
+.choice-control:has(input:checked){background:var(--surface-3);color:var(--text);box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+.choice-control input{position:absolute;opacity:0;pointer-events:none}
+
+html.android-app .app-tabs{display:none}
+
+@media(min-width:681px){
+  .app{width:min(1120px,calc(100% - 40px));margin-top:20px}
+  .hero{grid-template-columns:64px minmax(0,1fr) 248px;gap:18px;padding:18px 20px;margin-bottom:10px;border-radius:22px}
+  .brand-logo{width:64px;height:64px;border-radius:17px}
+  .eyebrow{font-size:9px;letter-spacing:.14em}
+  .hero h1{margin:5px 0 5px;font-size:clamp(26px,3vw,34px);line-height:1;letter-spacing:-.04em}
+  .hero p{font-size:12px;line-height:1.42}
+  .hero-tools{flex-direction:row;align-items:center;gap:10px}
+  .version{align-self:center;order:2}
+  .headline-rate{flex:1;padding:10px 12px;border-radius:14px}
+  .rate-value strong{font-size:18px}
+  .rate-refresh{width:38px;height:38px}
+  .app-tabs{position:sticky;top:12px;z-index:10;width:max-content;min-width:420px}
+  .view-panel{animation:panel-in .18s var(--ease)}
+  .card{box-shadow:0 14px 36px rgba(0,0,0,.18)}
+  .calculator-card{max-width:780px;margin:0 auto}
+  .calculator-card .card-summary{min-height:68px;padding:14px 18px}
+  .calculator-card .card-summary strong{font-size:17px}
+  .calculator-card .card-summary small{font-size:11px}
+  .calculator-card .summary-price{font-size:16px}
+  .calculator-card .details-body{padding:16px 18px 18px}
+  .calculator-card .result{padding:18px 20px}
+  .calculator-card .result-price{font-size:52px}
+  .calculator-card .result-meta{font-size:12px}
+
+  .project-card{padding:18px}
+  .project-card>.section-head{margin-bottom:14px}
+  .project-card>.section-head h2{font-size:23px}
+  .project-card>.section-head .muted{font-size:12px}
+  .project-history{margin-bottom:12px}
+  .history-summary{min-height:58px;padding:10px 14px}
+  .history-summary strong{font-size:14px}
+  .history-summary small{font-size:11px}
+  .project-workspace{margin-top:12px;padding:15px;border-radius:20px}
+  .active-project-bar{padding:3px 4px 14px 7px}
+  .active-project-identity>strong{font-size:26px}
+  .project-flow{margin:14px 1px 2px}
+  .project-flow-step{padding:10px 12px}
+  .project-flow-step>span{width:30px;height:30px;flex-basis:30px;font-size:13px}
+  .project-flow-step strong{font-size:13px}.project-flow-step small{font-size:10px}
+  .project-subdetails{margin-top:12px;border-radius:16px}
+  .project-subdetails>summary{min-height:64px;padding:11px 14px}
+  .project-stage-title>span>strong{font-size:16px}.project-stage-title>span>small{font-size:11px}
+  .project-subbody{padding:14px}
+  .project-meta-grid{max-width:360px;margin-bottom:10px}
+  .check-toggle{display:inline-flex;min-height:42px;margin-bottom:10px;padding:7px 10px;font-size:12px}
+  .image-cost-box{max-width:760px;padding:10px}
+  .project-editor,.actual-entry{padding:13px;border-radius:15px}
+  .project-editor-head>strong,.actual-entry-title{font-size:13px}
+  .project-editor-grid{gap:10px}
+  .field select,.field input[type=number],.project-editor select,.project-editor input[type=number],.project-meta-grid input,.image-cost-box input,.actual-entry select,.actual-entry input[type=number]{height:44px;padding-inline:12px;font-size:13px}
+  .field label{font-size:11px}
+  .project-duration-slider{min-height:44px}.project-duration-slider output{min-height:34px}
+  .project-line-result{margin-top:8px;padding:9px 2px 0;font-size:10px}
+  .project-add{width:auto;min-height:42px;margin-top:10px;padding-inline:13px}
+  .metric{padding:11px;border-radius:13px}.metric span{font-size:10px}.metric strong{font-size:18px}.metric small{font-size:10px}
+  .work-price-box{grid-template-columns:minmax(220px,1fr) minmax(240px,.9fr) minmax(180px,.65fr) minmax(155px,.55fr) auto;align-items:end;gap:10px;padding:13px}
+  .work-price-heading{align-self:center}.work-price-box>div>strong{font-size:14px}.work-price-box .tiny{font-size:10px}
+  #calculateWorkPrice{min-width:auto;min-height:44px;padding-inline:13px}
+  .work-price-result strong{font-size:32px}
+  .actual-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px}
+  .actual-entry-title,.actual-entry .project-editor-grid,.actual-entry .actual-draft-result{grid-column:1/-1}
+  .actual-add{width:auto;min-height:44px;margin:0;align-self:center;padding-inline:15px}
+  .actual-list{margin-top:8px}
+  .actual-totals,.project-totals{margin-top:10px}
+  .comparison-box{margin-top:10px;padding:12px}
+}
+
+@keyframes panel-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:680px){
+  .app-tabs{position:sticky;top:6px;z-index:10;margin-bottom:10px;border-radius:14px;overflow:auto}
+  .app-tab{flex:1;min-width:max-content;min-height:40px;padding-inline:12px;font-size:11px}
+  .summary-action{font-size:10px}
+  .stepper input[type=number]{height:46px!important}
+  .stepper-btn{height:46px}
+  .work-price-box{grid-template-columns:1fr}.price-mode{width:100%}
+}
