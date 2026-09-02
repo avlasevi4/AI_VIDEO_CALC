@@ -52,22 +52,24 @@
     if (!model) throw new Error('Модель не найдена');
     const variant = model.variants.find(v => v.id === variantId) || model.variants[0];
     const tariffKey = `${model.id}::${variant.id}`;
-    const storedTariff = settings.manualRubTariffs?.[tariffKey];
-    const manualRubPerSecond = Math.max(0, safeNumber(typeof storedTariff === 'object' ? storedTariff?.pricePerSecond : storedTariff, 0));
+    const storedTariff = settings.manualTokenTariffs?.[tariffKey];
+    const manualTokensPerSecond = Math.max(0, safeNumber(typeof storedTariff === 'object' ? storedTariff?.unitsPerSecond : storedTariff, 0));
     const normalizedDuration = safeNumber(duration, 5);
-    if (manualRubPerSecond > 0) {
-      const rub = manualRubPerSecond * normalizedDuration;
+    if (model.provider === 'syntex' && manualTokensPerSecond > 0) {
+      const units = manualTokensPerSecond * normalizedDuration;
+      const unitRub = unitPriceRub(model.provider, settings, pricing);
+      const rub = units * unitRub;
       return {
         model,
         variant,
         duration: normalizedDuration,
-        units: 0,
-        unitRub: manualRubPerSecond,
+        units,
+        unitRub,
         rub,
         usd: null,
         manualUnits: safeNumber(manualUnits, 0),
-        pricingMode: 'manual_rub_per_second',
-        manualRubPerSecond
+        pricingMode: 'manual_tokens_per_second',
+        manualTokensPerSecond
       };
     }
     const units = billableUnits(variant.billing, duration, manualUnits);

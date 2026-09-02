@@ -27,19 +27,19 @@ assert.ok(Math.abs(kling.rub - (40 * 10 / 660 * 75)) < 1e-12);
 
 const manualRateSettings = {
   ...settings,
-  manualRubTariffs: {
+  manualTokenTariffs: {
     'syntx-seedance-25::omni-reference-720': {
-      pricePerSecond: 30,
+      unitsPerSecond: 30,
       sourceDuration: 10,
-      sourceRub: 300
+      sourceUnits: 300
     }
   }
 };
 const manualRate = calc.calculateSelection(pricing, manualRateSettings, 'syntx-seedance-25', 'omni-reference-720', 15);
-assert.equal(manualRate.pricingMode, 'manual_rub_per_second');
-assert.equal(manualRate.manualRubPerSecond, 30);
-assert.equal(manualRate.units, 0);
-assert.equal(manualRate.rub, 450);
+assert.equal(manualRate.pricingMode, 'manual_tokens_per_second');
+assert.equal(manualRate.manualTokensPerSecond, 30);
+assert.equal(manualRate.units, 450);
+assert.equal(manualRate.rub, 450 * (1690 / 680));
 
 const project = calc.calculateProject([
   { rub: 100, qty: 6, generationsPerVideo: 3 }

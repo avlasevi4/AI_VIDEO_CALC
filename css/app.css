@@ -659,7 +659,7 @@ html.android-app .app-tabs{display:none}
   .work-price-box{grid-template-columns:1fr}.price-mode{width:100%}
 }
 
-/* Ручные тарифы: пользовательская цена за секунду для конкретной модели и режима. */
+/* Ручные тарифы: пользовательский расход токенов за секунду для конкретной модели и режима. */
 .manual-tariff-card{grid-column:1/-1}
 .manual-tariff-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:12px}
 .manual-tariff-head h3{margin-bottom:5px}

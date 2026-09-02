@@ -25,7 +25,7 @@
     syntexPackageRub: 1690,
     syntexPackageTokens: 680,
     syntexManualUnits: {},
-    manualRubTariffs: {},
+    manualTokenTariffs: {},
     lastProjectModelByProvider: { kling: 'kling-30' },
     lastCalculatorModelByProvider: { kling: 'kling-30' },
     lastPricingCheck: ''
@@ -70,7 +70,23 @@
       }
       settings = { ...settings, ...oldSettings };
       if (!settings.syntexManualUnits || typeof settings.syntexManualUnits !== 'object') settings.syntexManualUnits = {};
-      if (!settings.manualRubTariffs || typeof settings.manualRubTariffs !== 'object') settings.manualRubTariffs = {};
+      if (!settings.manualTokenTariffs || typeof settings.manualTokenTariffs !== 'object') settings.manualTokenTariffs = {};
+      // Сохраняем значения, введённые в предыдущем формате (₽/сек), в эквиваленте токенов.
+      if (settings.manualRubTariffs && typeof settings.manualRubTariffs === 'object') {
+        const tokenRub = Number(settings.syntexPackageRub) / Math.max(1, Number(settings.syntexPackageTokens));
+        Object.entries(settings.manualRubTariffs).forEach(([key, value]) => {
+          if (settings.manualTokenTariffs[key] || !(tokenRub > 0)) return;
+          const rubPerSecond = Number(typeof value === 'object' ? value.pricePerSecond : value);
+          if (!(rubPerSecond > 0)) return;
+          const sourceDuration = Number(typeof value === 'object' ? value.sourceDuration : 1) || 1;
+          settings.manualTokenTariffs[key] = {
+            unitsPerSecond: rubPerSecond / tokenRub,
+            sourceDuration,
+            sourceUnits: (rubPerSecond / tokenRub) * sourceDuration,
+            updatedAt: new Date().toISOString()
+          };
+        });
+      }
       if (!settings.lastProjectModelByProvider || typeof settings.lastProjectModelByProvider !== 'object') settings.lastProjectModelByProvider = { kling: 'kling-30' };
       if (!settings.lastCalculatorModelByProvider || typeof settings.lastCalculatorModelByProvider !== 'object') settings.lastCalculatorModelByProvider = { kling: 'kling-30' };
     } catch (_) {}
@@ -305,10 +321,10 @@
       const model = manualTariffModel();
       const variant = manualTariffVariant();
       const duration = Number($('manualTariffDuration').value);
-      const rate = model && variant ? manualRubTariffFor(model.id, variant.id) : 0;
-      $('manualTariffRub').value = rate > 0 && duration > 0 ? Number((rate * duration).toFixed(2)) : '';
+      const rate = model && variant ? manualTokenTariffFor(model.id, variant.id) : 0;
+      $('manualTariffTokens').value = rate > 0 && duration > 0 ? Number((rate * duration).toFixed(2)) : '';
     });
-    $('saveManualTariff').addEventListener('click', saveManualRubTariff);
+    $('saveManualTariff').addEventListener('click', saveManualTokenTariff);
     $('checkPricing').addEventListener('click', () => runPricingCheck(true));
     $('refreshRate').addEventListener('click', () => refreshRate(false));
     $('quickRefreshRate').addEventListener('click', () => refreshRate(false));
@@ -576,14 +592,14 @@
     return `${modelId}::${variantId}`;
   }
 
-  function manualRubTariffFor(modelId, variantId) {
-    const stored = settings.manualRubTariffs?.[manualTariffKeyFor(modelId, variantId)];
-    const value = Number(typeof stored === 'object' ? stored.pricePerSecond : stored);
+  function manualTokenTariffFor(modelId, variantId) {
+    const stored = settings.manualTokenTariffs?.[manualTariffKeyFor(modelId, variantId)];
+    const value = Number(typeof stored === 'object' ? stored.unitsPerSecond : stored);
     return value > 0 ? value : 0;
   }
 
-  function hasManualRubTariff(modelId, variantId) {
-    return manualRubTariffFor(modelId, variantId) > 0;
+  function hasManualTokenTariff(modelId, variantId) {
+    return manualTokenTariffFor(modelId, variantId) > 0;
   }
 
   function tariffDurationsForVariant(variant) {
@@ -610,7 +626,7 @@
 
   function renderManualTariffEditor() {
     if (!pricing || !$('manualTariffProvider')) return;
-    const availableProviders = Object.keys(pricing.providers || {}).filter(provider => modelsForProvider(provider).length);
+    const availableProviders = ['syntex'].filter(provider => pricing.providers?.[provider] && modelsForProvider(provider).length);
     const previous = $('manualTariffProvider').value;
     const provider = availableProviders.includes(previous) ? previous : (availableProviders.includes('syntex') ? 'syntex' : availableProviders[0]);
     $('manualTariffProvider').innerHTML = availableProviders.map(id => `<option value="${esc(id)}" ${id === provider ? 'selected' : ''}>${esc(pricing.providers[id].name)}</option>`).join('');
@@ -646,29 +662,29 @@
     const selected = values.includes(previous) ? previous : values[0];
     $('manualTariffDuration').innerHTML = values.map(value => `<option value="${value}" ${value === selected ? 'selected' : ''}>${value} сек</option>`).join('');
     const model = manualTariffModel();
-    const savedRate = manualRubTariffFor(model.id, variant.id);
-    $('manualTariffRub').value = savedRate > 0 ? Number((savedRate * selected).toFixed(2)) : '';
+    const savedRate = manualTokenTariffFor(model.id, variant.id);
+    $('manualTariffTokens').value = savedRate > 0 ? Number((savedRate * selected).toFixed(2)) : '';
   }
 
-  function saveManualRubTariff() {
+  function saveManualTokenTariff() {
     const model = manualTariffModel();
     const variant = manualTariffVariant();
     const duration = Number($('manualTariffDuration').value);
-    const rub = Number(String($('manualTariffRub').value).replace(',', '.'));
-    if (!model || !variant || !(duration > 0) || !(rub > 0)) {
-      $('manualTariffMessage').textContent = 'Укажите модель, режим, длительность и стоимость больше нуля.';
+    const units = Number(String($('manualTariffTokens').value).replace(',', '.'));
+    if (!model || !variant || !(duration > 0) || !(units > 0)) {
+      $('manualTariffMessage').textContent = 'Укажите модель, режим, длительность и расход токенов больше нуля.';
       return;
     }
     const key = manualTariffKeyFor(model.id, variant.id);
-    const pricePerSecond = rub / duration;
-    settings.manualRubTariffs[key] = {
-      pricePerSecond,
+    const unitsPerSecond = units / duration;
+    settings.manualTokenTariffs[key] = {
+      unitsPerSecond,
       sourceDuration: duration,
-      sourceRub: rub,
+      sourceUnits: units,
       updatedAt: new Date().toISOString()
     };
     saveLocal();
-    $('manualTariffMessage').textContent = `Тариф сохранён: ${model.name} · ${variant.label}: ${fmtRub(rub)} за ${duration} сек = ${fmtRub(pricePerSecond)} / сек.`;
+    $('manualTariffMessage').textContent = `Тариф сохранён: ${model.name} · ${variant.label}: ${fmtNum(units, 2)} токенов за ${duration} сек = ${fmtNum(unitsPerSecond, 2)} токенов / сек.`;
     renderManualTariffList();
     renderManualUnits();
     renderResult();
@@ -678,17 +694,17 @@
   function renderManualTariffList() {
     const list = $('manualTariffList');
     if (!list || !pricing) return;
-    const entries = Object.entries(settings.manualRubTariffs || {})
+    const entries = Object.entries(settings.manualTokenTariffs || {})
       .map(([key, saved]) => {
         const [modelId, variantId] = key.split('::');
         const model = pricing.models.find(item => item.id === modelId);
         const variant = model?.variants.find(item => item.id === variantId);
-        const pricePerSecond = Number(typeof saved === 'object' ? saved.pricePerSecond : saved);
+        const unitsPerSecond = Number(typeof saved === 'object' ? saved.unitsPerSecond : saved);
         const sourceDuration = Number(typeof saved === 'object' ? saved.sourceDuration : 1);
-        const sourceRub = Number(typeof saved === 'object' ? saved.sourceRub : saved);
-        return { key, pricePerSecond, sourceDuration, sourceRub, model, variant };
+        const sourceUnits = Number(typeof saved === 'object' ? saved.sourceUnits : saved);
+        return { key, unitsPerSecond, sourceDuration, sourceUnits, model, variant };
       })
-      .filter(item => item.pricePerSecond > 0)
+      .filter(item => item.unitsPerSecond > 0)
       .sort((a, b) => `${a.model?.name || a.key}`.localeCompare(`${b.model?.name || b.key}`, 'ru'));
 
     if (!entries.length) {
@@ -697,14 +713,14 @@
     }
     list.innerHTML = entries.map(item => `
       <article class="manual-tariff-row" data-key="${esc(item.key)}">
-        <div><strong>${esc(item.model?.name || item.key)}</strong><span>${esc(item.variant?.label || 'Режим из прежней базы')} · основа: ${fmtRub(item.sourceRub)} за ${item.sourceDuration} сек</span></div>
-        <strong>${fmtRub(item.pricePerSecond)} / сек</strong>
+        <div><strong>${esc(item.model?.name || item.key)}</strong><span>${esc(item.variant?.label || 'Режим из прежней базы')} · основа: ${fmtNum(item.sourceUnits, 2)} токенов за ${item.sourceDuration} сек</span></div>
+        <strong>${fmtNum(item.unitsPerSecond, 2)} токенов / сек</strong>
         <button class="manual-tariff-remove" type="button" aria-label="Удалить ручной тариф ${esc(item.model?.name || item.key)}">×</button>
       </article>`).join('');
     list.querySelectorAll('.manual-tariff-remove').forEach(button => button.addEventListener('click', () => {
       const key = button.closest('.manual-tariff-row')?.dataset.key;
       if (!key) return;
-      delete settings.manualRubTariffs[key];
+      delete settings.manualTokenTariffs[key];
       saveLocal();
       $('manualTariffMessage').textContent = 'Ручной тариф удалён. Для этой комбинации снова будет использоваться расчёт по токенам.';
       renderManualTariffList();
@@ -738,7 +754,7 @@
     const model = currentModel();
     const variant = currentVariant();
     if (!variant) return;
-    const needed = variant.billing.type === 'manual_required' && !hasManualRubTariff(model?.id, variant.id);
+    const needed = variant.billing.type === 'manual_required' && !hasManualTokenTariff(model?.id, variant.id);
     $('manualUnitsField').classList.toggle('hidden', !needed);
     $('manualUnits').value = needed ? getStoredManualUnits() : '';
   }
@@ -768,12 +784,12 @@
     $('resultPrice').textContent = fmtRub(result.rub);
     $('calculatorSummaryPrice').textContent = fmtRub(result.rub);
     const unitName = pricing.providers[result.model.provider].unit === 'credits' ? 'credits' : 'токенов';
-    $('resultMeta').innerHTML = result.pricingMode === 'manual_rub_per_second'
-      ? `<span>Ручной тариф: ${fmtRub(result.manualRubPerSecond)} / сек</span><span>${fmtNum(result.duration, 2)} сек × ${fmtRub(result.manualRubPerSecond)} / сек</span><span>Тариф сохранён в настройках устройства.</span>`
+    $('resultMeta').innerHTML = result.pricingMode === 'manual_tokens_per_second'
+      ? `<span>Ручной тариф: ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>${fmtNum(result.duration, 2)} сек × ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>1 токен = ${fmtRub(result.unitRub)} · тариф сохранён в настройках устройства.</span>`
       : `<span>${fmtNum(result.units, 2)} ${unitName}</span>${result.usd !== null ? `<span>≈ ${fmtUsd(result.usd)}</span>` : ''}<span>1 ${result.model.provider === 'kling' ? 'credit' : 'токен'} = ${fmtRub(result.unitRub)}</span><span>Курс: ${fmtNum(settings.usdRub, 2)} ₽/$</span><span>Тарифная база: ${esc(pricing.updated)}</span>`;
     const status = effectiveStatus(result);
     $('resultStatus').className = 'status ' + status;
-    $('resultStatus').textContent = result.pricingMode === 'manual_rub_per_second' ? '● ручной тариф' : status === 'verified' ? '✓ verified' : status === 'unverified' ? '⚠ unverified' : '● manual';
+    $('resultStatus').textContent = result.pricingMode === 'manual_tokens_per_second' ? '● ручной тариф' : status === 'verified' ? '✓ verified' : status === 'unverified' ? '⚠ unverified' : '● manual';
   }
 
   function createNewProject() {
@@ -946,7 +962,7 @@
     item.qty = Math.max(1, Math.round(Number(item.qty) || 1));
     item.generationsPerVideo = Math.max(1, Math.min(30, Math.round(Number(item.generationsPerVideo ?? item.extraQty) || 1)));
     delete item.extraQty;
-    if (variant.billing.type === 'manual_required' && !hasManualRubTariff(model.id, variant.id) && !(Number(item.manualUnits) > 0)) {
+    if (variant.billing.type === 'manual_required' && !hasManualTokenTariff(model.id, variant.id) && !(Number(item.manualUnits) > 0)) {
       const saved = settings.syntexManualUnits?.[manualKeyFor(model.id, variant.id, item.duration)];
       if (Number(saved) > 0) item.manualUnits = Number(saved);
     }
@@ -988,7 +1004,7 @@
     const model = getProjectModel(item);
     const variant = getProjectVariant(item, model);
     const providerModels = modelsForProvider(item.provider);
-    const manualNeeded = variant?.billing?.type === 'manual_required' && !hasManualRubTariff(model.id, variant.id);
+    const manualNeeded = variant?.billing?.type === 'manual_required' && !hasManualTokenTariff(model.id, variant.id);
     const rowBase = item.rub * item.qty;
     const rowExtraCount = item.qty * (item.generationsPerVideo - 1);
     const rowExtra = item.rub * rowExtraCount;
@@ -1202,7 +1218,7 @@
     const model = actualModelForDraft();
     const variant = actualVariantForDraft(model);
     if (!model || !variant) return;
-    const needed = variant.billing?.type === 'manual_required' && !hasManualRubTariff(model.id, variant.id);
+    const needed = variant.billing?.type === 'manual_required' && !hasManualTokenTariff(model.id, variant.id);
     $('actualManualField').classList.toggle('hidden', !needed);
     if (!needed) {
       actualDraft.manualUnits = '';
@@ -1242,8 +1258,8 @@
     try {
       const result = window.AIVideoCalculator.calculateSelection(pricing, settings, model.id, variant.id, actualDraft.duration, actualDraft.manualUnits);
       $('actualDraftResult').className = 'actual-draft-result ready';
-      const detail = result.pricingMode === 'manual_rub_per_second'
-        ? `Ручной тариф ${fmtRub(result.manualRubPerSecond)} / сек · ${actualDraft.duration} сек`
+      const detail = result.pricingMode === 'manual_tokens_per_second'
+        ? `Ручной тариф ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек · ${actualDraft.duration} сек`
         : `${fmtNum(result.units, 2)} ${pricing.providers[model.provider].unit === 'credits' ? 'credits' : 'токенов'} · ${actualDraft.duration} сек`;
       $('actualDraftResult').innerHTML = `<span>${detail}</span><strong>${fmtRub(result.rub)}</strong>`;
       $('addActualGeneration').disabled = false;
@@ -1260,7 +1276,7 @@
     if (!model || !variant) return;
     try {
       const result = window.AIVideoCalculator.calculateSelection(pricing, settings, model.id, variant.id, actualDraft.duration, actualDraft.manualUnits);
-      if (result.pricingMode !== 'manual_rub_per_second' && variant.billing?.type === 'manual_required' && Number(actualDraft.manualUnits) > 0) {
+      if (result.pricingMode !== 'manual_tokens_per_second' && variant.billing?.type === 'manual_required' && Number(actualDraft.manualUnits) > 0) {
         settings.syntexManualUnits[manualKeyFor(model.id, variant.id, actualDraft.duration)] = Number(actualDraft.manualUnits);
       }
       actualItems.push({
@@ -1276,7 +1292,7 @@
         rub: result.rub,
         usdRub: settings.usdRub,
         pricingMode: result.pricingMode,
-        manualRubPerSecond: result.manualRubPerSecond || 0,
+        manualTokensPerSecond: result.manualTokensPerSecond || 0,
         recordedAt: new Date().toISOString()
       });
       saveLocal();
@@ -1298,7 +1314,7 @@
         <div class="actual-copy">
           <strong>${esc(item.modelName || item.modelId)}</strong>
           <span>${esc(item.variantLabel || item.variantId)} · ${fmtNum(item.duration, 2)} сек</span>
-          <small>${item.pricingMode === 'manual_rub_per_second' ? `ручной тариф ${fmtRub(item.manualRubPerSecond)} / сек` : `${fmtNum(item.units, 2)} ${unitFor(item.provider)}`} · стоимость зафиксирована при записи</small>
+          <small>${item.pricingMode === 'manual_tokens_per_second' ? `ручной тариф ${fmtNum(item.manualTokensPerSecond, 2)} токенов / сек` : `${fmtNum(item.units, 2)} ${unitFor(item.provider)}`} · стоимость зафиксирована при записи</small>
         </div>
         <div class="actual-cost">${fmtRub(item.rub)}</div>
         <button class="remove actual-remove" type="button" aria-label="Удалить фактическую генерацию">×</button>

@@ -31,7 +31,8 @@ assert.match(html, /id="manualTariffProvider"/, 'manual tariff editor has a prov
 assert.match(html, /id="manualTariffModel"/, 'manual tariff editor has a model selector');
 assert.match(html, /id="manualTariffVariant"/, 'manual tariff editor has a mode selector');
 assert.match(html, /id="manualTariffDuration"/, 'manual tariff editor has a duration selector');
-assert.match(html, /id="saveManualTariff"/, 'manual tariff editor can save a per-second price');
+assert.match(html, /id="manualTariffTokens"/, 'manual tariff editor records token spending');
+assert.match(html, /id="saveManualTariff"/, 'manual tariff editor can save a per-second token rate');
 assert.match(css, /\.project-workspace\s*\{/, 'active project has a distinct visual workspace');
 assert.match(css, /\.project-completion-panel\s*\{/, 'completion has a dedicated visual panel');
 assert.match(css, /\.app-tabs\s*\{/, 'primary navigation is styled');
