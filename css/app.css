@@ -658,3 +658,20 @@ html.android-app .app-tabs{display:none}
   .stepper-btn{height:46px}
   .work-price-box{grid-template-columns:1fr}.price-mode{width:100%}
 }
+
+/* Ручные тарифы: пользовательская цена за секунду для конкретной модели и режима. */
+.manual-tariff-card{grid-column:1/-1}
+.manual-tariff-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:12px}
+.manual-tariff-head h3{margin-bottom:5px}
+.manual-tariff-head p{max-width:760px;margin:0;color:var(--muted);font-size:11px;line-height:1.45}
+.manual-tariff-editor{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto;gap:9px;align-items:end}
+.manual-tariff-editor .btn{min-height:46px;white-space:nowrap}
+.manual-tariff-message{margin-top:10px}
+.manual-tariff-list{display:grid;gap:7px;margin-top:10px}
+.manual-tariff-empty{padding:10px 11px;border:1px dashed rgba(137,170,199,.22);border-radius:11px;color:var(--muted);font-size:10px}
+.manual-tariff-row{display:grid;grid-template-columns:minmax(0,1fr) auto 34px;gap:10px;align-items:center;padding:9px 10px;border:1px solid rgba(100,230,170,.18);border-radius:12px;background:var(--money-soft)}
+.manual-tariff-row div{min-width:0}.manual-tariff-row span,.manual-tariff-row strong{display:block}.manual-tariff-row div>strong{font-size:11px}.manual-tariff-row span{margin-top:3px;color:var(--muted);font-size:9.5px;line-height:1.35}.manual-tariff-row>strong{color:var(--money);font-size:12px;white-space:nowrap}
+.manual-tariff-remove{width:34px;height:34px;padding:0;border:0;border-radius:9px;background:transparent;color:var(--danger);font-size:19px;line-height:1}.manual-tariff-remove:hover{background:var(--danger-soft)}
+
+@media(max-width:900px){.manual-tariff-editor{grid-template-columns:repeat(3,minmax(0,1fr))}.manual-tariff-editor .btn{justify-self:start}}
+@media(max-width:680px){.manual-tariff-head{display:block}.manual-tariff-head .summary-tag{display:inline-flex;margin-top:8px}.manual-tariff-editor{grid-template-columns:1fr}.manual-tariff-editor .btn{width:100%;justify-self:stretch}.manual-tariff-row{grid-template-columns:minmax(0,1fr) auto}.manual-tariff-remove{grid-column:2;grid-row:1/3}}

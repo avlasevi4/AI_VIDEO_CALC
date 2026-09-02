@@ -51,11 +51,30 @@
     const model = pricing.models.find(m => m.id === modelId);
     if (!model) throw new Error('Модель не найдена');
     const variant = model.variants.find(v => v.id === variantId) || model.variants[0];
+    const tariffKey = `${model.id}::${variant.id}`;
+    const storedTariff = settings.manualRubTariffs?.[tariffKey];
+    const manualRubPerSecond = Math.max(0, safeNumber(typeof storedTariff === 'object' ? storedTariff?.pricePerSecond : storedTariff, 0));
+    const normalizedDuration = safeNumber(duration, 5);
+    if (manualRubPerSecond > 0) {
+      const rub = manualRubPerSecond * normalizedDuration;
+      return {
+        model,
+        variant,
+        duration: normalizedDuration,
+        units: 0,
+        unitRub: manualRubPerSecond,
+        rub,
+        usd: null,
+        manualUnits: safeNumber(manualUnits, 0),
+        pricingMode: 'manual_rub_per_second',
+        manualRubPerSecond
+      };
+    }
     const units = billableUnits(variant.billing, duration, manualUnits);
     const unitRub = unitPriceRub(model.provider, settings, pricing);
     const rub = units * unitRub;
     const usd = model.provider === 'kling' ? rub / safeNumber(settings.usdRub, 75.05) : null;
-    return { model, variant, duration: safeNumber(duration, 5), units, unitRub, rub, usd, manualUnits: safeNumber(manualUnits, 0) };
+    return { model, variant, duration: normalizedDuration, units, unitRub, rub, usd, manualUnits: safeNumber(manualUnits, 0), pricingMode: 'provider_units' };
   }
 
   function calculateProject(items, meta = {}, actualItems = []) {

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "2.0.0-2026-08-19",
-  "updated": "2026-08-19",
+  "dataVersion": "2.1.0-2026-09-02",
+  "updated": "2026-09-02",
   "currency": "RUB",
   "providers": {
     "kling": {
@@ -60,6 +60,13 @@
         "checkedAt": "2026-08-19"
       },
       {
+        "id": "syntx-video-catalog",
+        "title": "SYNTX · каталог видеомоделей",
+        "url": "https://docs.syntx.ai/%F0%9F%8E%AC-%D0%92%D0%B8%D0%B4%D0%B5%D0%BE/",
+        "kind": "catalog",
+        "checkedAt": "2026-09-02"
+      },
+      {
         "id": "syntx-heygen-doc",
         "title": "SYNTX HeyGen",
         "url": "https://docs.syntx.ai/en/%F0%9F%8E%AC-Video/%F0%9F%92%9C-HeyGen",
@@ -95,6 +102,8 @@
     "requiredSyntexModelIds": [
       "syntx-kling",
       "syntx-seedance",
+      "syntx-seedance-20",
+      "syntx-seedance-25",
       "syntx-veo",
       "syntx-runway",
       "syntx-sora",
@@ -583,23 +592,46 @@
             }
           },
           "status": "unverified"
-        },
-        {
-          "id": "20",
-          "label": "Seedance 2.0",
-          "resolution": "—",
-          "audio": "—",
-          "billing": {
-            "type": "manual_required",
-            "durationRange": {
-              "min": 1,
-              "max": 60,
-              "step": 1,
-              "generic": true
-            }
-          },
-          "status": "unverified"
         }
+      ]
+    },
+    {
+      "id": "syntx-seedance-20",
+      "provider": "syntex",
+      "name": "Seedance 2.0",
+      "status": "manual",
+      "catalogVerifiedAt": "2026-09-02",
+      "sourceId": "syntx-video-catalog",
+      "variants": [
+        { "id": "mini-480", "label": "Mini · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "mini-720", "label": "Mini · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "fast-480", "label": "Fast · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "fast-720", "label": "Fast · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "pro-720", "label": "Pro · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "pro-1080", "label": "Pro · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "pro-4k", "label": "Pro · 4K", "resolution": "4K", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" }
+      ]
+    },
+    {
+      "id": "syntx-seedance-25",
+      "provider": "syntex",
+      "name": "Seedance 2.5",
+      "status": "manual",
+      "catalogVerifiedAt": "2026-09-02",
+      "sourceId": "syntx-video-catalog",
+      "variants": [
+        { "id": "omni-reference-480", "label": "Omni Reference · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "omni-reference-720", "label": "Omni Reference · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "omni-reference-1080", "label": "Omni Reference · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "k-frames-480", "label": "K-Frames · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "k-frames-720", "label": "K-Frames · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "k-frames-1080", "label": "K-Frames · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "extended-480", "label": "Extended · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "extended-720", "label": "Extended · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "extended-1080", "label": "Extended · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "edit-480", "label": "Edit · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "edit-720", "label": "Edit · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "edit-1080", "label": "Edit · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" }
       ]
     },
     {

@@ -27,9 +27,15 @@ assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation
 assert.match(html, /id="closeProject"/, 'opened project can be closed back to its list');
 assert.match(html, /id="customQuotedPrice"/, 'project can use a custom quoted price');
 assert.match(html, /id="priceRounding"/, 'project price supports rounding');
+assert.match(html, /id="manualTariffProvider"/, 'manual tariff editor has a provider selector');
+assert.match(html, /id="manualTariffModel"/, 'manual tariff editor has a model selector');
+assert.match(html, /id="manualTariffVariant"/, 'manual tariff editor has a mode selector');
+assert.match(html, /id="manualTariffDuration"/, 'manual tariff editor has a duration selector');
+assert.match(html, /id="saveManualTariff"/, 'manual tariff editor can save a per-second price');
 assert.match(css, /\.project-workspace\s*\{/, 'active project has a distinct visual workspace');
 assert.match(css, /\.project-completion-panel\s*\{/, 'completion has a dedicated visual panel');
 assert.match(css, /\.app-tabs\s*\{/, 'primary navigation is styled');
 assert.match(css, /\.stepper\s*\{/, 'quantity stepper is styled');
+assert.match(css, /\.manual-tariff-editor\s*\{/, 'manual tariff editor is styled');
 
 console.log('UI structure tests OK');
