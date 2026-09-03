@@ -25,7 +25,10 @@ assert.match(html, /class="app-tab active"[^>]*data-app-view="calculator"/, 'cal
 assert.match(html, /data-app-view="projects"/, 'projects have a primary navigation tab');
 assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation tab');
 assert.match(html, /id="closeProject"/, 'opened project can be closed back to its list');
+assert.match(html, /id="newProjectFromWorkspace"/, 'another project can be created without completing the open one');
+assert.match(html, /id="closeProject"[^>]*>Свернуть</, 'active project can be folded without completion');
 assert.match(html, /id="customQuotedPrice"/, 'project can use a custom quoted price');
+assert.match(html, /id="workPriceResult"/, 'customer price has a dedicated visible result area');
 assert.match(html, /id="priceRounding"/, 'project price supports rounding');
 assert.match(html, /id="manualTariffProvider"/, 'manual tariff editor has a provider selector');
 assert.match(html, /id="manualTariffModel"/, 'manual tariff editor has a model selector');

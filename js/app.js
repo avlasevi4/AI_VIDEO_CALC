@@ -11,7 +11,6 @@
   let actualItems = [];
   let projectMeta = defaultProjectMeta();
   let actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
-  let showWorkPrice = false;
   let projectDialogMode = 'create';
   let cloudConfigured = false;
   let cloudSession = null;
@@ -28,6 +27,10 @@
     manualTokenTariffs: {},
     lastProjectModelByProvider: { kling: 'kling-30' },
     lastCalculatorModelByProvider: { kling: 'kling-30' },
+    lastProjectSelectionByProvider: {},
+    lastCalculatorSelectionByProvider: {},
+    lastProjectProvider: 'kling',
+    lastCalculatorProvider: 'kling',
     lastPricingCheck: ''
   };
 
@@ -44,6 +47,7 @@
       priceMode: 'calculated',
       customQuotedPrice: 0,
       priceRounding: 'none',
+      showWorkPrice: false,
       includeImages: false,
       plannedImages: 0,
       actualImages: 0,
@@ -89,6 +93,8 @@
       }
       if (!settings.lastProjectModelByProvider || typeof settings.lastProjectModelByProvider !== 'object') settings.lastProjectModelByProvider = { kling: 'kling-30' };
       if (!settings.lastCalculatorModelByProvider || typeof settings.lastCalculatorModelByProvider !== 'object') settings.lastCalculatorModelByProvider = { kling: 'kling-30' };
+      if (!settings.lastProjectSelectionByProvider || typeof settings.lastProjectSelectionByProvider !== 'object') settings.lastProjectSelectionByProvider = {};
+      if (!settings.lastCalculatorSelectionByProvider || typeof settings.lastCalculatorSelectionByProvider !== 'object') settings.lastCalculatorSelectionByProvider = {};
     } catch (_) {}
 
     const library = window.AIVideoProjectStore.load(defaultProjectMeta());
@@ -110,6 +116,7 @@
     projectMeta.priceMode = projectMeta.priceMode === 'custom' ? 'custom' : 'calculated';
     projectMeta.customQuotedPrice = Math.max(0, Number(projectMeta.customQuotedPrice) || 0);
     projectMeta.priceRounding = ['none', 'up', 'down'].includes(projectMeta.priceRounding) ? projectMeta.priceRounding : 'none';
+    projectMeta.showWorkPrice = Boolean(projectMeta.showWorkPrice);
     projectMeta.includeImages = Boolean(projectMeta.includeImages);
     projectMeta.plannedImages = Math.max(0, Math.round(Number(projectMeta.plannedImages) || 0));
     projectMeta.actualImages = Math.max(0, Math.round(Number(projectMeta.actualImages) || 0));
@@ -151,6 +158,7 @@
     projectItems = JSON.parse(JSON.stringify(project.items || []));
     actualItems = JSON.parse(JSON.stringify(project.actualItems || []));
     projectMeta = { ...defaultProjectMeta(), ...(project.meta || {}) };
+    projectMeta.showWorkPrice = Boolean(projectMeta.showWorkPrice);
   }
 
   function syncActiveProjectState(touch = true) {
@@ -175,7 +183,7 @@
     renderDataStatus(loaded.warning);
     renderSourceLinks();
     renderManualTariffEditor();
-    setProvider('kling');
+    setProvider(settings.lastCalculatorProvider === 'syntex' ? 'syntex' : 'kling', false);
     await initCloudAccess();
     renderProject();
     runPricingCheck(false);
@@ -217,15 +225,17 @@
     document.querySelectorAll('.provider-tab').forEach(btn => btn.addEventListener('click', () => setProvider(btn.dataset.provider)));
     $('modelSelect').addEventListener('change', () => {
       settings.lastCalculatorModelByProvider[currentProvider] = $('modelSelect').value;
-      saveLocal();
       renderVariants(); renderDuration(); renderManualUnits(); renderResult();
+      rememberCalculatorSelection();
+      saveLocal();
     });
-    $('variantSelect').addEventListener('change', () => { renderDuration(); renderManualUnits(); renderResult(); });
-    $('durationRange').addEventListener('input', () => { $('durationNumber').value = $('durationRange').value; renderManualUnits(); renderResult(); });
-    $('durationNumber').addEventListener('input', () => { $('durationRange').value = $('durationNumber').value; renderManualUnits(); renderResult(); });
+    $('variantSelect').addEventListener('change', () => { renderDuration(); renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal(); });
+    $('durationRange').addEventListener('input', () => { $('durationNumber').value = $('durationRange').value; renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal(); });
+    $('durationNumber').addEventListener('input', () => { $('durationRange').value = $('durationNumber').value; renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal(); });
     $('manualUnits').addEventListener('input', () => { setStoredManualUnits($('manualUnits').value); renderResult(); });
 
     $('createProject').addEventListener('click', createNewProject);
+    $('newProjectFromWorkspace').addEventListener('click', createNewProject);
     $('closeProject').addEventListener('click', closeActiveProject);
     $('renameProject').addEventListener('click', () => openProjectNameDialog('rename'));
     $('completeProject').addEventListener('click', toggleProjectCompletion);
@@ -235,7 +245,11 @@
     $('authForm').addEventListener('submit', signInToProjects);
     $('authSignOut').addEventListener('click', signOutOfProjects);
     $('addProjectLine').addEventListener('click', () => { projectItems.push(defaultProjectItem()); saveLocal(); renderProject(); });
-    $('calculateWorkPrice').addEventListener('click', () => { showWorkPrice = true; renderTotals(); });
+    $('calculateWorkPrice').addEventListener('click', () => {
+      projectMeta.showWorkPrice = true;
+      saveLocal();
+      renderTotals();
+    });
 
     ['laborPerVideoRub', 'plannedImages', 'actualImages', 'imageUnitRub', 'customQuotedPrice'].forEach(id => {
       $(id).addEventListener('input', () => {
@@ -244,27 +258,23 @@
         if (id === 'actualImages') projectMeta.actualImages = Math.max(0, Math.round(Number($(id).value) || 0));
         if (id === 'imageUnitRub') projectMeta.imageUnitRub = Math.max(0, Number($(id).value) || 0);
         if (id === 'customQuotedPrice') projectMeta.customQuotedPrice = Math.max(0, Number($(id).value) || 0);
-        if (id !== 'actualImages') showWorkPrice = false;
         saveLocal();
         renderTotals();
       });
     });
     document.querySelectorAll('input[name="priceMode"]').forEach(input => input.addEventListener('change', () => {
       projectMeta.priceMode = input.value === 'custom' ? 'custom' : 'calculated';
-      showWorkPrice = false;
       saveLocal();
       renderProjectMeta();
       renderTotals();
     }));
     $('priceRounding').addEventListener('change', () => {
       projectMeta.priceRounding = ['up', 'down'].includes($('priceRounding').value) ? $('priceRounding').value : 'none';
-      showWorkPrice = false;
       saveLocal();
       renderTotals();
     });
     $('includeImages').addEventListener('change', () => {
       projectMeta.includeImages = $('includeImages').checked;
-      showWorkPrice = false;
       saveLocal();
       renderProjectMeta();
       renderTotals();
@@ -454,20 +464,50 @@
     return pricing.models.filter(model => model.provider === provider);
   }
 
-  function setProvider(provider) {
+  function savedCalculatorSelection(provider) {
+    const saved = settings.lastCalculatorSelectionByProvider?.[provider]
+      || settings.lastProjectSelectionByProvider?.[provider]
+      || {};
+    return {
+      modelId: saved.modelId || settings.lastCalculatorModelByProvider?.[provider] || (provider === 'kling' ? 'kling-30' : ''),
+      variantId: saved.variantId || '',
+      duration: Number(saved.duration) || 5
+    };
+  }
+
+  function rememberCalculatorSelection() {
+    const model = currentModel();
+    const variant = currentVariant();
+    if (!model || !variant) return;
+    settings.lastCalculatorModelByProvider[model.provider] = model.id;
+    const selection = {
+      modelId: model.id,
+      variantId: variant.id,
+      duration: currentDuration()
+    };
+    settings.lastCalculatorSelectionByProvider[model.provider] = selection;
+    settings.lastProjectSelectionByProvider[model.provider] = { ...selection };
+    settings.lastProjectProvider = model.provider;
+  }
+
+  function setProvider(provider, persist = true) {
     currentProvider = provider;
+    if (persist) {
+      settings.lastCalculatorProvider = provider;
+      settings.lastProjectProvider = provider;
+      saveLocal();
+    }
     document.querySelectorAll('.provider-tab').forEach(button => button.classList.toggle('active', button.dataset.provider === provider));
     renderModels();
   }
 
   function renderModels() {
     const models = modelsForProvider(currentProvider);
-    const preferredId = settings.lastCalculatorModelByProvider?.[currentProvider]
-      || (currentProvider === 'kling' ? 'kling-30' : '');
-    const selected = models.find(model => model.id === preferredId) || models[0];
+    const saved = savedCalculatorSelection(currentProvider);
+    const selected = models.find(model => model.id === saved.modelId) || models[0];
     $('modelSelect').innerHTML = models.map(model => `<option value="${esc(model.id)}" ${model.id === selected?.id ? 'selected' : ''}>${esc(model.name)}</option>`).join('');
-    renderVariants();
-    renderDuration();
+    renderVariants(saved.variantId);
+    renderDuration(saved.duration);
     renderManualUnits();
     renderResult();
   }
@@ -481,10 +521,11 @@
     return model?.variants.find(variant => variant.id === $('variantSelect').value) || model?.variants[0];
   }
 
-  function renderVariants() {
+  function renderVariants(preferredVariantId = '') {
     const model = currentModel();
     if (!model) return;
-    $('variantSelect').innerHTML = model.variants.map(variant => `<option value="${esc(variant.id)}">${esc(variant.label)}</option>`).join('');
+    const selected = model.variants.find(variant => variant.id === preferredVariantId) || model.variants[0];
+    $('variantSelect').innerHTML = model.variants.map(variant => `<option value="${esc(variant.id)}" ${variant.id === selected?.id ? 'selected' : ''}>${esc(variant.label)}</option>`).join('');
     $('variantField').classList.toggle('hidden', model.variants.length === 1 && /^(Стандартный режим|Hailuo MiniMax|Pika|Topaz AI 2\.5|Lip Sync|Act-One|Аватар)$/.test(model.variants[0].label));
   }
 
@@ -531,7 +572,7 @@
     return Number(input.value) || 5;
   }
 
-  function renderDuration() {
+  function renderDuration(preferredDuration = 5) {
     const variant = currentVariant();
     if (!variant) return;
     const billing = variant.billing;
@@ -545,10 +586,11 @@
     if (Array.isArray(billing.allowedDurations)) {
       rangeWrap.classList.add('hidden');
       chips.classList.remove('hidden');
+      const selectedDuration = initialDurationForVariant(variant, preferredDuration);
       billing.allowedDurations.forEach((duration, index) => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'duration-chip' + (index === 0 ? ' active' : '');
+        button.className = 'duration-chip' + (Number(duration) === selectedDuration ? ' active' : '');
         button.textContent = duration + ' сек';
         button.dataset.duration = duration;
         button.onclick = () => {
@@ -556,6 +598,8 @@
           button.classList.add('active');
           renderManualUnits();
           renderResult();
+          rememberCalculatorSelection();
+          saveLocal();
         };
         chips.appendChild(button);
       });
@@ -566,7 +610,7 @@
       $('durationRange').min = range.min;
       $('durationRange').max = range.max;
       $('durationRange').step = range.step;
-      const next = initialDurationForVariant(variant, $('durationNumber').value);
+      const next = initialDurationForVariant(variant, preferredDuration);
       $('durationRange').value = next;
       $('durationNumber').value = next;
       $('durationNumber').min = range.min;
@@ -840,7 +884,6 @@
     }
 
     actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
-    showWorkPrice = false;
     closeProjectNameDialog();
     saveLocal();
     renderProject();
@@ -852,7 +895,6 @@
     activeProjectId = id;
     loadActiveProjectState();
     actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
-    showWorkPrice = false;
     window.AIVideoProjectStore.save(projects, activeProjectId);
     $('projectHistory').open = false;
     renderProject();
@@ -860,7 +902,8 @@
 
   function closeActiveProject() {
     if (!activeProject()) return;
-    syncActiveProjectState(false);
+    // Сначала сохраняем текущий черновик, затем лишь скрываем его из рабочей области.
+    saveLocal();
     activeProjectId = '';
     projectItems = [];
     actualItems = [];
@@ -922,18 +965,44 @@
     renderProject();
   }
 
-  function defaultProjectItem(provider = 'kling') {
+  function savedProjectSelection(provider) {
+    const saved = settings.lastProjectSelectionByProvider?.[provider]
+      || settings.lastCalculatorSelectionByProvider?.[provider]
+      || {};
+    return {
+      modelId: saved.modelId || settings.lastProjectModelByProvider?.[provider] || (provider === 'kling' ? 'kling-30' : ''),
+      variantId: saved.variantId || '',
+      duration: Number(saved.duration) || 5
+    };
+  }
+
+  function rememberProjectSelection(item) {
+    const model = getProjectModel(item);
+    const variant = getProjectVariant(item, model);
+    if (!model || !variant) return;
+    settings.lastProjectModelByProvider[model.provider] = model.id;
+    const selection = {
+      modelId: model.id,
+      variantId: variant.id,
+      duration: initialDurationForVariant(variant, item.duration)
+    };
+    settings.lastProjectSelectionByProvider[model.provider] = selection;
+    settings.lastCalculatorSelectionByProvider[model.provider] = { ...selection };
+    settings.lastProjectProvider = model.provider;
+  }
+
+  function defaultProjectItem(provider = settings.lastProjectProvider || settings.lastCalculatorProvider || 'kling') {
+    if (!['kling', 'syntex'].includes(provider)) provider = 'kling';
     const models = modelsForProvider(provider);
-    const preferredId = settings.lastProjectModelByProvider?.[provider]
-      || (provider === 'kling' ? 'kling-30' : '');
-    const model = models.find(item => item.id === preferredId) || models[0];
-    const variant = model?.variants?.[0];
+    const saved = savedProjectSelection(provider);
+    const model = models.find(item => item.id === saved.modelId) || models[0];
+    const variant = model?.variants.find(item => item.id === saved.variantId) || model?.variants?.[0];
     return {
       id: 'p-' + Date.now() + '-' + Math.random().toString(16).slice(2),
       provider,
       modelId: model?.id || '',
       variantId: variant?.id || '',
-      duration: variant ? initialDurationForVariant(variant, 5) : 5,
+      duration: variant ? initialDurationForVariant(variant, saved.duration) : 5,
       manualUnits: '',
       qty: 1,
       generationsPerVideo: 1,
@@ -1067,21 +1136,20 @@
 
     row.querySelector('.remove').addEventListener('click', () => {
       projectItems = projectItems.filter(x => x.id !== item.id);
-      showWorkPrice = false;
       saveLocal();
       renderProject();
     });
 
     row.querySelector('.project-provider').addEventListener('change', event => {
       item.provider = event.target.value;
-      const preferredId = settings.lastProjectModelByProvider?.[item.provider]
-        || (item.provider === 'kling' ? 'kling-30' : '');
-      const nextModel = modelsForProvider(item.provider).find(model => model.id === preferredId) || modelsForProvider(item.provider)[0];
+      const saved = savedProjectSelection(item.provider);
+      const nextModel = modelsForProvider(item.provider).find(model => model.id === saved.modelId) || modelsForProvider(item.provider)[0];
       item.modelId = nextModel.id;
-      item.variantId = nextModel.variants[0].id;
-      item.duration = initialDurationForVariant(nextModel.variants[0], 5);
+      const nextVariant = nextModel.variants.find(variant => variant.id === saved.variantId) || nextModel.variants[0];
+      item.variantId = nextVariant.id;
+      item.duration = initialDurationForVariant(nextVariant, saved.duration);
       item.manualUnits = '';
-      showWorkPrice = false;
+      rememberProjectSelection(item);
       saveLocal();
       renderProject();
     });
@@ -1093,7 +1161,7 @@
       item.variantId = nextModel.variants[0].id;
       item.duration = initialDurationForVariant(nextModel.variants[0], 5);
       item.manualUnits = '';
-      showWorkPrice = false;
+      rememberProjectSelection(item);
       saveLocal();
       renderProject();
     });
@@ -1103,7 +1171,7 @@
       const nextVariant = getProjectVariant(item);
       item.duration = initialDurationForVariant(nextVariant, 5);
       item.manualUnits = '';
-      showWorkPrice = false;
+      rememberProjectSelection(item);
       saveLocal();
       renderProject();
     });
@@ -1117,7 +1185,7 @@
       item.manualUnits = Number(saved) > 0 ? Number(saved) : '';
       const manual = row.querySelector('.project-manual');
       if (manual) manual.value = item.manualUnits || '';
-      showWorkPrice = false;
+      rememberProjectSelection(item);
       recalcProjectItem(item);
       saveLocal();
       renderTotals();
@@ -1126,7 +1194,6 @@
 
     row.querySelector('.project-qty').addEventListener('input', event => {
       item.qty = Math.max(1, Math.round(Number(event.target.value) || 1));
-      showWorkPrice = false;
       saveLocal();
       recalcProjectItem(item);
       renderTotals();
@@ -1135,7 +1202,6 @@
 
     row.querySelector('.project-generations-per-video').addEventListener('input', event => {
       item.generationsPerVideo = Math.max(1, Math.min(30, Math.round(Number(event.target.value) || 1)));
-      showWorkPrice = false;
       saveLocal();
       recalcProjectItem(item);
       renderTotals();
@@ -1151,7 +1217,6 @@
         item.generationsPerVideo = Math.max(1, Math.min(30, item.generationsPerVideo + step));
         row.querySelector('.project-generations-per-video').value = item.generationsPerVideo;
       }
-      showWorkPrice = false;
       recalcProjectItem(item);
       saveLocal();
       renderTotals();
@@ -1164,7 +1229,6 @@
         const n = Number(String(event.target.value).replace(',', '.'));
         item.manualUnits = n > 0 ? n : '';
         if (n > 0) settings.syntexManualUnits[manualKeyFor(item.modelId, item.variantId, item.duration)] = n;
-        showWorkPrice = false;
         saveLocal();
         renderProject();
       });
@@ -1196,6 +1260,7 @@
     $('priceModeCustom').checked = projectMeta.priceMode === 'custom';
     $('customQuotedPrice').value = projectMeta.customQuotedPrice || '';
     $('priceRounding').value = projectMeta.priceRounding;
+    $('calculateWorkPrice').textContent = projectMeta.showWorkPrice ? 'Пересчитать цену' : 'Показать цену';
     $('customPriceField').classList.toggle('hidden', projectMeta.priceMode !== 'custom');
     $('includeImages').checked = projectMeta.includeImages;
     $('plannedImages').value = projectMeta.plannedImages;
@@ -1371,7 +1436,7 @@
     const completed = project.status === 'completed';
     const builder = $('projectBuilder');
     builder.classList.toggle('project-builder-completed', completed);
-    $('activeProjectStatus').textContent = completed ? 'Завершённый проект' : 'Текущий проект';
+    $('activeProjectStatus').textContent = completed ? 'Завершённый проект' : 'Открытый черновик';
     $('activeProjectUpdated').textContent = completed
       ? `Завершён ${formatProjectDate(project.completedAt)}`
       : `Изменён ${formatProjectDate(project.updatedAt)}`;
@@ -1388,7 +1453,7 @@
       $('estimateDetails').open = false;
       $('actualExpenses').open = false;
       builder.querySelectorAll('input, select, button').forEach(control => {
-        if (control.id === 'completeProject' || control.id === 'closeProject' || control.disabled) return;
+        if (control.id === 'completeProject' || control.id === 'closeProject' || control.id === 'newProjectFromWorkspace' || control.disabled) return;
         control.disabled = true;
         control.dataset.completionDisabled = 'true';
       });
@@ -1435,6 +1500,7 @@
           </div>
           <div class="history-finance">
             <div><span>Смета</span><strong>${fmtRub(totals.estimateCost)}</strong></div>
+            ${project.meta?.showWorkPrice ? `<div class="client-price"><span>Заказчику</span><strong>${fmtRub(totals.quotedPrice)}</strong></div>` : ''}
             <div><span>Факт</span><strong>${fmtRub(totals.actualCost)}</strong></div>
             <div class="profit"><span>Прибыль</span><strong>${fmtRub(totals.actualProfit)}</strong></div>
           </div>
@@ -1467,10 +1533,10 @@
     $('estimateImageTotal').textContent = fmtRub(totals.plannedImageCost);
     $('estimateImageCount').textContent = totals.includeImages ? `${totals.plannedImages} × ${fmtRub(projectMeta.imageUnitRub)}` : 'выключено';
 
-    if (showWorkPrice && totals.estimateCost >= 0) {
+    if (projectMeta.showWorkPrice && totals.estimateCost >= 0) {
       $('workPriceResult').classList.remove('hidden');
       $('workPrice').textContent = fmtRub(totals.quotedPrice);
-      $('workPriceLabel').textContent = totals.priceMode === 'custom' ? 'Цена для заказчика' : 'Расчётная цена проекта';
+      $('workPriceLabel').textContent = 'Цена для заказчика';
       const source = totals.priceMode === 'custom'
         ? `Своя цена ${fmtRub(totals.priceBeforeRounding)}`
         : `Себестоимость ${fmtRub(totals.estimateCost)} + ${totals.readyVideos} готовых видео × ${fmtRub(totals.laborPerVideoRub)}`;
@@ -1756,7 +1822,6 @@
       }
       loadActiveProjectState();
       projectItems = projectItems.map(item => ({ ...item, qty: Math.max(1, Math.round(Number(item.qty) || 1)) }));
-      showWorkPrice = false;
       saveLocal();
       hydrateSettings();
       renderHeadlineRate();

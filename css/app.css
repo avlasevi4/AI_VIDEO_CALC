@@ -421,6 +421,7 @@ html.android-app .project-card>.section-head{padding-top:4px}
 .history-item{padding:13px;border-radius:15px}
 .history-copy strong{font-size:14px}.history-copy span{font-size:11px}
 .history-finance div span{font-size:10px}.history-finance div strong{font-size:13px}
+.history-finance .client-price strong{color:var(--money)}
 
 .project-workspace{
   position:relative;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v2-manual-token-rates-20260902';
+const CACHE_NAME = 'ai-video-calc-v2-project-drafts-memory-20260903';
 const ASSETS = [
   './',
   './index.html',

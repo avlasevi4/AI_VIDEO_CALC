@@ -87,7 +87,7 @@
     <div class="section-head">
       <div>
         <h2>Мои проекты</h2>
-        <div class="muted">Личная история синхронизируется между устройствами и доступна только после входа.</div>
+        <div class="muted">Ведите любое количество параллельных проектов: черновики сохраняются и синхронизируются между устройствами.</div>
       </div>
       <button id="createProject" class="btn primary" type="button">Новый проект</button>
     </div>
@@ -111,7 +111,7 @@
     <div id="projectPrivateContent" class="hidden">
     <details id="projectHistory" class="project-history">
       <summary class="history-summary">
-        <span><strong>Все проекты</strong><small>Активные проекты и завершённые расчёты</small></span>
+        <span><strong>Все проекты</strong><small>Активные черновики и завершённые расчёты</small></span>
         <span id="projectCount" class="history-count">0 проектов</span>
       </summary>
       <div class="history-groups">
@@ -135,7 +135,8 @@
           <small id="activeProjectUpdated">—</small>
         </div>
         <div class="active-project-actions">
-          <button id="closeProject" class="btn secondary" type="button">К проектам</button>
+          <button id="newProjectFromWorkspace" class="btn secondary" type="button">Новый проект</button>
+          <button id="closeProject" class="btn secondary" type="button">Свернуть</button>
           <button id="renameProject" class="btn secondary" type="button">Переименовать</button>
         </div>
       </div>
