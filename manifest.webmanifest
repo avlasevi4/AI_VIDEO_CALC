@@ -1,7 +1,7 @@
 {
-  "name": "AI VIDEO CALC v2",
+  "name": "AI VIDEO CALC 3.0",
   "short_name": "AI VIDEO CALC",
-  "description": "AI VIDEO CALC v2 — калькулятор себестоимости генерации видео и проектов.",
+  "description": "AI VIDEO CALC 3.0 — проекты, сметы и расходы на AI-видео.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -11,14 +11,8 @@
   "lang": "ru",
   "icons": [
     {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
+      "src": "icons/ai-calc-logo.png",
+      "sizes": "1254x1254",
       "type": "image/png",
       "purpose": "any"
     }

@@ -1,8 +1,9 @@
-const CACHE_NAME = 'ai-video-calc-v2-project-drafts-memory-20260903';
+const CACHE_NAME = 'ai-video-calc-v3.0-20260908';
 const ASSETS = [
   './',
   './index.html',
   './css/app.css',
+  './css/v3.css',
   './vendor/supabase.min.js',
   './js/cloud-config.js',
   './js/cloud.js',

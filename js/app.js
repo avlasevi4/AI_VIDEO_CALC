@@ -15,7 +15,7 @@
   let cloudConfigured = false;
   let cloudSession = null;
   let projectAccess = false;
-  let syncTimer = null;
+  const projectSyncTimers = new Map();
 
   let settings = {
     usdRub: 75.05,
@@ -31,6 +31,8 @@
     lastCalculatorSelectionByProvider: {},
     lastProjectProvider: 'kling',
     lastCalculatorProvider: 'kling',
+    lastActualProvider: 'kling',
+    lastActualSelectionByProvider: {},
     lastPricingCheck: ''
   };
 
@@ -143,7 +145,7 @@
   }
 
   function activeProject() {
-    return projects.find(project => project.id === activeProjectId) || null;
+    return projects.find(project => project.id === activeProjectId && !project.deletedAt) || null;
   }
 
   function loadActiveProjectState() {
@@ -172,6 +174,7 @@
 
   async function init() {
     loadLocal();
+    actualDraft.provider = settings.lastActualProvider || 'kling';
     bind();
     setView(viewFromLocation(), false);
     hydrateSettings();
@@ -210,7 +213,8 @@
     document.querySelectorAll('.app-tab').forEach(button => {
       const active = button.dataset.appView === next;
       button.classList.toggle('active', active);
-      button.setAttribute('aria-selected', String(active));
+      if (active) button.setAttribute('aria-current', 'page');
+      else button.removeAttribute('aria-current');
     });
     document.querySelector('.app')?.setAttribute('data-active-view', next);
     if (updateHash) {
@@ -222,6 +226,10 @@
   function bind() {
     document.querySelectorAll('.app-tab').forEach(button => button.addEventListener('click', () => setView(button.dataset.appView)));
     window.addEventListener('hashchange', () => setView(viewFromLocation(), false));
+    window.addEventListener('online', async () => {
+      await synchronizeCloudProjects();
+      renderProject();
+    });
     document.querySelectorAll('.provider-tab').forEach(btn => btn.addEventListener('click', () => setProvider(btn.dataset.provider)));
     $('modelSelect').addEventListener('change', () => {
       settings.lastCalculatorModelByProvider[currentProvider] = $('modelSelect').value;
@@ -311,6 +319,16 @@
       renderActualDraftResult();
     });
     $('addActualGeneration').addEventListener('click', addActualGeneration);
+    ['actualProvider', 'actualModel', 'actualVariant', 'actualDurationRange'].forEach(id => {
+      $(id).addEventListener(id === 'actualDurationRange' ? 'input' : 'change', () => {
+        settings.lastActualProvider = actualDraft.provider;
+        settings.lastActualSelectionByProvider ||= {};
+        settings.lastActualSelectionByProvider[actualDraft.provider] = {
+          modelId: actualDraft.modelId, variantId: actualDraft.variantId, duration: actualDraft.duration
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      });
+    });
 
     ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens'].forEach(id => {
       $(id).addEventListener('input', () => {
@@ -431,8 +449,8 @@
       syncActiveProjectState(false);
       const merged = await window.AIVideoCloud.synchronize(projects);
       projects = merged.map(project => window.AIVideoProjectStore.normalizeProject(project, defaultProjectMeta()));
-      if (activeProjectId && !projects.some(project => project.id === activeProjectId)) {
-        activeProjectId = projects.find(project => project.status !== 'completed')?.id || '';
+      if (activeProjectId && !projects.some(project => project.id === activeProjectId && !project.deletedAt)) {
+        activeProjectId = '';
       }
       loadActiveProjectState();
       window.AIVideoProjectStore.save(projects, activeProjectId);
@@ -444,16 +462,24 @@
 
   function scheduleActiveProjectSync() {
     if (!cloudSession || !activeProject()) return;
-    clearTimeout(syncTimer);
+    clearTimeout(projectSyncTimers.get(activeProjectId));
     $('syncStatus').textContent = 'Есть несинхронизированные изменения…';
-    syncTimer = setTimeout(async () => {
+    const pendingProject = JSON.parse(JSON.stringify(activeProject()));
+    projectSyncTimers.set(pendingProject.id, setTimeout(async () => {
+      projectSyncTimers.delete(pendingProject.id);
       try {
-        await window.AIVideoCloud.saveProject(activeProject());
+        const saved = await window.AIVideoCloud.saveProject(pendingProject);
+        if (saved?.deletedAt) {
+          projects = projects.map(project => project.id === saved.id ? saved : project);
+          loadActiveProjectState();
+          window.AIVideoProjectStore.save(projects, activeProjectId);
+          renderProject();
+        }
         $('syncStatus').textContent = `Синхронизировано ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
       } catch (_) {
         $('syncStatus').textContent = 'Offline: изменения сохранены локально';
       }
-    }, 700);
+    }, 700));
   }
 
   function renderHeadlineRate() {
@@ -883,7 +909,7 @@
       $('projectHistory').open = false;
     }
 
-    actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
+    actualDraft = { provider: settings.lastActualProvider || 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
     closeProjectNameDialog();
     saveLocal();
     renderProject();
@@ -894,7 +920,7 @@
     saveLocal();
     activeProjectId = id;
     loadActiveProjectState();
-    actualDraft = { provider: 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
+    actualDraft = { provider: settings.lastActualProvider || 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
     window.AIVideoProjectStore.save(projects, activeProjectId);
     $('projectHistory').open = false;
     renderProject();
@@ -947,22 +973,25 @@
   async function deleteSavedProject(id) {
     const project = projects.find(item => item.id === id);
     if (!project || !confirm(`Удалить проект «${project.name}»? Это действие нельзя отменить.`)) return;
-    if (cloudSession) {
-      try {
-        await window.AIVideoCloud.deleteProject(id);
-        $('syncStatus').textContent = 'Проект удалён из облака';
-      } catch (_) {
-        $('syncStatus').textContent = 'Не удалось удалить проект: проверьте соединение';
-        return;
-      }
-    }
-    projects = projects.filter(item => item.id !== id);
+    clearTimeout(projectSyncTimers.get(id));
+    projectSyncTimers.delete(id);
+    const deletedAt = new Date().toISOString();
+    project.deletedAt = deletedAt;
+    project.updatedAt = deletedAt;
     if (activeProjectId === id) {
-      activeProjectId = projects.find(item => item.status !== 'completed')?.id || '';
+      activeProjectId = '';
       loadActiveProjectState();
     }
     window.AIVideoProjectStore.save(projects, activeProjectId);
     renderProject();
+    if (cloudSession) {
+      try {
+        await window.AIVideoCloud.saveProject(project);
+        $('syncStatus').textContent = 'Проект удалён из облака';
+      } catch (_) {
+        $('syncStatus').textContent = 'Удалён на устройстве. Синхронизируем при подключении.';
+      }
+    }
   }
 
   function savedProjectSelection(provider) {
@@ -1298,6 +1327,10 @@
   function renderActualDraft() {
     if (!pricing || !$('actualProvider')) return;
     if (!['kling', 'syntex'].includes(actualDraft.provider)) actualDraft.provider = 'kling';
+    if (!actualDraft.modelId) {
+      const saved = settings.lastActualSelectionByProvider?.[actualDraft.provider] || savedProjectSelection(actualDraft.provider);
+      Object.assign(actualDraft, saved);
+    }
     $('actualProvider').value = actualDraft.provider;
 
     const models = modelsForProvider(actualDraft.provider);
@@ -1411,7 +1444,7 @@
     const hasProject = Boolean(activeProject());
     $('projectEmpty').classList.toggle('hidden', hasProject);
     if (!hasProject) {
-      $('projectEmpty').textContent = projects.length
+      $('projectEmpty').textContent = projects.some(project => !project.deletedAt)
         ? 'Выберите активный проект или откройте завершённый проект для просмотра.'
         : 'Сохранённых проектов пока нет. Нажми «Новый проект», введи название и начни расчёт.';
     }
@@ -1436,6 +1469,17 @@
     const completed = project.status === 'completed';
     const builder = $('projectBuilder');
     builder.classList.toggle('project-builder-completed', completed);
+    const completionPanel = builder.querySelector('.project-completion-panel');
+    const overview = $('completedOverview');
+    overview.classList.toggle('hidden', !completed);
+    if (completed) {
+      const totals = window.AIVideoCalculator.calculateProject(projectItems, projectMeta, actualItems);
+      overview.innerHTML = [['Цена заказчику', totals.quotedPrice], ['Себестоимость', totals.actualCost], ['Прибыль', totals.actualProfit]]
+        .map(([label, value]) => `<div class="metric"><span>${label}</span><strong>${fmtRub(value)}</strong></div>`).join('');
+      builder.appendChild(completionPanel);
+    } else {
+      $('actualExpenses').querySelector('.project-subbody').appendChild(completionPanel);
+    }
     $('activeProjectStatus').textContent = completed ? 'Завершённый проект' : 'Открытый черновик';
     $('activeProjectUpdated').textContent = completed
       ? `Завершён ${formatProjectDate(project.completedAt)}`
@@ -1473,15 +1517,18 @@
   }
 
   function renderProjectHistory() {
-    $('projectCount').textContent = `${projects.length} ${projects.length === 1 ? 'проект' : projects.length >= 2 && projects.length <= 4 ? 'проекта' : 'проектов'}`;
-    $('projectHistory').classList.toggle('hidden', projects.length === 0);
-    const activeProjects = projects.filter(project => project.status !== 'completed');
-    const completedProjects = projects.filter(project => project.status === 'completed');
+    const visibleProjects = projects.filter(project => !project.deletedAt);
+    const count = visibleProjects.length;
+    const ending = count % 100 >= 11 && count % 100 <= 14 ? 'проектов' : count % 10 === 1 ? 'проект' : count % 10 >= 2 && count % 10 <= 4 ? 'проекта' : 'проектов';
+    $('projectCount').textContent = `${count} ${ending}`;
+    $('projectHistory').classList.toggle('hidden', count === 0);
+    const activeProjects = visibleProjects.filter(project => project.status !== 'completed');
+    const completedProjects = visibleProjects.filter(project => project.status === 'completed');
     $('activeProjectCount').textContent = String(activeProjects.length);
     $('completedProjectCount').textContent = String(completedProjects.length);
     $('activeProjectsGroup').classList.toggle('hidden', activeProjects.length === 0);
     $('completedProjectsGroup').classList.toggle('hidden', completedProjects.length === 0);
-    if (!activeProject() && projects.length) $('projectHistory').open = true;
+    if (!activeProject() && count) $('projectHistory').open = true;
 
     const renderGroup = (listId, group) => {
       const list = $(listId);
@@ -1536,6 +1583,8 @@
     if (projectMeta.showWorkPrice && totals.estimateCost >= 0) {
       $('workPriceResult').classList.remove('hidden');
       $('workPrice').textContent = fmtRub(totals.quotedPrice);
+      $('activeProjectPrice').textContent = 'Цена для заказчика · ' + fmtRub(totals.quotedPrice);
+      $('activeProjectPrice').classList.remove('hidden');
       $('workPriceLabel').textContent = 'Цена для заказчика';
       const source = totals.priceMode === 'custom'
         ? `Своя цена ${fmtRub(totals.priceBeforeRounding)}`
@@ -1544,6 +1593,7 @@
       $('workPriceMeta').textContent = `${source} = ${fmtRub(totals.quotedPrice)}${rounding}.`;
     } else {
       $('workPriceResult').classList.add('hidden');
+      $('activeProjectPrice').classList.add('hidden');
     }
 
     $('actualSummary').textContent = fmtRub(totals.actualCost);
@@ -1787,7 +1837,7 @@
   function exportData() {
     syncActiveProjectState(false);
     const payload = {
-      app: 'AI VIDEO CALC v2',
+      app: 'AI VIDEO CALC 3.0',
       schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       settings,
@@ -1797,7 +1847,7 @@
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'ai-video-calc-v2-data.json';
+    link.download = 'ai-video-calc-v3-data.json';
     link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 500);
   }

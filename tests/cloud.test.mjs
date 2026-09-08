@@ -18,6 +18,14 @@ const client = {
   },
   from() {
     return {
+      update(row) {
+        return { eq: (_field, id) => ({ is: () => ({ select: async () => {
+          const index = rows.findIndex(item => item.id === id && !item.payload.deletedAt);
+          if (index < 0) return { data: [], error: null };
+          rows[index] = row;
+          return { data: [row], error: null };
+        } }) }) };
+      },
       select() {
         return {
           order: async () => ({ data: rows.map(row => ({ ...row })), error: null })
@@ -76,12 +84,23 @@ assert.equal(rows[0].payload.status, 'completed');
 assert.equal(rows[0].payload.completedAt, '2026-08-20T02:00:00.000Z');
 
 const loaded = await cloud.loadProjects();
+await cloud.saveProject({ ...loaded[0], name: 'Обновлённый тест' });
+assert.equal(rows[0].name, 'Обновлённый тест');
 assert.equal(loaded[0].name, 'Тест');
 assert.equal(loaded[0].items[0].generationsPerVideo, 3);
 assert.equal(loaded[0].status, 'completed');
 assert.equal(loaded[0].completedAt, '2026-08-20T02:00:00.000Z');
 
 await cloud.deleteProject('project-1');
-assert.equal(rows.length, 0);
+assert.equal(rows.length, 1, 'keep a deletion record for other devices');
+assert.ok(rows[0].payload.deletedAt);
+const staleDevice = { ...loaded[0], updatedAt: '2099-01-01T00:00:00.000Z' };
+const merged = await cloud.synchronize([staleDevice]);
+assert.ok(merged[0].deletedAt, 'deletion wins even against a clock-ahead stale device');
+await cloud.saveProject(staleDevice);
+assert.ok(rows[0].payload.deletedAt, 'autosave from an open editor cannot resurrect a deleted project');
+rows.length = 0;
+await cloud.synchronize(merged);
+assert.ok(rows[0].payload.deletedAt, 'offline deletion uploads when reconnecting');
 
 console.log('cloud adapter tests OK');

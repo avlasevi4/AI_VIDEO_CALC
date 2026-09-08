@@ -65,6 +65,7 @@
       name: row.name,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      deletedAt: row.payload?.deletedAt || null,
       status: row.payload?.status === 'completed' ? 'completed' : 'active',
       completedAt: row.payload?.completedAt || null,
       items: row.payload?.items || [],
@@ -82,11 +83,15 @@
 
   async function saveProject(project) {
     const current = requireSession();
+    // Deletion wins over stale open editors, even when their clock is ahead.
+    const remote = (await loadProjects()).find(item => item.id === project.id);
+    if (remote?.deletedAt && !project.deletedAt) return remote;
     const row = {
       id: project.id,
       user_id: current.user.id,
       name: project.name,
       payload: {
+        deletedAt: project.deletedAt || null,
         status: project.status === 'completed' ? 'completed' : 'active',
         completedAt: project.completedAt || null,
         items: project.items || [],
@@ -96,14 +101,27 @@
       created_at: project.createdAt,
       updated_at: project.updatedAt
     };
+    if (remote && !project.deletedAt) {
+      // Atomic predicate closes the gap between reading and writing a deletion.
+      const { data, error } = await client.from('projects').update(row).eq('id', project.id)
+        .is('payload->>deletedAt', null).select('id,name,payload,created_at,updated_at');
+      if (error) throw error;
+      if (!data?.length) return (await loadProjects()).find(item => item.id === project.id) || project;
+      return fromRow(data[0]);
+    }
     const { error } = await client.from('projects').upsert(row, { onConflict: 'id' });
     if (error) throw error;
+    return project;
   }
 
   async function deleteProject(id) {
     requireSession();
-    const { error } = await client.from('projects').delete().eq('id', id);
-    if (error) throw error;
+    const project = (await loadProjects()).find(item => item.id === id);
+    if (!project) return null;
+    const deletedAt = new Date().toISOString();
+    const tombstone = { ...project, deletedAt, updatedAt: deletedAt };
+    await saveProject(tombstone);
+    return tombstone;
   }
 
   async function synchronize(localProjects) {
@@ -113,9 +131,10 @@
 
     for (const local of localProjects) {
       const remote = remoteById.get(local.id);
-      if (!remote || new Date(local.updatedAt) >= new Date(remote.updatedAt)) {
-        await saveProject(local);
-        merged.push(local);
+      if (remote?.deletedAt) {
+        merged.push(remote);
+      } else if (local.deletedAt || !remote || new Date(local.updatedAt) >= new Date(remote.updatedAt)) {
+        merged.push(await saveProject(local));
       } else {
         merged.push(remote);
       }

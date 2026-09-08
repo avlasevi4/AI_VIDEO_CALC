@@ -46,7 +46,7 @@ memory.set(store.STORAGE_KEY, JSON.stringify({
   }]
 }));
 const migrated = store.load(defaults);
-assert.equal(migrated.schemaVersion, 5);
+assert.equal(migrated.schemaVersion, 6);
 assert.equal(migrated.projects[0].items[0].generationsPerVideo, 3);
 assert.equal('extraQty' in migrated.projects[0].items[0], false);
 assert.equal('retryPercent' in migrated.projects[0].meta, false);
@@ -76,4 +76,10 @@ store.save([completed], '');
 const closedLibrary = store.load(defaults);
 assert.equal(closedLibrary.activeProjectId, '');
 
+const deleted = { ...completed, deletedAt: '2026-09-08T12:00:00.000Z' };
+store.save([deleted], deleted.id);
+const deletedLibrary = store.load(defaults);
+assert.equal(deletedLibrary.activeProjectId, '');
+assert.equal(deletedLibrary.projects[0].deletedAt, deleted.deletedAt);
+assert.equal(deletedLibrary.projects[0].actualItems[0].rub, 500);
 console.log('project store tests OK');

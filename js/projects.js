@@ -5,7 +5,7 @@
   const LEGACY_PROJECT_KEY = 'ai-video-calc-v2-project';
   const LEGACY_META_KEY = 'ai-video-calc-v2-project-meta';
   const LEGACY_ACTUAL_KEY = 'ai-video-calc-v2-actual';
-  const SCHEMA_VERSION = 5;
+  const SCHEMA_VERSION = 6;
 
   const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -31,6 +31,7 @@
       name: normalizeName(project?.name),
       createdAt: project?.createdAt || now,
       updatedAt: project?.updatedAt || project?.createdAt || now,
+      deletedAt: project?.deletedAt || null,
       status,
       completedAt: status === 'completed' ? (project?.completedAt || project?.updatedAt || now) : null,
       items: Array.isArray(project?.items) ? clone(project.items).map(item => {
@@ -77,9 +78,9 @@
       const projects = saved.projects.map(project => normalizeProject(project, defaultMeta));
       const activeProjectId = saved.activeProjectId === ''
         ? ''
-        : projects.some(project => project.id === saved.activeProjectId)
+        : projects.some(project => project.id === saved.activeProjectId && !project.deletedAt)
           ? saved.activeProjectId
-          : (projects.find(project => project.status === 'active')?.id || '');
+          : '';
       const library = { schemaVersion: SCHEMA_VERSION, projects, activeProjectId };
       if (saved.schemaVersion !== SCHEMA_VERSION) save(library.projects, library.activeProjectId);
       return library;

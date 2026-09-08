@@ -4,23 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101a">
-  <meta name="description" content="AI VIDEO CALC v2 — mobile-first калькулятор себестоимости генерации видео">
+  <meta name="description" content="AI VIDEO CALC 3.0 — сметы, проекты и расходы на AI-видео">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" href="./icons/ai-calc-logo.png">
+  <link rel="apple-touch-icon" href="./icons/ai-calc-logo.png">
   <link rel="stylesheet" href="./css/app.css">
-  <title>AI VIDEO CALC v2</title>
+  <link rel="stylesheet" href="./css/v3.css">
+  <title>AI VIDEO CALC 3.0</title>
 </head>
 <body>
 <main class="app" data-active-view="calculator">
   <header class="hero">
     <img class="brand-logo" src="./icons/ai-calc-logo.png" alt="Логотип AI VIDEO CALC" width="104" height="104">
     <div class="hero-copy">
-      <div class="eyebrow">production cost calculator</div>
+      <div class="eyebrow">Ваше пространство AI-продакшена</div>
       <h1>AI VIDEO CALC</h1>
-      <p>Расчёт себестоимости видео, сметы проектов и фиксация фактических расходов.</p>
+      <p>От первой генерации до прибыли проекта.</p>
     </div>
     <div class="hero-tools">
-      <div class="version">v2</div>
+      <div class="version">v3.0</div>
       <div class="headline-rate" aria-live="polite">
         <span>Курс USD / RUB</span>
         <div class="rate-value"><strong id="headlineRate">1 $ = — ₽</strong><small>для расчётов</small></div>
@@ -30,19 +32,19 @@
   </header>
 
   <nav class="app-tabs" aria-label="Основные разделы">
-    <button class="app-tab active" type="button" data-app-view="calculator" aria-controls="calculatorDetails" aria-selected="true">Одна генерация</button>
-    <button class="app-tab" type="button" data-app-view="projects" aria-controls="projects" aria-selected="false">Мои проекты</button>
-    <button class="app-tab" type="button" data-app-view="tariffs" aria-controls="tariffs" aria-selected="false">Тарифы</button>
+    <button class="app-tab active" type="button" data-app-view="calculator" aria-controls="calculatorDetails" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 7h6M9 11h1m4 0h1m-6 4h1m4 0h1m-6 3h1m4 0h1"/></svg><span>Одна генерация<small>Быстрый расчёт</small></span></button>
+    <button class="app-tab" type="button" data-app-view="projects" aria-controls="projects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Z"/><path d="M8 12h8m-8 4h5"/></svg><span>Мои проекты<small>Смета, расходы, результат</small></span></button>
+    <button class="app-tab" type="button" data-app-view="tariffs" aria-controls="tariffs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg><span>Тарифы<small>Модели и стоимость</small></span></button>
   </nav>
 
   <details class="card calculator-card view-panel" id="calculatorDetails" data-view="calculator">
     <summary class="card-summary">
       <span>
         <strong>Калькулятор одной генерации</strong>
-        <small>Нажмите, чтобы открыть быстрый расчёт отдельного ролика</small>
+        <small>Выберите модель и длительность — узнайте себестоимость</small>
       </span>
       <span id="calculatorSummaryPrice" class="summary-price">—</span>
-      <span class="summary-action">Открыть</span>
+      <span class="summary-action">Рассчитать</span>
     </summary>
     <div class="details-body">
       <div class="provider-tabs" role="tablist" aria-label="Провайдер генерации">
@@ -133,6 +135,7 @@
           <span id="activeProjectStatus">Текущий проект</span>
           <strong id="activeProjectName">—</strong>
           <small id="activeProjectUpdated">—</small>
+          <div id="activeProjectPrice" class="project-header-price hidden"></div>
         </div>
         <div class="active-project-actions">
           <button id="newProjectFromWorkspace" class="btn secondary" type="button">Новый проект</button>
@@ -146,6 +149,8 @@
         <div class="project-flow-line" aria-hidden="true"></div>
         <div class="project-flow-step actual-step"><span>2</span><div><strong>Записать факт</strong><small>Внести реальные расходы и завершить проект</small></div></div>
       </div>
+
+      <div id="completedOverview" class="completed-overview hidden" aria-label="Итоги завершённого проекта"></div>
 
       <details id="estimateDetails" class="project-subdetails estimate-details" open>
         <summary>
@@ -300,6 +305,7 @@
   </section>
 
   <section id="tariffs" class="view-panel hidden" data-view="tariffs">
+  <div class="section-head tariff-heading"><div><div class="eyebrow">Стоимость под контролем</div><h2>Тарифы и модели</h2><p class="muted">Настройте пакеты провайдеров и собственные тарифы в токенах.</p></div></div>
   <details class="card checker-card">
     <summary class="card-summary compact-summary">
       <span>
@@ -323,7 +329,7 @@
     </div>
   </details>
 
-  <details class="card details">
+  <details class="card details" open>
     <summary class="card-summary compact-summary"><span><strong>Настройки и тарифы</strong><small>Курс, пакеты Kling / SYNTX и локальные данные</small></span></summary>
     <div class="settings-grid">
       <div class="subcard">
@@ -375,7 +381,7 @@
   </details>
   </section>
 
-  <footer class="footer">AI VIDEO CALC v2 · 25.08.2026</footer>
+  <footer class="footer">AI VIDEO CALC <span>3.0</span> · 08.09.2026</footer>
 </main>
 
 <dialog id="projectNameDialog" class="project-dialog" aria-labelledby="projectNameTitle">
