@@ -209,6 +209,17 @@
   function setView(view, updateHash = true) {
     const allowed = ['calculator', 'projects', 'tariffs'];
     const next = allowed.includes(view) ? view : 'calculator';
+    const previous = document.querySelector('.app')?.getAttribute('data-active-view');
+    // The library opens as a dashboard. A workspace remains open only after the
+    // user explicitly selects a project in this visit to the Projects section.
+    if (next === 'projects' && previous !== 'projects' && activeProject()) {
+      syncActiveProjectState();
+      activeProjectId = '';
+      projectItems = [];
+      actualItems = [];
+      projectMeta = defaultProjectMeta();
+      window.AIVideoProjectStore.save(projects, activeProjectId);
+    }
     document.querySelectorAll('.view-panel').forEach(panel => panel.classList.toggle('hidden', panel.dataset.view !== next));
     document.querySelectorAll('.app-tab').forEach(button => {
       const active = button.dataset.appView === next;
@@ -1861,14 +1872,14 @@
       if (!settings.syntexManualUnits) settings.syntexManualUnits = {};
       if (Array.isArray(data.projects)) {
         projects = data.projects.map(project => window.AIVideoProjectStore.normalizeProject(project, defaultProjectMeta()));
-        activeProjectId = projects.some(project => project.id === data.activeProjectId) ? data.activeProjectId : (projects[0]?.id || '');
+        activeProjectId = '';
       } else {
         const imported = window.AIVideoProjectStore.createProject('Импортированный проект', defaultProjectMeta());
         imported.meta = { ...defaultProjectMeta(), ...(data.projectMeta || {}) };
         imported.items = Array.isArray(data.projectItems) ? data.projectItems : [];
         imported.actualItems = Array.isArray(data.actualItems) ? data.actualItems : [];
         projects = [imported];
-        activeProjectId = imported.id;
+        activeProjectId = '';
       }
       loadActiveProjectState();
       projectItems = projectItems.map(item => ({ ...item, qty: Math.max(1, Math.round(Number(item.qty) || 1)) }));

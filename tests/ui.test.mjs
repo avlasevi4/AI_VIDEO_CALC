@@ -27,6 +27,7 @@ assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation
 assert.match(html, /id="closeProject"/, 'opened project can be closed back to its list');
 assert.match(html, /id="newProjectFromWorkspace"/, 'another project can be created without completing the open one');
 assert.match(html, /id="closeProject"[^>]*>Свернуть</, 'active project can be folded without completion');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /next === 'projects' && previous !== 'projects' && activeProject\(\)/, 'entering the projects tab folds any previously open workspace');
 assert.match(html, /id="customQuotedPrice"/, 'project can use a custom quoted price');
 assert.match(html, /id="workPriceResult"/, 'customer price has a dedicated visible result area');
 assert.match(html, /id="priceRounding"/, 'project price supports rounding');
