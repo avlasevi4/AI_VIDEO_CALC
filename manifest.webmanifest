@@ -1,7 +1,7 @@
 {
-  "name": "AI VIDEO CALC 3.0",
+  "name": "AI VIDEO CALC 3.1",
   "short_name": "AI VIDEO CALC",
-  "description": "AI VIDEO CALC 3.0 — проекты, сметы и расходы на AI-видео.",
+  "description": "AI VIDEO CALC 3.1 — проекты, сметы, расходы и общие тарифы AI-видео.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

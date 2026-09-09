@@ -16,6 +16,7 @@
   let cloudSession = null;
   let projectAccess = false;
   const projectSyncTimers = new Map();
+  let tariffSyncTimer = null;
 
   let settings = {
     usdRub: 75.05,
@@ -25,6 +26,7 @@
     syntexPackageTokens: 680,
     syntexManualUnits: {},
     manualTokenTariffs: {},
+    sharedTariffsUpdatedAt: '',
     lastProjectModelByProvider: { kling: 'kling-30' },
     lastCalculatorModelByProvider: { kling: 'kling-30' },
     lastProjectSelectionByProvider: {},
@@ -144,6 +146,60 @@
     } catch (_) {}
   }
 
+  function sharedTariffs() {
+    return {
+      usdRub: settings.usdRub,
+      klingPackageUsd: settings.klingPackageUsd,
+      klingPackageCredits: settings.klingPackageCredits,
+      syntexPackageRub: settings.syntexPackageRub,
+      syntexPackageTokens: settings.syntexPackageTokens,
+      manualTokenTariffs: settings.manualTokenTariffs,
+      syntexManualUnits: settings.syntexManualUnits
+    };
+  }
+
+  function saveTariffSettings() {
+    settings.sharedTariffsUpdatedAt = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    if (!cloudSession) return;
+    clearTimeout(tariffSyncTimer);
+    tariffSyncTimer = setTimeout(() => synchronizeCloudTariffs(), 650);
+  }
+
+  function applySharedTariffs(value, updatedAt) {
+    const allowed = sharedTariffs();
+    Object.keys(allowed).forEach(key => {
+      if (value && Object.prototype.hasOwnProperty.call(value, key)) settings[key] = value[key];
+    });
+    settings.sharedTariffsUpdatedAt = updatedAt || settings.sharedTariffsUpdatedAt || '';
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }
+
+  async function synchronizeCloudTariffs() {
+    if (!cloudSession) return;
+    try {
+      const remote = await window.AIVideoCloud.loadSettings();
+      const localTime = new Date(settings.sharedTariffsUpdatedAt || 0).getTime() || 0;
+      const remoteTime = new Date(remote?.updatedAt || 0).getTime() || 0;
+      if (!remote || localTime > remoteTime) {
+        const saved = await window.AIVideoCloud.saveSettings(sharedTariffs(), settings.sharedTariffsUpdatedAt || new Date().toISOString());
+        settings.sharedTariffsUpdatedAt = saved.updatedAt;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      } else if (remoteTime > localTime) {
+        applySharedTariffs(remote.settings, remote.updatedAt);
+      }
+      hydrateSettings();
+      renderHeadlineRate();
+      renderManualTariffEditor();
+      renderManualUnits();
+      renderResult();
+      renderProject();
+      if ($('manualTariffMessage')) $('manualTariffMessage').textContent = 'Тарифы синхронизированы с вашим облаком и доступны на других устройствах.';
+    } catch (_) {
+      // The local tariff set stays usable until the next successful sync.
+    }
+  }
+
   function activeProject() {
     return projects.find(project => project.id === activeProjectId && !project.deletedAt) || null;
   }
@@ -209,10 +265,9 @@
   function setView(view, updateHash = true) {
     const allowed = ['calculator', 'projects', 'tariffs'];
     const next = allowed.includes(view) ? view : 'calculator';
-    const previous = document.querySelector('.app')?.getAttribute('data-active-view');
     // The library opens as a dashboard. A workspace remains open only after the
     // user explicitly selects a project in this visit to the Projects section.
-    if (next === 'projects' && previous !== 'projects' && activeProject()) {
+    if (next === 'projects' && activeProject()) {
       syncActiveProjectState();
       activeProjectId = '';
       projectItems = [];
@@ -239,6 +294,7 @@
     window.addEventListener('hashchange', () => setView(viewFromLocation(), false));
     window.addEventListener('online', async () => {
       await synchronizeCloudProjects();
+      await synchronizeCloudTariffs();
       renderProject();
     });
     document.querySelectorAll('.provider-tab').forEach(btn => btn.addEventListener('click', () => setProvider(btn.dataset.provider)));
@@ -344,6 +400,7 @@
     ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens'].forEach(id => {
       $(id).addEventListener('input', () => {
         settings[id] = Number($(id).value) || 0;
+        saveTariffSettings();
         saveLocal();
         renderHeadlineRate();
         renderResult();
@@ -394,7 +451,10 @@
       cloudConfigured = state.configured;
       cloudSession = state.session;
       projectAccess = cloudConfigured ? Boolean(cloudSession) : isLocalDevelopment();
-      if (cloudSession) await synchronizeCloudProjects();
+      if (cloudSession) {
+        await synchronizeCloudProjects();
+        await synchronizeCloudTariffs();
+      }
     } catch (error) {
       cloudConfigured = window.AIVideoCloud.isConfigured();
       cloudSession = null;
@@ -434,6 +494,7 @@
       $('authPassword').value = '';
       renderAuthState();
       await synchronizeCloudProjects();
+      await synchronizeCloudTariffs();
       renderProject();
     } catch (error) {
       $('authError').textContent = error.message;
@@ -764,6 +825,7 @@
       sourceUnits: units,
       updatedAt: new Date().toISOString()
     };
+    saveTariffSettings();
     saveLocal();
     $('manualTariffMessage').textContent = `Тариф сохранён: ${model.name} · ${variant.label}: ${fmtNum(units, 2)} токенов за ${duration} сек = ${fmtNum(unitsPerSecond, 2)} токенов / сек.`;
     renderManualTariffList();
@@ -802,6 +864,7 @@
       const key = button.closest('.manual-tariff-row')?.dataset.key;
       if (!key) return;
       delete settings.manualTokenTariffs[key];
+      saveTariffSettings();
       saveLocal();
       $('manualTariffMessage').textContent = 'Ручной тариф удалён. Для этой комбинации снова будет использоваться расчёт по токенам.';
       renderManualTariffList();
@@ -828,7 +891,7 @@
     const n = Number(String(value).replace(',', '.'));
     if (n > 0) settings.syntexManualUnits[key] = n;
     else delete settings.syntexManualUnits[key];
-    saveLocal();
+    saveTariffSettings();
   }
 
   function renderManualUnits() {
@@ -866,7 +929,7 @@
     $('calculatorSummaryPrice').textContent = fmtRub(result.rub);
     const unitName = pricing.providers[result.model.provider].unit === 'credits' ? 'credits' : 'токенов';
     $('resultMeta').innerHTML = result.pricingMode === 'manual_tokens_per_second'
-      ? `<span>Ручной тариф: ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>${fmtNum(result.duration, 2)} сек × ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>1 токен = ${fmtRub(result.unitRub)} · тариф сохранён в настройках устройства.</span>`
+      ? `<span>Ручной тариф: ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>${fmtNum(result.duration, 2)} сек × ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>1 токен = ${fmtRub(result.unitRub)} · ${cloudSession ? 'тариф синхронизирован с личным облаком.' : 'тариф будет синхронизирован после входа.'}</span>`
       : `<span>${fmtNum(result.units, 2)} ${unitName}</span>${result.usd !== null ? `<span>≈ ${fmtUsd(result.usd)}</span>` : ''}<span>1 ${result.model.provider === 'kling' ? 'credit' : 'токен'} = ${fmtRub(result.unitRub)}</span><span>Курс: ${fmtNum(settings.usdRub, 2)} ₽/$</span><span>Тарифная база: ${esc(pricing.updated)}</span>`;
     const status = effectiveStatus(result);
     $('resultStatus').className = 'status ' + status;
@@ -1270,6 +1333,7 @@
         item.manualUnits = n > 0 ? n : '';
         if (n > 0) settings.syntexManualUnits[manualKeyFor(item.modelId, item.variantId, item.duration)] = n;
         saveLocal();
+        saveTariffSettings();
         renderProject();
       });
     }
@@ -1807,6 +1871,7 @@
         if (!Number.isFinite(result.rate)) throw new Error('Некорректный курс');
         settings.usdRub = Number(result.rate.toFixed(4));
         $('usdRub').value = settings.usdRub;
+        saveTariffSettings();
         saveLocal();
         renderHeadlineRate();
         renderResult();
@@ -1884,6 +1949,7 @@
       loadActiveProjectState();
       projectItems = projectItems.map(item => ({ ...item, qty: Math.max(1, Math.round(Number(item.qty) || 1)) }));
       saveLocal();
+      saveTariffSettings();
       hydrateSettings();
       renderHeadlineRate();
       renderManualUnits();

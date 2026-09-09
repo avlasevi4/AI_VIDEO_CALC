@@ -27,7 +27,7 @@ assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation
 assert.match(html, /id="closeProject"/, 'opened project can be closed back to its list');
 assert.match(html, /id="newProjectFromWorkspace"/, 'another project can be created without completing the open one');
 assert.match(html, /id="closeProject"[^>]*>Свернуть</, 'active project can be folded without completion');
-assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /next === 'projects' && previous !== 'projects' && activeProject\(\)/, 'entering the projects tab folds any previously open workspace');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /next === 'projects' && activeProject\(\)/, 'opening the projects tab folds any previously open workspace');
 assert.match(html, /id="customQuotedPrice"/, 'project can use a custom quoted price');
 assert.match(html, /id="workPriceResult"/, 'customer price has a dedicated visible result area');
 assert.match(html, /id="priceRounding"/, 'project price supports rounding');
@@ -36,6 +36,7 @@ assert.match(html, /id="manualTariffModel"/, 'manual tariff editor has a model s
 assert.match(html, /id="manualTariffVariant"/, 'manual tariff editor has a mode selector');
 assert.match(html, /id="manualTariffDuration"/, 'manual tariff editor has a duration selector');
 assert.match(html, /id="manualTariffTokens"/, 'manual tariff editor records token spending');
+assert.match(html, /тарифы синхронизируются с личным облаком/, 'manual tariffs describe cross-device cloud sync');
 assert.match(html, /id="saveManualTariff"/, 'manual tariff editor can save a per-second token rate');
 assert.match(css, /\.project-workspace\s*\{/, 'active project has a distinct visual workspace');
 assert.match(css, /\.project-completion-panel\s*\{/, 'completion has a dedicated visual panel');

@@ -3,6 +3,7 @@
 
   let client = null;
   let session = null;
+  const SETTINGS_ID = '__ai_video_calc_shared_tariffs__';
 
   function config() {
     return window.AIVideoCloudConfig || {};
@@ -78,7 +79,32 @@
     requireSession();
     const { data, error } = await client.from('projects').select('id,name,payload,created_at,updated_at').order('updated_at', { ascending: false });
     if (error) throw error;
-    return (data || []).map(fromRow);
+    return (data || []).filter(row => row.id !== SETTINGS_ID).map(fromRow);
+  }
+
+  async function loadSettings() {
+    requireSession();
+    const { data, error } = await client.from('projects').select('id,payload,created_at,updated_at')
+      .eq('id', SETTINGS_ID).maybeSingle();
+    if (error) throw error;
+    if (!data?.payload || data.payload.kind !== 'shared_tariffs') return null;
+    return { settings: data.payload.settings || {}, createdAt: data.created_at || null, updatedAt: data.updated_at || null };
+  }
+
+  async function saveSettings(settings, updatedAt = new Date().toISOString()) {
+    const current = requireSession();
+    const existing = await loadSettings();
+    const row = {
+      id: SETTINGS_ID,
+      user_id: current.user.id,
+      name: 'Системные тарифы AI VIDEO CALC',
+      payload: { kind: 'shared_tariffs', settings: settings || {} },
+      created_at: existing?.createdAt || updatedAt,
+      updated_at: updatedAt
+    };
+    const { error } = await client.from('projects').upsert(row, { onConflict: 'id' });
+    if (error) throw error;
+    return { settings: row.payload.settings, updatedAt };
   }
 
   async function saveProject(project) {
@@ -152,6 +178,8 @@
     signIn,
     signOut,
     loadProjects,
+    loadSettings,
+    saveSettings,
     saveProject,
     deleteProject,
     synchronize,
