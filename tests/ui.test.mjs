@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const css = await readFile(new URL('../css/app.css', import.meta.url), 'utf8');
+const manifest = await readFile(new URL('../manifest.webmanifest', import.meta.url), 'utf8');
 
 const workspaceStart = html.indexOf('id="projectBuilder"');
 const estimateStart = html.indexOf('class="project-subdetails estimate-details"');
@@ -24,6 +25,8 @@ assert.match(html, /id="actualExpenses" class="project-subdetails actual-details
 assert.match(html, /class="app-tab active"[^>]*data-app-view="calculator"/, 'calculator has a primary navigation tab');
 assert.match(html, /data-app-view="projects"/, 'projects have a primary navigation tab');
 assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation tab');
+assert.match(manifest, /pwa-logo-v3-192\.png/, 'PWA uses the current 192px logo');
+assert.match(manifest, /pwa-logo-v3-512\.png/, 'PWA uses the current 512px logo');
 assert.match(html, /id="closeProject"/, 'opened project can be closed back to its list');
 assert.match(html, /id="newProjectFromWorkspace"/, 'another project can be created without completing the open one');
 assert.match(html, /id="closeProject"[^>]*>Свернуть</, 'active project can be folded without completion');

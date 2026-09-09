@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.1-20260909';
+const CACHE_NAME = 'ai-video-calc-v3.2-pwa-logo-20260909';
 const ASSETS = [
   './',
   './index.html',
@@ -14,8 +14,8 @@ const ASSETS = [
   './data/pricing.json',
   './manifest.webmanifest',
   './icons/ai-calc-logo.png',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/pwa-logo-v3-192.png',
+  './icons/pwa-logo-v3-512.png'
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));

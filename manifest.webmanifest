@@ -1,7 +1,7 @@
 {
-  "name": "AI VIDEO CALC 3.1",
+  "name": "AI VIDEO CALC 3.2",
   "short_name": "AI VIDEO CALC",
-  "description": "AI VIDEO CALC 3.1 — проекты, сметы, расходы и общие тарифы AI-видео.",
+  "description": "AI VIDEO CALC 3.2 — проекты, сметы, расходы и общие тарифы AI-видео.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -11,10 +11,16 @@
   "lang": "ru",
   "icons": [
     {
-      "src": "icons/ai-calc-logo.png",
-      "sizes": "1254x1254",
+      "src": "icons/pwa-logo-v3-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/pwa-logo-v3-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

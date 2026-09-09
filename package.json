@@ -1,6 +1,6 @@
 {
   "name": "ai-video-calc",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "private": true,
   "scripts": {
     "test": "node tests/calculator.test.mjs && node tests/projects.test.mjs && node tests/cloud.test.mjs && node tests/ui.test.mjs",
