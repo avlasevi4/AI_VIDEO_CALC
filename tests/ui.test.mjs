@@ -27,6 +27,8 @@ assert.match(html, /data-app-view="projects"/, 'projects have a primary navigati
 assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation tab');
 assert.match(manifest, /pwa-logo-v3-192\.png/, 'PWA uses the current 192px logo');
 assert.match(manifest, /pwa-logo-v3-512\.png/, 'PWA uses the current 512px logo');
+assert.match(manifest, /pwa-logo-v3-maskable-512\.png/, 'PWA has a padded Android maskable logo');
+assert.match(manifest, /"purpose": "maskable"/, 'Android maskable icon is declared separately');
 assert.match(html, /id="closeProject"/, 'opened project can be closed back to its list');
 assert.match(html, /id="newProjectFromWorkspace"/, 'another project can be created without completing the open one');
 assert.match(html, /id="closeProject"[^>]*>Свернуть</, 'active project can be folded without completion');
