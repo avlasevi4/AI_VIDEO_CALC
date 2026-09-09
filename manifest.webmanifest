@@ -1,11 +1,10 @@
 {
-  "name": "AI VIDEO CALC 3.3",
+  "name": "AI VIDEO CALC 3.4",
   "short_name": "AI VIDEO CALC",
-  "description": "AI VIDEO CALC 3.3 — проекты, сметы, расходы и общие тарифы AI-видео.",
+  "description": "AI VIDEO CALC 3.4 — проекты, сметы, расходы и общие тарифы AI-видео.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#07101a",
   "theme_color": "#07101a",
   "lang": "ru",

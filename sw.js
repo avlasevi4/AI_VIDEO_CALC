@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.3-maskable-logo-20260909';
+const CACHE_NAME = 'ai-video-calc-v3.4-orientation-20260909';
 const ASSETS = [
   './',
   './index.html',

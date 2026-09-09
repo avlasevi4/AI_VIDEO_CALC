@@ -29,6 +29,7 @@ assert.match(manifest, /pwa-logo-v3-192\.png/, 'PWA uses the current 192px logo'
 assert.match(manifest, /pwa-logo-v3-512\.png/, 'PWA uses the current 512px logo');
 assert.match(manifest, /pwa-logo-v3-maskable-512\.png/, 'PWA has a padded Android maskable logo');
 assert.match(manifest, /"purpose": "maskable"/, 'Android maskable icon is declared separately');
+assert.doesNotMatch(manifest, /"orientation":\s*"portrait-primary"/, 'PWA is not locked to portrait orientation');
 assert.match(html, /id="closeProject"/, 'opened project can be closed back to its list');
 assert.match(html, /id="newProjectFromWorkspace"/, 'another project can be created without completing the open one');
 assert.match(html, /id="closeProject"[^>]*>Свернуть</, 'active project can be folded without completion');
