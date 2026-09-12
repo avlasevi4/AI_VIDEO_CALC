@@ -2,6 +2,15 @@
   'use strict';
 
   const STORAGE_KEY = 'ai-video-calc-v2-settings';
+  const PROVIDER_IDS = ['kling', 'syntex', 'dreamina', 'dreamina-plus'];
+  const DREAMINA_PACKAGE_PRESETS = {
+    'standard-monthly': { usd: 5, tokens: 1575 },
+    'pro-monthly': { usd: 11, tokens: 3885 },
+    'max-monthly': { usd: 42, tokens: 8645 },
+    'standard-annual': { usd: 73, tokens: 18900 },
+    'pro-annual': { usd: 168, tokens: 46620 },
+    'max-annual': { usd: 335, tokens: 103740 }
+  };
   let pricing = null;
   let pricingSource = '—';
   let currentProvider = 'kling';
@@ -24,6 +33,9 @@
     klingPackageCredits: 660,
     syntexPackageRub: 1690,
     syntexPackageTokens: 680,
+    dreaminaPackageUsd: 11,
+    dreaminaPackageTokens: 3885,
+    dreaminaPackagePreset: 'pro-monthly',
     syntexManualUnits: {},
     manualTokenTariffs: {},
     sharedTariffsUpdatedAt: '',
@@ -153,6 +165,9 @@
       klingPackageCredits: settings.klingPackageCredits,
       syntexPackageRub: settings.syntexPackageRub,
       syntexPackageTokens: settings.syntexPackageTokens,
+      dreaminaPackageUsd: settings.dreaminaPackageUsd,
+      dreaminaPackageTokens: settings.dreaminaPackageTokens,
+      dreaminaPackagePreset: settings.dreaminaPackagePreset,
       manualTokenTariffs: settings.manualTokenTariffs,
       syntexManualUnits: settings.syntexManualUnits
     };
@@ -242,7 +257,7 @@
     renderDataStatus(loaded.warning);
     renderSourceLinks();
     renderManualTariffEditor();
-    setProvider(settings.lastCalculatorProvider === 'syntex' ? 'syntex' : 'kling', false);
+    setProvider(PROVIDER_IDS.includes(settings.lastCalculatorProvider) ? settings.lastCalculatorProvider : 'kling', false);
     await initCloudAccess();
     renderProject();
     runPricingCheck(false);
@@ -397,9 +412,13 @@
       });
     });
 
-    ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens'].forEach(id => {
+    ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens', 'dreaminaPackageUsd', 'dreaminaPackageTokens'].forEach(id => {
       $(id).addEventListener('input', () => {
         settings[id] = Number($(id).value) || 0;
+        if (id === 'dreaminaPackageUsd' || id === 'dreaminaPackageTokens') {
+          settings.dreaminaPackagePreset = 'custom';
+          $('dreaminaPackagePreset').value = 'custom';
+        }
         saveTariffSettings();
         saveLocal();
         renderHeadlineRate();
@@ -407,6 +426,22 @@
         renderProject();
         renderUnitPrices();
       });
+    });
+    $('dreaminaPackagePreset').addEventListener('change', () => {
+      const id = $('dreaminaPackagePreset').value;
+      settings.dreaminaPackagePreset = id;
+      const preset = DREAMINA_PACKAGE_PRESETS[id];
+      if (preset) {
+        settings.dreaminaPackageUsd = preset.usd;
+        settings.dreaminaPackageTokens = preset.tokens;
+        $('dreaminaPackageUsd').value = preset.usd;
+        $('dreaminaPackageTokens').value = preset.tokens;
+      }
+      saveTariffSettings();
+      saveLocal();
+      renderResult();
+      renderProject();
+      renderUnitPrices();
     });
 
     $('refreshPricing').addEventListener('click', refreshPricing);
@@ -431,9 +466,10 @@
   }
 
   function hydrateSettings() {
-    ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens'].forEach(k => {
+    ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens', 'dreaminaPackageUsd', 'dreaminaPackageTokens'].forEach(k => {
       if ($(k)) $(k).value = settings[k];
     });
+    if ($('dreaminaPackagePreset')) $('dreaminaPackagePreset').value = DREAMINA_PACKAGE_PRESETS[settings.dreaminaPackagePreset] ? settings.dreaminaPackagePreset : 'custom';
   }
 
   function isLocalDevelopment() {
@@ -560,6 +596,13 @@
 
   function modelsForProvider(provider) {
     return pricing.models.filter(model => model.provider === provider);
+  }
+
+  function providerOptions(selected) {
+    return PROVIDER_IDS
+      .filter(id => pricing?.providers?.[id])
+      .map(id => `<option value="${esc(id)}" ${id === selected ? 'selected' : ''}>${esc(pricing.providers[id].name)}</option>`)
+      .join('');
   }
 
   function savedCalculatorSelection(provider) {
@@ -930,7 +973,7 @@
     const unitName = pricing.providers[result.model.provider].unit === 'credits' ? 'credits' : 'токенов';
     $('resultMeta').innerHTML = result.pricingMode === 'manual_tokens_per_second'
       ? `<span>Ручной тариф: ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>${fmtNum(result.duration, 2)} сек × ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>1 токен = ${fmtRub(result.unitRub)} · ${cloudSession ? 'тариф синхронизирован с личным облаком.' : 'тариф будет синхронизирован после входа.'}</span>`
-      : `<span>${fmtNum(result.units, 2)} ${unitName}</span>${result.usd !== null ? `<span>≈ ${fmtUsd(result.usd)}</span>` : ''}<span>1 ${result.model.provider === 'kling' ? 'credit' : 'токен'} = ${fmtRub(result.unitRub)}</span><span>Курс: ${fmtNum(settings.usdRub, 2)} ₽/$</span><span>Тарифная база: ${esc(pricing.updated)}</span>`;
+      : `<span>${fmtNum(result.units, 2)} ${unitName}</span>${result.usd !== null ? `<span>≈ ${fmtUsd(result.usd)}</span>` : ''}<span>1 ${result.model.provider === 'kling' ? 'credit' : 'токен'} = ${fmtRub(result.unitRub)}</span>${result.model.provider === 'dreamina-plus' ? '<span>Спецкурс: 100 ₽ / 10 500 токенов</span>' : result.model.provider === 'syntex' ? '<span>Расчёт по пакету SYNTX</span>' : `<span>Курс: ${fmtNum(settings.usdRub, 2)} ₽/$</span>`}<span>Тарифная база: ${esc(pricing.updated)}</span>`;
     const status = effectiveStatus(result);
     $('resultStatus').className = 'status ' + status;
     $('resultStatus').textContent = result.pricingMode === 'manual_tokens_per_second' ? '● ручной тариф' : status === 'verified' ? '✓ verified' : status === 'unverified' ? '⚠ unverified' : '● manual';
@@ -1095,7 +1138,7 @@
   }
 
   function defaultProjectItem(provider = settings.lastProjectProvider || settings.lastCalculatorProvider || 'kling') {
-    if (!['kling', 'syntex'].includes(provider)) provider = 'kling';
+    if (!PROVIDER_IDS.includes(provider)) provider = 'kling';
     const models = modelsForProvider(provider);
     const saved = savedProjectSelection(provider);
     const model = models.find(item => item.id === saved.modelId) || models[0];
@@ -1123,7 +1166,7 @@
   }
 
   function normalizeProjectItem(item) {
-    if (!['kling', 'syntex'].includes(item.provider)) item.provider = 'kling';
+    if (!PROVIDER_IDS.includes(item.provider)) item.provider = 'kling';
     const model = getProjectModel(item);
     if (!model) return item;
     item.modelId = model.id;
@@ -1194,8 +1237,7 @@
         <div class="field">
           <label>Провайдер</label>
           <select class="project-provider">
-            <option value="kling" ${item.provider === 'kling' ? 'selected' : ''}>KLING AI</option>
-            <option value="syntex" ${item.provider === 'syntex' ? 'selected' : ''}>SYNTX</option>
+            ${providerOptions(item.provider)}
           </select>
         </div>
         <div class="field">
@@ -1401,7 +1443,7 @@
 
   function renderActualDraft() {
     if (!pricing || !$('actualProvider')) return;
-    if (!['kling', 'syntex'].includes(actualDraft.provider)) actualDraft.provider = 'kling';
+    if (!PROVIDER_IDS.includes(actualDraft.provider)) actualDraft.provider = 'kling';
     if (!actualDraft.modelId) {
       const saved = settings.lastActualSelectionByProvider?.[actualDraft.provider] || savedProjectSelection(actualDraft.provider);
       Object.assign(actualDraft, saved);
@@ -1716,6 +1758,8 @@
     if (!pricing) return;
     $('klingUnitPrice').textContent = fmtRub(window.AIVideoCalculator.unitPriceRub('kling', settings, pricing));
     $('syntexUnitPrice').textContent = fmtRub(window.AIVideoCalculator.unitPriceRub('syntex', settings, pricing));
+    $('dreaminaUnitPrice').textContent = fmtRub(window.AIVideoCalculator.unitPriceRub('dreamina', settings, pricing));
+    $('dreaminaPlusUnitPrice').textContent = fmtRub(window.AIVideoCalculator.unitPriceRub('dreamina-plus', settings, pricing));
   }
 
   function renderDataStatus(warning) {

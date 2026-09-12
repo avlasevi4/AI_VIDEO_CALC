@@ -22,6 +22,16 @@
       return rub / units;
     }
 
+    if (providerId === 'dreamina') {
+      const usd = safeNumber(settings.dreaminaPackageUsd, provider.package.price);
+      const units = Math.max(1, safeNumber(settings.dreaminaPackageTokens, provider.package.units));
+      return (usd / units) * safeNumber(settings.usdRub, 75.05);
+    }
+
+    if (providerId === 'dreamina-plus') {
+      return safeNumber(provider.package.price, 100) / Math.max(1, safeNumber(provider.package.units, 10500));
+    }
+
     throw new Error('Не поддерживается цена единицы провайдера');
   }
 
@@ -75,7 +85,7 @@
     const units = billableUnits(variant.billing, duration, manualUnits);
     const unitRub = unitPriceRub(model.provider, settings, pricing);
     const rub = units * unitRub;
-    const usd = model.provider === 'kling' ? rub / safeNumber(settings.usdRub, 75.05) : null;
+    const usd = ['kling', 'dreamina'].includes(model.provider) ? rub / safeNumber(settings.usdRub, 75.05) : null;
     return { model, variant, duration: normalizedDuration, units, unitRub, rub, usd, manualUnits: safeNumber(manualUnits, 0), pricingMode: 'provider_units' };
   }
 

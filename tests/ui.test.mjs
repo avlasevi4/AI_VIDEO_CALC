@@ -25,6 +25,10 @@ assert.match(html, /id="actualExpenses" class="project-subdetails actual-details
 assert.match(html, /class="app-tab active"[^>]*data-app-view="calculator"/, 'calculator has a primary navigation tab');
 assert.match(html, /data-app-view="projects"/, 'projects have a primary navigation tab');
 assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation tab');
+assert.match(html, /data-provider="dreamina"/, 'Dreamina has a calculator provider tab');
+assert.match(html, /data-provider="dreamina-plus"/, 'Dreamina Plus has a calculator provider tab');
+assert.match(html, /id="dreaminaPackagePreset"/, 'Dreamina offers selectable official package presets');
+assert.match(html, /100 ₽ <span>за<\/span> 10 500 токенов/, 'Dreamina Plus fixed exchange is visible');
 assert.match(manifest, /pwa-logo-v3-192\.png/, 'PWA uses the current 192px logo');
 assert.match(manifest, /pwa-logo-v3-512\.png/, 'PWA uses the current 512px logo');
 assert.match(manifest, /pwa-logo-v3-maskable-512\.png/, 'PWA has a padded Android maskable logo');

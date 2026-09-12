@@ -17,13 +17,26 @@ const settings = {
   klingPackageUsd: 10,
   klingPackageCredits: 660,
   syntexPackageRub: 1690,
-  syntexPackageTokens: 680
+  syntexPackageTokens: 680,
+  dreaminaPackageUsd: 11,
+  dreaminaPackageTokens: 3885
 };
 
 const kling = calc.calculateSelection(pricing, settings, 'kling-30', '1080-na', 5);
 assert.equal(kling.units, 40);
 assert.ok(Math.abs(kling.usd - (40 * 10 / 660)) < 1e-12);
 assert.ok(Math.abs(kling.rub - (40 * 10 / 660 * 75)) < 1e-12);
+
+const dreamina = calc.calculateSelection(pricing, settings, 'dreamina-seedance-25', '720p', 5);
+assert.equal(dreamina.units, 185);
+assert.ok(Math.abs(dreamina.usd - (185 * 11 / 3885)) < 1e-12);
+assert.ok(Math.abs(dreamina.rub - (185 * 11 / 3885 * 75)) < 1e-12);
+
+const dreaminaPlus = calc.calculateSelection(pricing, settings, 'dreamina-plus-seedance-25', '1080p', 30);
+assert.equal(dreaminaPlus.units, 2730);
+assert.equal(dreaminaPlus.usd, null);
+assert.ok(Math.abs(dreaminaPlus.unitRub - (100 / 10500)) < 1e-12);
+assert.ok(Math.abs(dreaminaPlus.rub - 26) < 1e-12);
 
 const manualRateSettings = {
   ...settings,

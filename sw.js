@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.4-orientation-20260909';
+const CACHE_NAME = 'ai-video-calc-v3.5-dreamina-20260912';
 const ASSETS = [
   './',
   './index.html',

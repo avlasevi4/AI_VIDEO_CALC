@@ -54,5 +54,25 @@ assert.equal(pricing.providers.kling.package.price, 10, 'Изменился ру
 assert.equal(pricing.providers.kling.package.units, 660, 'Изменилось число credits Kling из v1.2');
 assert.equal(pricing.providers.syntex.package.price, 1690, 'Изменился ручной пакет SYNTX из v1.2');
 assert.equal(pricing.providers.syntex.package.units, 680, 'Изменилось число tokens SYNTX из v1.2');
+assert.equal(pricing.providers['dreamina-plus'].package.price, 100, 'Dreamina Plus должен стоить 100 ₽');
+assert.equal(pricing.providers['dreamina-plus'].package.units, 10500, 'В пакете Dreamina Plus должно быть 10 500 токенов');
+
+const expectedDreaminaRates = {
+  'dreamina-seedance-20-mini': { '720p': 12 },
+  'dreamina-seedance-20-fast': { '720p': 14 },
+  'dreamina-seedance-20': { '720p': 17, '1080p': 41, '4k': 78 },
+  'dreamina-seedance-25': { '480p': 17, '720p': 37, '1080p': 91 }
+};
+for (const [modelId, variants] of Object.entries(expectedDreaminaRates)) {
+  for (const provider of ['dreamina', 'dreamina-plus']) {
+    const effectiveId = provider === 'dreamina' ? modelId : modelId.replace('dreamina-', 'dreamina-plus-');
+    const model = pricing.models.find(item => item.id === effectiveId && item.provider === provider);
+    assert.ok(model, `Отсутствует модель ${effectiveId}`);
+    for (const [variantId, rate] of Object.entries(variants)) {
+      const variant = model.variants.find(item => item.id === variantId);
+      assert.equal(variant?.billing?.unitsPerSecond, rate, `Неверный тариф ${effectiveId}/${variantId}`);
+    }
+  }
+}
 
 console.log(`pricing.json OK: ${pricing.models.length} моделей, ${pricing.updated}`);

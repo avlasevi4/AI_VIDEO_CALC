@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101a">
-  <meta name="description" content="AI VIDEO CALC 3.4 — проекты, сметы, расходы и общие тарифы AI-видео">
+  <meta name="description" content="AI VIDEO CALC 3.5 — проекты, сметы, расходы и общие тарифы AI-видео">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./icons/pwa-logo-v3-192.png">
   <link rel="apple-touch-icon" href="./icons/pwa-logo-v3-192.png">
   <link rel="stylesheet" href="./css/app.css">
   <link rel="stylesheet" href="./css/v3.css">
-  <title>AI VIDEO CALC 3.4</title>
+  <title>AI VIDEO CALC 3.5</title>
 </head>
 <body>
 <main class="app" data-active-view="calculator">
@@ -22,7 +22,7 @@
       <p>От первой генерации до прибыли проекта.</p>
     </div>
     <div class="hero-tools">
-      <div class="version">v3.4</div>
+      <div class="version">v3.5</div>
       <div class="headline-rate" aria-live="polite">
         <span>Курс USD / RUB</span>
         <div class="rate-value"><strong id="headlineRate">1 $ = — ₽</strong><small>для расчётов</small></div>
@@ -50,6 +50,8 @@
       <div class="provider-tabs" role="tablist" aria-label="Провайдер генерации">
         <button class="provider-tab active" data-provider="kling" type="button">KLING AI</button>
         <button class="provider-tab" data-provider="syntex" type="button">SYNTX</button>
+        <button class="provider-tab" data-provider="dreamina" type="button">DREAMINA</button>
+        <button class="provider-tab provider-tab-plus" data-provider="dreamina-plus" type="button">DREAMINA PLUS</button>
       </div>
 
       <div class="grid">
@@ -236,6 +238,8 @@
                 <select id="actualProvider">
                   <option value="kling">KLING AI</option>
                   <option value="syntex">SYNTX</option>
+                  <option value="dreamina">Dreamina</option>
+                  <option value="dreamina-plus">Dreamina Plus</option>
                 </select>
               </div>
               <div class="field">
@@ -330,7 +334,7 @@
   </details>
 
   <details class="card details" open>
-    <summary class="card-summary compact-summary"><span><strong>Настройки и тарифы</strong><small>Курс, пакеты Kling / SYNTX и локальные данные</small></span></summary>
+    <summary class="card-summary compact-summary"><span><strong>Настройки и тарифы</strong><small>Курс, пакеты провайдеров и облачные тарифы</small></span></summary>
     <div class="settings-grid">
       <div class="subcard">
         <h3>Курс валют</h3>
@@ -349,6 +353,26 @@
         <div class="field"><label for="syntexPackageRub">Стоимость пакета, ₽</label><input id="syntexPackageRub" type="number" min="0" step="0.01"></div>
         <div class="field"><label for="syntexPackageTokens">Токенов в пакете</label><input id="syntexPackageTokens" type="number" min="1" step="1"></div>
         <div class="tiny">Цена 1 токена: <strong id="syntexUnitPrice">—</strong></div>
+      </div>
+      <div class="subcard">
+        <h3>Dreamina</h3>
+        <div class="field"><label for="dreaminaPackagePreset">Тарифный пакет</label><select id="dreaminaPackagePreset">
+          <option value="standard-monthly">Standard · месяц</option>
+          <option value="pro-monthly">Pro · месяц</option>
+          <option value="max-monthly">Max · месяц</option>
+          <option value="standard-annual">Standard · год</option>
+          <option value="pro-annual">Pro · год</option>
+          <option value="max-annual">Max · год</option>
+          <option value="custom">Свой пакет</option>
+        </select></div>
+        <div class="field"><label for="dreaminaPackageUsd">Цена пакета, $</label><input id="dreaminaPackageUsd" type="number" min="0" step="0.01"></div>
+        <div class="field"><label for="dreaminaPackageTokens">Токенов в пакете</label><input id="dreaminaPackageTokens" type="number" min="1" step="1"></div>
+        <div class="tiny">Цена 1 токена по курсу USD: <strong id="dreaminaUnitPrice">—</strong></div>
+      </div>
+      <div class="subcard dreamina-plus-card">
+        <h3>Dreamina Plus</h3>
+        <div class="plus-rate">100 ₽ <span>за</span> 10 500 токенов</div>
+        <div class="tiny">Фиксированный специальный курс, без пересчёта USD. Цена 1 токена: <strong id="dreaminaPlusUnitPrice">—</strong></div>
       </div>
       <section class="subcard manual-tariff-card" aria-labelledby="manualTariffTitle">
         <div class="manual-tariff-head">
@@ -381,7 +405,7 @@
   </details>
   </section>
 
-  <footer class="footer">AI VIDEO CALC <span>3.4</span> · 09.09.2026</footer>
+  <footer class="footer">AI VIDEO CALC <span>3.5</span> · 12.09.2026</footer>
 </main>
 
 <dialog id="projectNameDialog" class="project-dialog" aria-labelledby="projectNameTitle">

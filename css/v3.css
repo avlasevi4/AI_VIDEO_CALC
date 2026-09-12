@@ -31,7 +31,7 @@ button:focus-visible,summary:focus-visible,a:focus-visible,.choice-control:has(i
 .calculator-card .result::before{content:'Себестоимость генерации';color:#b0cfca;font-size:14px;margin-bottom:20px}
 .calculator-card .result-price{font-size:clamp(36px,4vw,56px);color:var(--money);line-height:1.12;letter-spacing:-2px}
 .calculator-card .result-meta{font-size:14px;line-height:1.65;margin-top:20px}.status{align-self:flex-start;font-size:11px}
-.provider-tabs{padding:5px;border-radius:14px}.provider-tab{min-height:48px;font-size:14px}
+.provider-tabs{padding:5px;border-radius:14px}.provider-tab{min-height:48px;font-size:12px}
 .field{gap:9px}.field label{font-size:13px;color:#b7c4de;font-weight:600;letter-spacing:0}
 .field select,.field input[type=number],.project-editor select,.project-editor input[type=number],.project-meta-grid input,.image-cost-box input,.actual-entry select,.actual-entry input[type=number]{height:52px;font-size:16px;border-radius:12px;padding:0 14px}
 .field input[type=email],.field input[type=password],.field input[type=text]{height:52px;font-size:16px}

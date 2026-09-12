@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "2.1.0-2026-09-02",
-  "updated": "2026-09-02",
+  "dataVersion": "3.5.0-2026-09-12",
+  "updated": "2026-09-12",
   "currency": "RUB",
   "providers": {
     "kling": {
@@ -25,6 +25,28 @@
       },
       "status": "manual",
       "sourceNote": "Пользовательский пакет 1690 ₽ / 680 токенов из v1.2; редактируется в настройках."
+    },
+    "dreamina": {
+      "name": "Dreamina",
+      "unit": "tokens",
+      "package": {
+        "price": 11,
+        "currency": "USD",
+        "units": 3885
+      },
+      "status": "manual",
+      "sourceNote": "По умолчанию выбран пакет Dreamina Pro 11 USD / 3885 токенов; значения редактируются пользователем."
+    },
+    "dreamina-plus": {
+      "name": "Dreamina Plus",
+      "unit": "tokens",
+      "package": {
+        "price": 100,
+        "currency": "RUB",
+        "units": 10500
+      },
+      "status": "manual",
+      "sourceNote": "Специальный фиксированный курс пользователя: 100 ₽ / 10 500 токенов."
     }
   },
   "verification": {
@@ -362,6 +384,114 @@
             }
           }
         }
+      ]
+    },
+    {
+      "id": "dreamina-seedance-20-mini",
+      "provider": "dreamina",
+      "name": "Seedance 2.0 Mini",
+      "status": "manual",
+      "verifiedAt": "2026-09-12",
+      "sourceNote": "Пользователь подтвердил 60 токенов за 5 секунд в Dreamina.",
+      "variants": [
+        {
+          "id": "720p",
+          "label": "720p",
+          "resolution": "720p",
+          "audio": "—",
+          "billing": { "type": "rate_per_second", "unitsPerSecond": 12, "durationRange": { "min": 5, "max": 15, "step": 1 } }
+        }
+      ]
+    },
+    {
+      "id": "dreamina-seedance-20-fast",
+      "provider": "dreamina",
+      "name": "Seedance 2.0 Fast",
+      "status": "manual",
+      "verifiedAt": "2026-09-12",
+      "sourceNote": "Пользователь подтвердил 70 токенов за 5 секунд в Dreamina.",
+      "variants": [
+        {
+          "id": "720p",
+          "label": "720p",
+          "resolution": "720p",
+          "audio": "—",
+          "billing": { "type": "rate_per_second", "unitsPerSecond": 14, "durationRange": { "min": 5, "max": 15, "step": 1 } }
+        }
+      ]
+    },
+    {
+      "id": "dreamina-seedance-20",
+      "provider": "dreamina",
+      "name": "Seedance 2.0",
+      "status": "manual",
+      "verifiedAt": "2026-09-12",
+      "sourceNote": "Пользователь подтвердил тарифы Dreamina за 5 секунд.",
+      "variants": [
+        { "id": "720p", "label": "720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 15, "step": 1 } } },
+        { "id": "1080p", "label": "1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 41, "durationRange": { "min": 5, "max": 15, "step": 1 } } },
+        { "id": "4k", "label": "4K", "resolution": "4K", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 78, "durationRange": { "min": 5, "max": 15, "step": 1 } } }
+      ]
+    },
+    {
+      "id": "dreamina-seedance-25",
+      "provider": "dreamina",
+      "name": "Seedance 2.5",
+      "status": "manual",
+      "verifiedAt": "2026-09-12",
+      "sourceNote": "Пользователь подтвердил 85/185/455 токенов за 5 секунд; расчёт линейный до 30 секунд.",
+      "variants": [
+        { "id": "480p", "label": "480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "720p", "label": "720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "1080p", "label": "1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
+      ]
+    },
+    {
+      "id": "dreamina-plus-seedance-20-mini",
+      "provider": "dreamina-plus",
+      "name": "Seedance 2.0 Mini",
+      "status": "manual",
+      "verifiedAt": "2026-09-12",
+      "sourceNote": "Тариф Dreamina с отдельным курсом Dreamina Plus.",
+      "variants": [
+        { "id": "720p", "label": "720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 12, "durationRange": { "min": 5, "max": 15, "step": 1 } } }
+      ]
+    },
+    {
+      "id": "dreamina-plus-seedance-20-fast",
+      "provider": "dreamina-plus",
+      "name": "Seedance 2.0 Fast",
+      "status": "manual",
+      "verifiedAt": "2026-09-12",
+      "sourceNote": "Тариф Dreamina с отдельным курсом Dreamina Plus.",
+      "variants": [
+        { "id": "720p", "label": "720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 14, "durationRange": { "min": 5, "max": 15, "step": 1 } } }
+      ]
+    },
+    {
+      "id": "dreamina-plus-seedance-20",
+      "provider": "dreamina-plus",
+      "name": "Seedance 2.0",
+      "status": "manual",
+      "verifiedAt": "2026-09-12",
+      "sourceNote": "Тариф Dreamina с отдельным курсом Dreamina Plus.",
+      "variants": [
+        { "id": "720p", "label": "720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 15, "step": 1 } } },
+        { "id": "1080p", "label": "1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 41, "durationRange": { "min": 5, "max": 15, "step": 1 } } },
+        { "id": "4k", "label": "4K", "resolution": "4K", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 78, "durationRange": { "min": 5, "max": 15, "step": 1 } } }
+      ]
+    },
+    {
+      "id": "dreamina-plus-seedance-25",
+      "provider": "dreamina-plus",
+      "name": "Seedance 2.5",
+      "status": "manual",
+      "verifiedAt": "2026-09-12",
+      "sourceNote": "Тариф Dreamina с отдельным курсом Dreamina Plus; расчёт линейный до 30 секунд.",
+      "variants": [
+        { "id": "480p", "label": "480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "720p", "label": "720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "1080p", "label": "1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
       ]
     },
     {
