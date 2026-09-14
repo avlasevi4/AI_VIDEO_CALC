@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.9-sync-icon-20260914';
+const CACHE_NAME = 'ai-video-calc-v3.10-original-icon-20260914';
 const ASSETS = [
   './',
   './index.html',
@@ -14,9 +14,8 @@ const ASSETS = [
   './data/pricing.json',
   './manifest.webmanifest',
   './icons/ai-calc-logo.png',
-  './icons/pwa-logo-v4-192.png',
-  './icons/pwa-logo-v4-512.png',
-  './icons/pwa-logo-v4-maskable-512.png'
+  './icons/pwa-logo-v5-192.png',
+  './icons/pwa-logo-v5-512.png'
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));

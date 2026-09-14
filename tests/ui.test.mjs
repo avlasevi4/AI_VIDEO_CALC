@@ -29,10 +29,9 @@ assert.match(html, /data-provider="dreamina"/, 'Dreamina has a calculator provid
 assert.match(html, /data-provider="dreamina-plus"/, 'Dreamina Plus has a calculator provider tab');
 assert.match(html, /id="dreaminaPackagePreset"/, 'Dreamina offers selectable official package presets');
 assert.match(html, /100 ₽ <span>за<\/span> 10 500 токенов/, 'Dreamina Plus fixed exchange is visible');
-assert.match(manifest, /pwa-logo-v4-192\.png/, 'PWA uses the current 192px logo');
-assert.match(manifest, /pwa-logo-v4-512\.png/, 'PWA uses the current 512px logo');
-assert.match(manifest, /pwa-logo-v4-maskable-512\.png/, 'PWA has a full-bleed Android maskable logo');
-assert.match(manifest, /"purpose": "maskable"/, 'Android maskable icon is declared separately');
+assert.match(manifest, /pwa-logo-v5-192\.png/, 'PWA uses the original full-size 192px logo');
+assert.match(manifest, /pwa-logo-v5-512\.png/, 'PWA uses the original full-size 512px logo');
+assert.doesNotMatch(manifest, /"purpose": "maskable"/, 'tablet cannot substitute a padded or haloed maskable logo');
 assert.doesNotMatch(manifest, /"orientation":\s*"portrait-primary"/, 'PWA is not locked to portrait orientation');
 assert.match(manifest, /"orientation":\s*"any"/, 'PWA explicitly allows portrait and landscape orientations');
 assert.match(html, /id="closeProject"/, 'opened project can be closed back to its list');
