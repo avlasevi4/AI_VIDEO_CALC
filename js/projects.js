@@ -5,7 +5,7 @@
   const LEGACY_PROJECT_KEY = 'ai-video-calc-v2-project';
   const LEGACY_META_KEY = 'ai-video-calc-v2-project-meta';
   const LEGACY_ACTUAL_KEY = 'ai-video-calc-v2-actual';
-  const SCHEMA_VERSION = 6;
+  const SCHEMA_VERSION = 7;
 
   const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -34,6 +34,7 @@
       deletedAt: project?.deletedAt || null,
       status,
       completedAt: status === 'completed' ? (project?.completedAt || project?.updatedAt || now) : null,
+      reopenedAt: project?.reopenedAt || null,
       items: Array.isArray(project?.items) ? clone(project.items).map(item => {
         const normalized = {
           ...item,
@@ -57,6 +58,7 @@
       updatedAt: now,
       status: 'active',
       completedAt: null,
+      reopenedAt: null,
       items: initialItem ? [initialItem] : [],
       meta: defaultMeta,
       actualItems: []

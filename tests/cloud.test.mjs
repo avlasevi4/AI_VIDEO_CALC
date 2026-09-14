@@ -99,6 +99,18 @@ assert.equal(loaded[0].items[0].generationsPerVideo, 3);
 assert.equal(loaded[0].status, 'completed');
 assert.equal(loaded[0].completedAt, '2026-08-20T02:00:00.000Z');
 
+const staleActiveProject = {
+  ...loaded[0],
+  status: 'active',
+  completedAt: null,
+  updatedAt: '2099-01-01T00:00:00.000Z',
+  actualItems: [{ id: 'old-mobile-copy', rub: 1 }]
+};
+const protectedCompletedProject = await cloud.saveProject(staleActiveProject);
+assert.equal(protectedCompletedProject.status, 'completed', 'completed cloud project wins over a stale active device');
+assert.equal(projectRow().payload.status, 'completed', 'stale mobile autosave cannot reopen a completed project');
+assert.deepEqual(projectRow().payload.actualItems, [], 'stale mobile autosave cannot replace completed actual expenses');
+
 await cloud.deleteProject('project-1');
 assert.equal(rows.filter(row => row.id === 'project-1').length, 1, 'keep a deletion record for other devices');
 assert.ok(projectRow().payload.deletedAt);

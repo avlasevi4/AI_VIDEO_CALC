@@ -29,9 +29,9 @@ assert.match(html, /data-provider="dreamina"/, 'Dreamina has a calculator provid
 assert.match(html, /data-provider="dreamina-plus"/, 'Dreamina Plus has a calculator provider tab');
 assert.match(html, /id="dreaminaPackagePreset"/, 'Dreamina offers selectable official package presets');
 assert.match(html, /100 ₽ <span>за<\/span> 10 500 токенов/, 'Dreamina Plus fixed exchange is visible');
-assert.match(manifest, /pwa-logo-v3-192\.png/, 'PWA uses the current 192px logo');
-assert.match(manifest, /pwa-logo-v3-512\.png/, 'PWA uses the current 512px logo');
-assert.match(manifest, /pwa-logo-v3-maskable-512\.png/, 'PWA has a padded Android maskable logo');
+assert.match(manifest, /pwa-logo-v4-192\.png/, 'PWA uses the current 192px logo');
+assert.match(manifest, /pwa-logo-v4-512\.png/, 'PWA uses the current 512px logo');
+assert.match(manifest, /pwa-logo-v4-maskable-512\.png/, 'PWA has a full-bleed Android maskable logo');
 assert.match(manifest, /"purpose": "maskable"/, 'Android maskable icon is declared separately');
 assert.doesNotMatch(manifest, /"orientation":\s*"portrait-primary"/, 'PWA is not locked to portrait orientation');
 assert.match(manifest, /"orientation":\s*"any"/, 'PWA explicitly allows portrait and landscape orientations');
@@ -61,5 +61,7 @@ assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /class="actual-action actual-remove"[^>]*title="Удалить"/, 'repeat and delete use the same action-button component');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /actualItems\.push\(\{[\s\S]*JSON\.parse\(JSON\.stringify\(source\)\)/, 'repeat action copies the recorded generation snapshot');
 assert.doesNotMatch(css, /\.actual-repeat:hover[^}]*rotate/, 'repeat button does not use a spinning hover animation');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /visibilitychange[\s\S]*refreshProjectsOnForeground/, 'projects refresh when the PWA returns to the foreground');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /clearTimeout\(projectSyncTimers\.get\(project\.id\)\)/, 'completion cancels a pending stale autosave');
 
 console.log('UI structure tests OK');

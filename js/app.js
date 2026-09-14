@@ -26,6 +26,8 @@
   let projectAccess = false;
   const projectSyncTimers = new Map();
   let tariffSyncTimer = null;
+  let lastCloudProjectSyncAt = 0;
+  let foregroundSyncPromise = null;
 
   let settings = {
     usdRub: 75.05,
@@ -149,12 +151,12 @@
     if ('retryGenerations' in settings) delete settings.retryGenerations;
   }
 
-  function saveLocal() {
+  function saveLocal({ touchProject = true, syncProject = true } = {}) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      syncActiveProjectState();
+      syncActiveProjectState(touchProject);
       window.AIVideoProjectStore.save(projects, activeProjectId);
-      scheduleActiveProjectSync();
+      if (syncProject) scheduleActiveProjectSync();
     } catch (_) {}
   }
 
@@ -280,8 +282,12 @@
   }
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) releaseOrientationLock();
+    if (!document.hidden) {
+      releaseOrientationLock();
+      refreshProjectsOnForeground();
+    }
   });
+  window.addEventListener('pageshow', () => refreshProjectsOnForeground());
 
   function viewFromLocation() {
     const hash = String(location.hash || '').replace('#', '').toLowerCase();
@@ -296,7 +302,7 @@
     // The library opens as a dashboard. A workspace remains open only after the
     // user explicitly selects a project in this visit to the Projects section.
     if (next === 'projects' && activeProject()) {
-      syncActiveProjectState();
+      syncActiveProjectState(false);
       activeProjectId = '';
       projectItems = [];
       actualItems = [];
@@ -575,10 +581,18 @@
       }
       loadActiveProjectState();
       window.AIVideoProjectStore.save(projects, activeProjectId);
+      lastCloudProjectSyncAt = Date.now();
       $('syncStatus').textContent = `Синхронизировано ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
     } catch (error) {
       $('syncStatus').textContent = 'Offline: изменения сохранены локально';
     }
+  }
+
+  function refreshProjectsOnForeground() {
+    if (!cloudSession || document.hidden || Date.now() - lastCloudProjectSyncAt < 1500 || foregroundSyncPromise) return;
+    foregroundSyncPromise = synchronizeCloudProjects()
+      .then(() => renderProject())
+      .finally(() => { foregroundSyncPromise = null; });
   }
 
   function scheduleActiveProjectSync() {
@@ -590,7 +604,12 @@
       projectSyncTimers.delete(pendingProject.id);
       try {
         const saved = await window.AIVideoCloud.saveProject(pendingProject);
-        if (saved?.deletedAt) {
+        const remoteWon = saved && (
+          saved.updatedAt !== pendingProject.updatedAt
+          || saved.status !== pendingProject.status
+          || saved.completedAt !== pendingProject.completedAt
+        );
+        if (saved?.deletedAt || remoteWon) {
           projects = projects.map(project => project.id === saved.id ? saved : project);
           loadActiveProjectState();
           window.AIVideoProjectStore.save(projects, activeProjectId);
@@ -1058,8 +1077,8 @@
 
   function closeActiveProject() {
     if (!activeProject()) return;
-    // Сначала сохраняем текущий черновик, затем лишь скрываем его из рабочей области.
-    saveLocal();
+    // Сворачивание не является изменением проекта и не должно выигрывать конфликт синхронизации.
+    syncActiveProjectState(false);
     activeProjectId = '';
     projectItems = [];
     actualItems = [];
@@ -1074,10 +1093,13 @@
     if (!project) return;
 
     syncActiveProjectState(false);
+    clearTimeout(projectSyncTimers.get(project.id));
+    projectSyncTimers.delete(project.id);
     const completing = project.status !== 'completed';
     const now = new Date().toISOString();
     project.status = completing ? 'completed' : 'active';
     project.completedAt = completing ? now : null;
+    project.reopenedAt = completing ? null : now;
     project.updatedAt = now;
     window.AIVideoProjectStore.save(projects, activeProjectId);
 

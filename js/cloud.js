@@ -69,6 +69,7 @@
       deletedAt: row.payload?.deletedAt || null,
       status: row.payload?.status === 'completed' ? 'completed' : 'active',
       completedAt: row.payload?.completedAt || null,
+      reopenedAt: row.payload?.reopenedAt || null,
       items: row.payload?.items || [],
       meta: row.payload?.meta || {},
       actualItems: row.payload?.actualItems || []
@@ -112,6 +113,16 @@
     // Deletion wins over stale open editors, even when their clock is ahead.
     const remote = (await loadProjects()).find(item => item.id === project.id);
     if (remote?.deletedAt && !project.deletedAt) return remote;
+    if (remote && !project.deletedAt) {
+      const remoteTime = new Date(remote.updatedAt || 0).getTime() || 0;
+      const localTime = new Date(project.updatedAt || 0).getTime() || 0;
+      const remoteCompletedAt = new Date(remote.completedAt || remote.updatedAt || 0).getTime() || 0;
+      const localReopenedAt = new Date(project.reopenedAt || 0).getTime() || 0;
+      const staleActiveCopy = remote.status === 'completed'
+        && project.status !== 'completed'
+        && localReopenedAt <= remoteCompletedAt;
+      if (staleActiveCopy || remoteTime > localTime) return remote;
+    }
     const row = {
       id: project.id,
       user_id: current.user.id,
@@ -120,6 +131,7 @@
         deletedAt: project.deletedAt || null,
         status: project.status === 'completed' ? 'completed' : 'active',
         completedAt: project.completedAt || null,
+        reopenedAt: project.reopenedAt || null,
         items: project.items || [],
         meta: project.meta || {},
         actualItems: project.actualItems || []

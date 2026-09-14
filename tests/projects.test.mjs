@@ -46,7 +46,7 @@ memory.set(store.STORAGE_KEY, JSON.stringify({
   }]
 }));
 const migrated = store.load(defaults);
-assert.equal(migrated.schemaVersion, 6);
+assert.equal(migrated.schemaVersion, 7);
 assert.equal(migrated.projects[0].items[0].generationsPerVideo, 3);
 assert.equal('extraQty' in migrated.projects[0].items[0], false);
 assert.equal('retryPercent' in migrated.projects[0].meta, false);
