@@ -1544,8 +1544,25 @@
           <span>${esc(item.variantLabel || item.variantId)} · ${fmtNum(item.duration, 2)} сек · ${fmtNum(item.units, 2)} ${unitFor(item.provider)}</span>
         </div>
         <div class="actual-cost">${fmtRub(item.rub)}</div>
+        <button class="actual-repeat" type="button" title="Повторить" aria-label="Повторить фактическую генерацию">↻</button>
         <button class="remove actual-remove" type="button" aria-label="Удалить фактическую генерацию">×</button>
       </article>`).join('');
+
+    $('actualList').querySelectorAll('.actual-repeat').forEach(button => {
+      button.addEventListener('click', () => {
+        const id = button.closest('.actual-item')?.dataset.id;
+        const source = actualItems.find(item => item.id === id);
+        if (!source) return;
+        actualItems.push({
+          ...JSON.parse(JSON.stringify(source)),
+          id: 'a-' + Date.now() + '-' + Math.random().toString(16).slice(2),
+          recordedAt: new Date().toISOString()
+        });
+        saveLocal();
+        renderActualList();
+        renderTotals();
+      });
+    });
 
     $('actualList').querySelectorAll('.actual-remove').forEach(button => {
       button.addEventListener('click', () => {

@@ -108,10 +108,10 @@ input[type=range]{height:32px;box-shadow:none!important;border:0!important}input
  .project-subbody{padding:8px}
  .project-editor,.actual-entry{padding:10px;border-radius:14px}
  .actual-list{gap:7px}
- .actual-item{grid-template-columns:25px minmax(0,1fr) auto 34px;gap:7px;padding:8px 7px}
+ .actual-item{grid-template-columns:25px minmax(0,1fr) auto 34px 34px;gap:5px;padding:8px 7px}
  .actual-index{width:25px;height:25px}
  .actual-copy strong{font-size:12px}.actual-copy span{font-size:10px}
- .actual-cost{font-size:12px}.actual-remove{width:34px;height:34px}
+ .actual-cost{font-size:12px}.actual-repeat,.actual-remove{width:34px;height:34px}
 }
 
 /* На планшете оставляем больше воздуха, но не тратим ширину на широкие поля. */

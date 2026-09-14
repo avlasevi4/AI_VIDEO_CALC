@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.6-mobile-layout-orientation-20260914';
+const CACHE_NAME = 'ai-video-calc-v3.7-repeat-generation-20260914';
 const ASSETS = [
   './',
   './index.html',

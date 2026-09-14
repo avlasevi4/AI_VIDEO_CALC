@@ -57,5 +57,7 @@ assert.match(css, /\.manual-tariff-editor\s*\{/, 'manual tariff editor is styled
 assert.doesNotMatch(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /стоимость зафиксирована при записи/, 'actual generation rows do not repeat verbose fixed-cost text');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /orientation\?\.unlock/, 'PWA releases an orientation lock left by an older installation');
 assert.match(await readFile(new URL('../css/v3.css', import.meta.url), 'utf8'), /\.project-workspace\{margin:14px 0 0;padding:0;overflow:visible;border:0/, 'mobile project workspace does not waste width on nested frames');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /class="actual-repeat"[^>]*title="Повторить"/, 'each actual generation has a compact repeat action');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /actualItems\.push\(\{[\s\S]*JSON\.parse\(JSON\.stringify\(source\)\)/, 'repeat action copies the recorded generation snapshot');
 
 console.log('UI structure tests OK');
