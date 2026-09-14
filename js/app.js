@@ -1544,8 +1544,12 @@
           <span>${esc(item.variantLabel || item.variantId)} · ${fmtNum(item.duration, 2)} сек · ${fmtNum(item.units, 2)} ${unitFor(item.provider)}</span>
         </div>
         <div class="actual-cost">${fmtRub(item.rub)}</div>
-        <button class="actual-repeat" type="button" title="Повторить" aria-label="Повторить фактическую генерацию">↻</button>
-        <button class="remove actual-remove" type="button" aria-label="Удалить фактическую генерацию">×</button>
+        <button class="actual-action actual-repeat" type="button" title="Повторить" aria-label="Повторить фактическую генерацию">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <button class="actual-action actual-remove" type="button" title="Удалить" aria-label="Удалить фактическую генерацию">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m8 8 8 8M16 8l-8 8"/></svg>
+        </button>
       </article>`).join('');
 
     $('actualList').querySelectorAll('.actual-repeat').forEach(button => {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.7-repeat-generation-20260914';
+const CACHE_NAME = 'ai-video-calc-v3.8-generation-actions-20260914';
 const ASSETS = [
   './',
   './index.html',
