@@ -34,6 +34,7 @@ assert.match(manifest, /pwa-logo-v3-512\.png/, 'PWA uses the current 512px logo'
 assert.match(manifest, /pwa-logo-v3-maskable-512\.png/, 'PWA has a padded Android maskable logo');
 assert.match(manifest, /"purpose": "maskable"/, 'Android maskable icon is declared separately');
 assert.doesNotMatch(manifest, /"orientation":\s*"portrait-primary"/, 'PWA is not locked to portrait orientation');
+assert.match(manifest, /"orientation":\s*"any"/, 'PWA explicitly allows portrait and landscape orientations');
 assert.match(html, /id="closeProject"/, 'opened project can be closed back to its list');
 assert.match(html, /id="newProjectFromWorkspace"/, 'another project can be created without completing the open one');
 assert.match(html, /id="closeProject"[^>]*>Свернуть</, 'active project can be folded without completion');
@@ -53,5 +54,8 @@ assert.match(css, /\.project-completion-panel\s*\{/, 'completion has a dedicated
 assert.match(css, /\.app-tabs\s*\{/, 'primary navigation is styled');
 assert.match(css, /\.stepper\s*\{/, 'quantity stepper is styled');
 assert.match(css, /\.manual-tariff-editor\s*\{/, 'manual tariff editor is styled');
+assert.doesNotMatch(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /стоимость зафиксирована при записи/, 'actual generation rows do not repeat verbose fixed-cost text');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /orientation\?\.unlock/, 'PWA releases an orientation lock left by an older installation');
+assert.match(await readFile(new URL('../css/v3.css', import.meta.url), 'utf8'), /\.project-workspace\{margin:14px 0 0;padding:0;overflow:visible;border:0/, 'mobile project workspace does not waste width on nested frames');
 
 console.log('UI structure tests OK');

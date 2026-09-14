@@ -245,6 +245,7 @@
 
   async function init() {
     loadLocal();
+    releaseOrientationLock();
     actualDraft.provider = settings.lastActualProvider || 'kling';
     bind();
     setView(viewFromLocation(), false);
@@ -269,6 +270,18 @@
     // При открытии пытаемся освежить курс. Если сеть недоступна, остаётся последнее сохранённое значение.
     refreshRate(true);
   }
+
+  function releaseOrientationLock() {
+    try {
+      window.screen?.orientation?.unlock?.();
+    } catch (_) {
+      // Некоторые браузеры разрешают управление ориентацией только в полноэкранном режиме.
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) releaseOrientationLock();
+  });
 
   function viewFromLocation() {
     const hash = String(location.hash || '').replace('#', '').toLowerCase();
@@ -1528,8 +1541,7 @@
         <div class="actual-index">${index + 1}</div>
         <div class="actual-copy">
           <strong>${esc(item.modelName || item.modelId)}</strong>
-          <span>${esc(item.variantLabel || item.variantId)} · ${fmtNum(item.duration, 2)} сек</span>
-          <small>${item.pricingMode === 'manual_tokens_per_second' ? `ручной тариф ${fmtNum(item.manualTokensPerSecond, 2)} токенов / сек` : `${fmtNum(item.units, 2)} ${unitFor(item.provider)}`} · стоимость зафиксирована при записи</small>
+          <span>${esc(item.variantLabel || item.variantId)} · ${fmtNum(item.duration, 2)} сек · ${fmtNum(item.units, 2)} ${unitFor(item.provider)}</span>
         </div>
         <div class="actual-cost">${fmtRub(item.rub)}</div>
         <button class="remove actual-remove" type="button" aria-label="Удалить фактическую генерацию">×</button>
