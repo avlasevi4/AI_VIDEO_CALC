@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "3.5.0-2026-09-12",
-  "updated": "2026-09-12",
+  "dataVersion": "3.11.0-2026-09-15",
+  "updated": "2026-09-15",
   "currency": "RUB",
   "providers": {
     "kling": {
@@ -438,12 +438,15 @@
       "provider": "dreamina",
       "name": "Seedance 2.5",
       "status": "manual",
-      "verifiedAt": "2026-09-12",
-      "sourceNote": "Пользователь подтвердил 85/185/455 токенов за 5 секунд; расчёт линейный до 30 секунд.",
+      "verifiedAt": "2026-09-15",
+      "sourceNote": "Пользователь подтвердил отдельные тарифы First & Last Frame и Omni Reference; расчёт линейный до 30 секунд.",
       "variants": [
-        { "id": "480p", "label": "480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "720p", "label": "720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "1080p", "label": "1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
+        { "id": "480p", "label": "First & Last Frame · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "720p", "label": "First & Last Frame · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "1080p", "label": "First & Last Frame · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-480p", "label": "Omni Reference · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 28, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-720p", "label": "Omni Reference · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 74, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-1080p", "label": "Omni Reference · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 546, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
       ]
     },
     {
@@ -486,12 +489,15 @@
       "provider": "dreamina-plus",
       "name": "Seedance 2.5",
       "status": "manual",
-      "verifiedAt": "2026-09-12",
-      "sourceNote": "Тариф Dreamina с отдельным курсом Dreamina Plus; расчёт линейный до 30 секунд.",
+      "verifiedAt": "2026-09-15",
+      "sourceNote": "Тарифы First & Last Frame и Omni Reference с отдельным курсом Dreamina Plus; расчёт линейный до 30 секунд.",
       "variants": [
-        { "id": "480p", "label": "480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "720p", "label": "720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "1080p", "label": "1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
+        { "id": "480p", "label": "First & Last Frame · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "720p", "label": "First & Last Frame · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "1080p", "label": "First & Last Frame · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-480p", "label": "Omni Reference · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 28, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-720p", "label": "Omni Reference · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 74, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-1080p", "label": "Omni Reference · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 546, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
       ]
     },
     {

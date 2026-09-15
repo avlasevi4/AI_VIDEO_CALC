@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.10-original-icon-20260914';
+const CACHE_NAME = 'ai-video-calc-v3.11-seedance-modes-20260915';
 const ASSETS = [
   './',
   './index.html',

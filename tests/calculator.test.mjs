@@ -38,6 +38,16 @@ assert.equal(dreaminaPlus.usd, null);
 assert.ok(Math.abs(dreaminaPlus.unitRub - (100 / 10500)) < 1e-12);
 assert.ok(Math.abs(dreaminaPlus.rub - 26) < 1e-12);
 
+const omni480 = calc.calculateSelection(pricing, settings, 'dreamina-plus-seedance-25', 'omni-reference-480p', 30);
+const omni720 = calc.calculateSelection(pricing, settings, 'dreamina-plus-seedance-25', 'omni-reference-720p', 30);
+const omni1080 = calc.calculateSelection(pricing, settings, 'dreamina-plus-seedance-25', 'omni-reference-1080p', 6);
+assert.equal(omni480.units, 840);
+assert.equal(omni720.units, 2220);
+assert.equal(omni1080.units, 3276);
+assert.ok(Math.abs(omni480.rub - 8) < 1e-12);
+assert.ok(Math.abs(omni720.rub - (2220 * 100 / 10500)) < 1e-12);
+assert.ok(Math.abs(omni1080.rub - 31.2) < 1e-12);
+
 const manualRateSettings = {
   ...settings,
   manualTokenTariffs: {

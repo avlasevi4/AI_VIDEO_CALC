@@ -61,7 +61,14 @@ const expectedDreaminaRates = {
   'dreamina-seedance-20-mini': { '720p': 12 },
   'dreamina-seedance-20-fast': { '720p': 14 },
   'dreamina-seedance-20': { '720p': 17, '1080p': 41, '4k': 78 },
-  'dreamina-seedance-25': { '480p': 17, '720p': 37, '1080p': 91 }
+  'dreamina-seedance-25': {
+    '480p': 17,
+    '720p': 37,
+    '1080p': 91,
+    'omni-reference-480p': 28,
+    'omni-reference-720p': 74,
+    'omni-reference-1080p': 546
+  }
 };
 for (const [modelId, variants] of Object.entries(expectedDreaminaRates)) {
   for (const provider of ['dreamina', 'dreamina-plus']) {
