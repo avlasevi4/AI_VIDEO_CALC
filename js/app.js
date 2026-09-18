@@ -24,7 +24,7 @@
   let projectDialogMode = 'create';
   let cloudConfigured = false;
   let cloudSession = null;
-  let projectAccess = false;
+  let projectAccess = true;
   const projectSyncTimers = new Map();
   let tariffSyncTimer = null;
   let lastCloudProjectSyncAt = 0;
@@ -116,6 +116,7 @@
       if (!settings.lastCalculatorSelectionByProvider || typeof settings.lastCalculatorSelectionByProvider !== 'object') settings.lastCalculatorSelectionByProvider = {};
     } catch (_) {}
 
+    window.AIVideoProjectStore.setScope('guest');
     const library = window.AIVideoProjectStore.load(defaultProjectMeta());
     projects = library.projects;
     activeProjectId = library.activeProjectId;
@@ -500,13 +501,15 @@
     try {
       const state = await window.AIVideoCloud.init(session => {
         cloudSession = session;
-        projectAccess = Boolean(session);
+        projectAccess = true;
+        switchProjectLibrary(session ? 'owner' : 'guest');
         renderAuthState();
         renderProject();
       });
       cloudConfigured = state.configured;
       cloudSession = state.session;
-      projectAccess = cloudConfigured ? Boolean(cloudSession) : isLocalDevelopment();
+      projectAccess = true;
+      switchProjectLibrary(cloudSession ? 'owner' : 'guest');
       if (cloudSession) {
         await synchronizeCloudProjects();
         await synchronizeCloudTariffs();
@@ -514,7 +517,8 @@
     } catch (error) {
       cloudConfigured = window.AIVideoCloud.isConfigured();
       cloudSession = null;
-      projectAccess = false;
+      projectAccess = true;
+      switchProjectLibrary('guest');
       $('authError').textContent = 'Не удалось подключить личные проекты: ' + error.message;
     }
     renderAuthState();
@@ -528,6 +532,7 @@
     $('authSetup').classList.toggle('hidden', cloudConfigured || Boolean(cloudSession));
     $('projectPrivateContent').classList.toggle('hidden', !projectAccess);
     $('createProject').classList.toggle('hidden', !projectAccess);
+    $('ownerAccessLabel').textContent = cloudSession ? 'Облако подключено' : 'Облачная синхронизация';
 
     if (localMode) {
       $('authSetup').querySelector('strong').textContent = 'Локальный режим разработки';
@@ -548,6 +553,7 @@
     try {
       cloudSession = await window.AIVideoCloud.signIn($('authEmail').value, $('authPassword').value);
       projectAccess = true;
+      switchProjectLibrary('owner');
       $('authPassword').value = '';
       renderAuthState();
       await synchronizeCloudProjects();
@@ -566,9 +572,20 @@
     $('syncStatus').textContent = 'Завершаем сессию…';
     await window.AIVideoCloud.signOut();
     cloudSession = null;
-    projectAccess = false;
+    projectAccess = true;
+    switchProjectLibrary('guest');
     renderAuthState();
     renderProject();
+  }
+
+  function switchProjectLibrary(scope) {
+    if (window.AIVideoProjectStore.getScope() === scope) return;
+    window.AIVideoProjectStore.setScope(scope);
+    const library = window.AIVideoProjectStore.load(defaultProjectMeta());
+    projects = library.projects;
+    activeProjectId = library.activeProjectId;
+    loadActiveProjectState();
+    actualDraft = { provider: settings.lastActualProvider || 'kling', modelId: '', variantId: '', duration: 5, manualUnits: '' };
   }
 
   async function synchronizeCloudProjects() {

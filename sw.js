@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.12-private-provider-ui-20260918';
+const CACHE_NAME = 'ai-video-calc-v3.13-local-projects-20260918';
 const ASSETS = [
   './',
   './index.html',

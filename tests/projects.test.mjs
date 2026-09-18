@@ -34,6 +34,7 @@ assert.equal(reloaded.activeProjectId, second.id);
 store.clear();
 assert.equal(store.load(defaults).projects.length, 0);
 
+store.setScope('owner');
 memory.set(store.STORAGE_KEY, JSON.stringify({
   schemaVersion: 4,
   activeProjectId: 'legacy-project',
@@ -57,6 +58,13 @@ assert.equal(migrated.projects[0].actualItems[0].id, 'actual-kept');
 assert.equal(migrated.projects[0].actualItems[0].rub, 123);
 assert.equal(migrated.projects[0].status, 'active');
 assert.equal(migrated.projects[0].completedAt, null);
+
+store.setScope('guest');
+assert.equal(store.load(defaults).projects.length, 0, 'guest projects are isolated from the owner cache');
+const guest = store.createProject('Гостевой проект', defaults);
+store.save([guest], guest.id);
+store.setScope('owner');
+assert.equal(store.load(defaults).projects[0].id, 'legacy-project', 'owner cache remains intact after guest saves');
 
 const completed = store.normalizeProject({
   id: 'completed-project',

@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101a">
-  <meta name="description" content="AI VIDEO CALC 3.12 — проекты, сметы, расходы и общие тарифы AI-видео">
+  <meta name="description" content="AI VIDEO CALC 3.13 — проекты, сметы, расходы и общие тарифы AI-видео">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./icons/pwa-logo-v5-192.png">
   <link rel="apple-touch-icon" href="./icons/pwa-logo-v5-192.png">
   <link rel="stylesheet" href="./css/app.css">
   <link rel="stylesheet" href="./css/v3.css">
-  <title>AI VIDEO CALC 3.12</title>
+  <title>AI VIDEO CALC 3.13</title>
 </head>
 <body>
 <main class="app" data-active-view="calculator">
@@ -22,7 +22,7 @@
       <p>От первой генерации до прибыли проекта.</p>
     </div>
     <div class="hero-tools">
-      <div class="version">v3.12</div>
+      <div class="version">v3.13</div>
       <div class="headline-rate" aria-live="polite">
         <span>Курс USD / RUB</span>
         <div class="rate-value"><strong id="headlineRate">1 $ = — ₽</strong><small>для расчётов</small></div>
@@ -91,28 +91,31 @@
     <div class="section-head">
       <div>
         <h2>Мои проекты</h2>
-        <div class="muted">Ведите любое количество параллельных проектов: черновики сохраняются и синхронизируются между устройствами.</div>
+        <div class="muted">Без входа проекты сохраняются в этом браузере. Для владельца доступна синхронизация между устройствами.</div>
       </div>
       <button id="createProject" class="btn primary" type="button">Новый проект</button>
     </div>
 
-    <div id="projectAuth" class="project-auth">
-      <div id="authLoading" class="auth-state"><strong>Проверяем доступ…</strong><span>Калькулятор остаётся доступным независимо от входа.</span></div>
-      <form id="authForm" class="auth-form hidden">
-        <div class="auth-copy"><strong>Вход в личные проекты</strong><span>Сметы и история доступны только разрешённому аккаунту.</span></div>
-        <div class="field"><label for="authEmail">E-mail</label><input id="authEmail" type="email" required autocomplete="username"></div>
-        <div class="field"><label for="authPassword">Пароль</label><input id="authPassword" type="password" required autocomplete="current-password"></div>
-        <button id="authSubmit" class="btn primary" type="submit">Войти</button>
-        <div id="authError" class="field-error hidden" role="alert"></div>
-      </form>
-      <div id="authAccount" class="auth-account hidden">
-        <div><span>Выполнен вход</span><strong id="authAccountEmail">—</strong><small id="syncStatus">Локальная копия синхронизирована</small></div>
-        <button id="authSignOut" class="btn secondary" type="button">Выйти</button>
+    <details id="projectAuth" class="project-auth owner-access">
+      <summary class="owner-access-summary"><span id="ownerAccessLabel">Облачная синхронизация</span><small>Вход владельца</small></summary>
+      <div class="owner-access-panel">
+        <div id="authLoading" class="auth-state"><strong>Проверяем доступ…</strong><span>Локальные проекты уже доступны.</span></div>
+        <form id="authForm" class="auth-form hidden">
+          <div class="auth-copy"><strong>Вход владельца</strong><span>Включает личное облако и дополнительные инструменты.</span></div>
+          <div class="field"><label for="authEmail">E-mail</label><input id="authEmail" type="email" required autocomplete="username"></div>
+          <div class="field"><label for="authPassword">Пароль</label><input id="authPassword" type="password" required autocomplete="current-password"></div>
+          <button id="authSubmit" class="btn primary" type="submit">Войти</button>
+          <div id="authError" class="field-error hidden" role="alert"></div>
+        </form>
+        <div id="authAccount" class="auth-account hidden">
+          <div><span>Выполнен вход</span><strong id="authAccountEmail">—</strong><small id="syncStatus">Локальная копия синхронизирована</small></div>
+          <button id="authSignOut" class="btn secondary" type="button">Выйти</button>
+        </div>
+        <div id="authSetup" class="auth-state hidden"><strong>Облачное хранилище ещё не подключено</strong><span>Проекты сохраняются только в этом браузере.</span></div>
       </div>
-      <div id="authSetup" class="auth-state hidden"><strong>Облачное хранилище ещё не подключено</strong><span>Публичный калькулятор работает. После добавления параметров Supabase здесь появится вход владельца.</span></div>
-    </div>
+    </details>
 
-    <div id="projectPrivateContent" class="hidden">
+    <div id="projectPrivateContent">
     <details id="projectHistory" class="project-history">
       <summary class="history-summary">
         <span><strong>Все проекты</strong><small>Активные черновики и завершённые расчёты</small></span>
@@ -404,7 +407,7 @@
   </details>
   </section>
 
-  <footer class="footer">AI VIDEO CALC <span>3.12</span> · 18.09.2026</footer>
+  <footer class="footer">AI VIDEO CALC <span>3.13</span> · 18.09.2026</footer>
 </main>
 
 <dialog id="projectNameDialog" class="project-dialog" aria-labelledby="projectNameTitle">

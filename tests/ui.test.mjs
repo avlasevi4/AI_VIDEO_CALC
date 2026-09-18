@@ -21,6 +21,9 @@ assert.ok(completionButton < workspaceEnd, 'completion action stays inside the p
 assert.equal((html.match(/id="completeProject"/g) || []).length, 1, 'completion action is unique');
 assert.match(html, /id="projectHistory" class="project-history"/, 'project library is a separate disclosure');
 assert.match(html, /id="projects" class="card project-card view-panel/, 'Android shell can navigate directly to projects');
+assert.match(html, /id="projectPrivateContent">/, 'project workspace is available without authorization');
+assert.match(html, /id="projectAuth" class="project-auth owner-access"/, 'owner sign-in is kept in a compact disclosure');
+assert.match(html, /Без входа проекты сохраняются в этом браузере/, 'public projects explain local browser storage');
 assert.match(html, /id="actualExpenses" class="project-subdetails actual-details"/, 'Android shell can navigate directly to actual expenses');
 assert.match(html, /class="app-tab active"[^>]*data-app-view="calculator"/, 'calculator has a primary navigation tab');
 assert.match(html, /data-app-view="projects"/, 'projects have a primary navigation tab');
@@ -66,5 +69,6 @@ assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /provider !== PRIVATE_PROVIDER_ID \|\| Boolean\(cloudSession\)/, 'Dreamina Plus requires an authenticated owner session');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /if \(!canUseProvider\(provider\)\) return \[\]/, 'private provider models cannot be used by anonymous calculator calls');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /refreshProviderAccess\(\)/, 'provider visibility refreshes with authorization state');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /switchProjectLibrary\(session \? 'owner' : 'guest'\)/, 'authorization switches between isolated owner and guest libraries');
 
 console.log('UI structure tests OK');

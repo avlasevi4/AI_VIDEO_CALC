@@ -2,10 +2,12 @@
   'use strict';
 
   const STORAGE_KEY = 'ai-video-calc-v2-project-library';
+  const GUEST_STORAGE_KEY = 'ai-video-calc-v2-project-library-guest';
   const LEGACY_PROJECT_KEY = 'ai-video-calc-v2-project';
   const LEGACY_META_KEY = 'ai-video-calc-v2-project-meta';
   const LEGACY_ACTUAL_KEY = 'ai-video-calc-v2-actual';
   const SCHEMA_VERSION = 7;
+  let storageScope = 'guest';
 
   const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -74,8 +76,16 @@
     }
   }
 
+  function setScope(scope) {
+    storageScope = scope === 'owner' ? 'owner' : 'guest';
+  }
+
+  function activeStorageKey() {
+    return storageScope === 'owner' ? STORAGE_KEY : GUEST_STORAGE_KEY;
+  }
+
   function load(defaultMeta) {
-    const saved = readJson(STORAGE_KEY, null);
+    const saved = readJson(activeStorageKey(), null);
     if (saved && Number(saved.schemaVersion) >= 1 && Number(saved.schemaVersion) <= SCHEMA_VERSION && Array.isArray(saved.projects)) {
       const projects = saved.projects.map(project => normalizeProject(project, defaultMeta));
       const activeProjectId = saved.activeProjectId === ''
@@ -88,9 +98,9 @@
       return library;
     }
 
-    const legacyItems = readJson(LEGACY_PROJECT_KEY, []);
-    const legacyMeta = readJson(LEGACY_META_KEY, null);
-    const legacyActual = readJson(LEGACY_ACTUAL_KEY, []);
+    const legacyItems = storageScope === 'owner' ? readJson(LEGACY_PROJECT_KEY, []) : [];
+    const legacyMeta = storageScope === 'owner' ? readJson(LEGACY_META_KEY, null) : null;
+    const legacyActual = storageScope === 'owner' ? readJson(LEGACY_ACTUAL_KEY, []) : [];
     if ((Array.isArray(legacyItems) && legacyItems.length) || (Array.isArray(legacyActual) && legacyActual.length)) {
       const migrated = normalizeProject({
         name: 'Проект до обновления',
@@ -113,17 +123,23 @@
       activeProjectId: String(activeProjectId || ''),
       projects: Array.isArray(projects) ? projects : []
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    localStorage.setItem(activeStorageKey(), JSON.stringify(payload));
     return payload;
   }
 
   function clear() {
-    [STORAGE_KEY, LEGACY_PROJECT_KEY, LEGACY_META_KEY, LEGACY_ACTUAL_KEY].forEach(key => localStorage.removeItem(key));
+    localStorage.removeItem(activeStorageKey());
+    if (storageScope === 'owner') {
+      [LEGACY_PROJECT_KEY, LEGACY_META_KEY, LEGACY_ACTUAL_KEY].forEach(key => localStorage.removeItem(key));
+    }
   }
 
   window.AIVideoProjectStore = {
     STORAGE_KEY,
+    GUEST_STORAGE_KEY,
     SCHEMA_VERSION,
+    setScope,
+    getScope: () => storageScope,
     normalizeName,
     normalizeProject,
     createProject,
