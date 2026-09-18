@@ -26,9 +26,10 @@ assert.match(html, /class="app-tab active"[^>]*data-app-view="calculator"/, 'cal
 assert.match(html, /data-app-view="projects"/, 'projects have a primary navigation tab');
 assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation tab');
 assert.match(html, /data-provider="dreamina"/, 'Dreamina has a calculator provider tab');
-assert.match(html, /data-provider="dreamina-plus"/, 'Dreamina Plus has a calculator provider tab');
+assert.match(html, /class="provider-tab provider-tab-plus hidden"[^>]*data-provider="dreamina-plus"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus calculator tab is hidden before owner authorization');
 assert.match(html, /id="dreaminaPackagePreset"/, 'Dreamina offers selectable official package presets');
-assert.match(html, /100 ₽ <span>за<\/span> 10 500 токенов/, 'Dreamina Plus fixed exchange is visible');
+assert.match(html, /class="subcard dreamina-plus-card hidden"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus tariff card is hidden before owner authorization');
+assert.match(html, /100 ₽ <span>за<\/span> 10 500 токенов/, 'Dreamina Plus fixed exchange remains in the public application source');
 assert.match(manifest, /pwa-logo-v5-192\.png/, 'PWA uses the original full-size 192px logo');
 assert.match(manifest, /pwa-logo-v5-512\.png/, 'PWA uses the original full-size 512px logo');
 assert.doesNotMatch(manifest, /"purpose": "maskable"/, 'tablet cannot substitute a padded or haloed maskable logo');
@@ -62,5 +63,8 @@ assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /
 assert.doesNotMatch(css, /\.actual-repeat:hover[^}]*rotate/, 'repeat button does not use a spinning hover animation');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /visibilitychange[\s\S]*refreshProjectsOnForeground/, 'projects refresh when the PWA returns to the foreground');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /clearTimeout\(projectSyncTimers\.get\(project\.id\)\)/, 'completion cancels a pending stale autosave');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /provider !== PRIVATE_PROVIDER_ID \|\| Boolean\(cloudSession\)/, 'Dreamina Plus requires an authenticated owner session');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /if \(!canUseProvider\(provider\)\) return \[\]/, 'private provider models cannot be used by anonymous calculator calls');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /refreshProviderAccess\(\)/, 'provider visibility refreshes with authorization state');
 
 console.log('UI structure tests OK');

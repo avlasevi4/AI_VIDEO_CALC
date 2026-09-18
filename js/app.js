@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = 'ai-video-calc-v2-settings';
   const PROVIDER_IDS = ['kling', 'syntex', 'dreamina', 'dreamina-plus'];
+  const PRIVATE_PROVIDER_ID = 'dreamina-plus';
   const DREAMINA_PACKAGE_PRESETS = {
     'standard-monthly': { usd: 5, tokens: 1575 },
     'pro-monthly': { usd: 11, tokens: 3885 },
@@ -535,6 +536,7 @@
     if (cloudSession) {
       $('authAccountEmail').textContent = cloudSession.user.email;
     }
+    refreshProviderAccess();
   }
 
   async function signInToProjects(event) {
@@ -626,13 +628,41 @@
     if ($('headlineRate')) $('headlineRate').textContent = `1 $ = ${fmtNum(settings.usdRub, 2)} ₽`;
   }
 
+  function canUseProvider(provider) {
+    return provider !== PRIVATE_PROVIDER_ID || Boolean(cloudSession);
+  }
+
+  function availableProviderIds() {
+    return PROVIDER_IDS.filter(id => pricing?.providers?.[id] && canUseProvider(id));
+  }
+
+  function safeProvider(provider) {
+    return PROVIDER_IDS.includes(provider) && canUseProvider(provider) ? provider : 'kling';
+  }
+
+  function refreshProviderAccess() {
+    if (!pricing) return;
+    const plusAvailable = canUseProvider(PRIVATE_PROVIDER_ID);
+    document.querySelectorAll(`[data-private-provider="${PRIVATE_PROVIDER_ID}"]`).forEach(element => {
+      element.classList.toggle('hidden', !plusAvailable);
+    });
+
+    if (!canUseProvider(currentProvider)) setProvider('kling', false);
+
+    if ($('actualProvider')) {
+      actualDraft.provider = safeProvider(actualDraft.provider);
+      $('actualProvider').innerHTML = providerOptions(actualDraft.provider);
+      if (projectAccess && activeProject()) renderActualDraft();
+    }
+  }
+
   function modelsForProvider(provider) {
+    if (!canUseProvider(provider)) return [];
     return pricing.models.filter(model => model.provider === provider);
   }
 
   function providerOptions(selected) {
-    return PROVIDER_IDS
-      .filter(id => pricing?.providers?.[id])
+    return availableProviderIds()
       .map(id => `<option value="${esc(id)}" ${id === selected ? 'selected' : ''}>${esc(pricing.providers[id].name)}</option>`)
       .join('');
   }
@@ -664,6 +694,7 @@
   }
 
   function setProvider(provider, persist = true) {
+    provider = safeProvider(provider);
     currentProvider = provider;
     if (persist) {
       settings.lastCalculatorProvider = provider;
@@ -1173,7 +1204,7 @@
   }
 
   function defaultProjectItem(provider = settings.lastProjectProvider || settings.lastCalculatorProvider || 'kling') {
-    if (!PROVIDER_IDS.includes(provider)) provider = 'kling';
+    provider = safeProvider(provider);
     const models = modelsForProvider(provider);
     const saved = savedProjectSelection(provider);
     const model = models.find(item => item.id === saved.modelId) || models[0];
@@ -1478,7 +1509,8 @@
 
   function renderActualDraft() {
     if (!pricing || !$('actualProvider')) return;
-    if (!PROVIDER_IDS.includes(actualDraft.provider)) actualDraft.provider = 'kling';
+    actualDraft.provider = safeProvider(actualDraft.provider);
+    $('actualProvider').innerHTML = providerOptions(actualDraft.provider);
     if (!actualDraft.modelId) {
       const saved = settings.lastActualSelectionByProvider?.[actualDraft.provider] || savedProjectSelection(actualDraft.provider);
       Object.assign(actualDraft, saved);
