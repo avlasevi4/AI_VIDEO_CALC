@@ -355,6 +355,7 @@
     $('projectNameDialog').addEventListener('cancel', event => { event.preventDefault(); closeProjectNameDialog(); });
     $('authForm').addEventListener('submit', signInToProjects);
     $('authSignOut').addEventListener('click', signOutOfProjects);
+    $('ownerAccessToggle').addEventListener('click', toggleOwnerAccessPanel);
     $('addProjectLine').addEventListener('click', () => { projectItems.push(defaultProjectItem()); saveLocal(); renderProject(); });
     $('calculateWorkPrice').addEventListener('click', () => {
       projectMeta.showWorkPrice = true;
@@ -532,7 +533,8 @@
     $('authSetup').classList.toggle('hidden', cloudConfigured || Boolean(cloudSession));
     $('projectPrivateContent').classList.toggle('hidden', !projectAccess);
     $('createProject').classList.toggle('hidden', !projectAccess);
-    $('ownerAccessLabel').textContent = cloudSession ? 'Облако подключено' : 'Облачная синхронизация';
+    $('ownerAccessToggle').classList.toggle('connected', Boolean(cloudSession));
+    $('ownerAccessToggle').setAttribute('aria-label', cloudSession ? 'Открыть состояние облачной синхронизации' : 'Открыть вход владельца');
 
     if (localMode) {
       $('authSetup').querySelector('strong').textContent = 'Локальный режим разработки';
@@ -542,6 +544,16 @@
       $('authAccountEmail').textContent = cloudSession.user.email;
     }
     refreshProviderAccess();
+  }
+
+  function toggleOwnerAccessPanel() {
+    const panel = $('ownerAccessPanel');
+    const opening = panel.classList.contains('hidden');
+    panel.classList.toggle('hidden', !opening);
+    $('ownerAccessToggle').setAttribute('aria-expanded', String(opening));
+    if (opening && !cloudSession && !$('authForm').classList.contains('hidden')) {
+      $('authEmail').focus();
+    }
   }
 
   async function signInToProjects(event) {

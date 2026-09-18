@@ -22,7 +22,10 @@ assert.equal((html.match(/id="completeProject"/g) || []).length, 1, 'completion 
 assert.match(html, /id="projectHistory" class="project-history"/, 'project library is a separate disclosure');
 assert.match(html, /id="projects" class="card project-card view-panel/, 'Android shell can navigate directly to projects');
 assert.match(html, /id="projectPrivateContent">/, 'project workspace is available without authorization');
-assert.match(html, /id="projectAuth" class="project-auth owner-access"/, 'owner sign-in is kept in a compact disclosure');
+assert.doesNotMatch(html.slice(workspaceStart, workspaceEnd), /id="authForm"/, 'owner sign-in is absent from the projects workspace');
+assert.match(html, /id="ownerAccessToggle" class="cloud-access-toggle"/, 'owner sign-in opens from a compact cloud button');
+assert.match(html, /id="ownerAccessPanel" class="cloud-auth-panel hidden"/, 'cloud authorization panel is hidden by default');
+assert.match(html, /placeholder="Например: Проект 1"/, 'new project dialog uses a neutral example name');
 assert.match(html, /Без входа проекты сохраняются в этом браузере/, 'public projects explain local browser storage');
 assert.match(html, /id="actualExpenses" class="project-subdetails actual-details"/, 'Android shell can navigate directly to actual expenses');
 assert.match(html, /class="app-tab active"[^>]*data-app-view="calculator"/, 'calculator has a primary navigation tab');
