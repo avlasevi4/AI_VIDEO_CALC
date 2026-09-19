@@ -1,6 +1,7 @@
 (function () {
   'use strict';
   const CACHE_KEY = 'ai-video-calc-v2-pricing-cache';
+  const PRICING_URL = './data/pricing.json?v=3.4.0';
 
   async function loadPricing(forceNetwork = false) {
     if (window.__INLINE_PRICING__ && !forceNetwork) {
@@ -8,7 +9,7 @@
     }
 
     try {
-      const response = await fetch('./data/pricing.json' + (forceNetwork ? `?t=${Date.now()}` : ''), { cache: forceNetwork ? 'no-store' : 'default' });
+      const response = await fetch(PRICING_URL + (forceNetwork ? `&t=${Date.now()}` : ''), { cache: forceNetwork ? 'no-store' : 'default' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       localStorage.setItem(CACHE_KEY, JSON.stringify(data));
