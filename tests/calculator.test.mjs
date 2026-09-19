@@ -55,12 +55,29 @@ assert.ok(Math.abs(dreaminaPlus.rub - 26) < 1e-12);
 const omni480 = calc.calculateSelection(pricing, settings, 'dreamina-plus-seedance-25', 'omni-reference-480p', 30);
 const omni720 = calc.calculateSelection(pricing, settings, 'dreamina-plus-seedance-25', 'omni-reference-720p', 30);
 const omni1080 = calc.calculateSelection(pricing, settings, 'dreamina-plus-seedance-25', 'omni-reference-1080p', 6);
-assert.equal(omni480.units, 840);
 assert.equal(omni720.units, 2220);
 assert.equal(omni1080.units, 3276);
-assert.ok(Math.abs(omni480.rub - 8) < 1e-12);
+assert.equal(omni480.units, 1020);
+assert.ok(Math.abs(omni480.rub - (1020 * 100 / 10500)) < 1e-12);
 assert.ok(Math.abs(omni720.rub - (2220 * 100 / 10500)) < 1e-12);
 assert.ok(Math.abs(omni1080.rub - 31.2) < 1e-12);
+
+const dreaminaOmniExpected = {
+  'omni-reference-480p': { 4: 578, 10: 680, 20: 850, 30: 1020 },
+  'omni-reference-720p': { 4: 1258, 10: 1480, 20: 1850, 30: 2220 },
+  'omni-reference-1080p': { 4: 3094, 6: 3276, 10: 3640, 20: 4550, 25: 5005, 30: 5460 }
+};
+for (const modelId of ['dreamina-seedance-25', 'dreamina-plus-seedance-25']) {
+  for (const [variantId, durations] of Object.entries(dreaminaOmniExpected)) {
+    for (const [duration, expectedUnits] of Object.entries(durations)) {
+      const result = calc.calculateSelection(pricing, settings, modelId, variantId, Number(duration));
+      assert.equal(result.units, expectedUnits, `${modelId} ${variantId} / ${duration} сек`);
+      const plainVariantId = variantId.replace('omni-reference-', '');
+      const plainResult = calc.calculateSelection(pricing, settings, modelId, plainVariantId, Number(duration));
+      assert.ok(result.units > plainResult.units, `${modelId} ${variantId} с видео дороже варианта без видео`);
+    }
+  }
+}
 
 const manualRateSettings = {
   ...settings,
@@ -144,7 +161,7 @@ const dreaminaOmni30 = calc.calculateSelection(pricing, comparisonSettings, 'dre
 const syntxOmni5 = calc.calculateSelection(pricing, comparisonSettings, 'syntx-seedance-25', 'omni-reference-720', 5);
 const syntxOmni30 = calc.calculateSelection(pricing, comparisonSettings, 'syntx-seedance-25', 'omni-reference-720', 30);
 const syntxKeyframes30 = calc.calculateSelection(pricing, comparisonSettings, 'syntx-seedance-25', 'k-frames-720', 30);
-assert.equal(dreaminaOmni5.units, 370);
+assert.equal(dreaminaOmni5.units, 1295);
 assert.equal(dreaminaOmni30.units, 2220);
 assert.equal(syntxOmni5.units, 358.9);
 assert.equal(syntxOmni30.units, 618);
@@ -159,6 +176,14 @@ for (const [variantId, durations] of Object.entries(syntxKeyframesExpected)) {
   for (const [duration, expectedUnits] of Object.entries(durations)) {
     const result = calc.calculateSelection(pricing, settings, 'syntx-seedance-25', variantId, Number(duration));
     assert.equal(result.units, expectedUnits, `SYNTX Seedance 2.5 ${variantId} / ${duration} сек`);
+  }
+}
+
+for (const resolution of ['480', '720', '1080']) {
+  for (const duration of [4, 10, 20, 30]) {
+    const withVideo = calc.calculateSelection(pricing, settings, 'syntx-seedance-25', `omni-reference-${resolution}`, duration);
+    const withoutVideo = calc.calculateSelection(pricing, settings, 'syntx-seedance-25', `k-frames-${resolution}`, duration);
+    assert.ok(withVideo.units > withoutVideo.units, `SYNTX ${resolution}p / ${duration} сек с видео дороже варианта без видео`);
   }
 }
 

@@ -68,10 +68,7 @@ const expectedDreaminaRates = {
   'dreamina-seedance-25': {
     '480p': 17,
     '720p': 37,
-    '1080p': 91,
-    'omni-reference-480p': 28,
-    'omni-reference-720p': 74,
-    'omni-reference-1080p': 546
+    '1080p': 91
   }
 };
 for (const [modelId, variants] of Object.entries(expectedDreaminaRates)) {
@@ -83,6 +80,22 @@ for (const [modelId, variants] of Object.entries(expectedDreaminaRates)) {
       const variant = model.variants.find(item => item.id === variantId);
       assert.equal(variant?.billing?.unitsPerSecond, rate, `Неверный тариф ${effectiveId}/${variantId}`);
     }
+  }
+}
+
+const expectedDreaminaOmniCurves = {
+  'omni-reference-480p': { 4: 578, 10: 680, 20: 850, 30: 1020 },
+  'omni-reference-720p': { 4: 1258, 10: 1480, 20: 1850, 30: 2220 },
+  'omni-reference-1080p': { 4: 3094, 10: 3640, 20: 4550, 25: 5005, 30: 5460 }
+};
+for (const provider of ['dreamina', 'dreamina-plus']) {
+  const modelId = `${provider}-seedance-25`;
+  const model = pricing.models.find(item => item.id === modelId && item.provider === provider);
+  assert.ok(model, `Отсутствует модель ${modelId}`);
+  for (const [variantId, curve] of Object.entries(expectedDreaminaOmniCurves)) {
+    const variant = model.variants.find(item => item.id === variantId);
+    assert.equal(variant?.billing?.type, 'duration_curve', `Неверный тип тарифа ${modelId}/${variantId}`);
+    assert.deepEqual(variant.billing.unitsByDuration, curve, `Неверная кривая ${modelId}/${variantId}`);
   }
 }
 

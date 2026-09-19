@@ -446,15 +446,15 @@
       "provider": "dreamina",
       "name": "Seedance 2.5",
       "status": "manual",
-      "verifiedAt": "2026-09-15",
-      "sourceNote": "Omni Reference с исходным видео использует повышенный тариф. Без исходного видео Omni Reference рассчитывается по тарифу K-Frames.",
+      "verifiedAt": "2026-09-19",
+      "sourceNote": "Omni Reference с исходным видео использует нелинейный тариф без учёта временной скидки. Между контрольными длительностями применяется линейная интерполяция. Без исходного видео Omni Reference рассчитывается по тарифу K-Frames.",
       "variants": [
         { "id": "480p", "label": "K-Frames / Omni без видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
         { "id": "720p", "label": "K-Frames / Omni без видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
         { "id": "1080p", "label": "K-Frames / Omni без видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-480p", "label": "Omni с исходным видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 28, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-720p", "label": "Omni с исходным видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 74, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-1080p", "label": "Omni с исходным видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 546, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
+        { "id": "omni-reference-480p", "label": "Omni с исходным видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 578, "10": 680, "20": 850, "30": 1020 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "note": "Цены без временной скидки; 4 секунды рассчитаны по линейной серии 17 токенов за дополнительную секунду." },
+        { "id": "omni-reference-720p", "label": "Omni с исходным видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 1258, "10": 1480, "20": 1850, "30": 2220 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "note": "Цена без временной скидки: 37 токенов за секунду плюс 1 110 токенов за видеореференс." },
+        { "id": "omni-reference-1080p", "label": "Omni с исходным видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 3094, "10": 3640, "20": 4550, "25": 5005, "30": 5460 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "note": "Цена без временной скидки: 91 токен за секунду плюс 2 730 токенов за видеореференс; 6 секунд стоят 3 276 токенов." }
       ]
     },
     {
@@ -497,15 +497,15 @@
       "provider": "dreamina-plus",
       "name": "Seedance 2.5",
       "status": "manual",
-      "verifiedAt": "2026-09-15",
-      "sourceNote": "Omni Reference с исходным видео использует повышенный тариф Dreamina Plus. Без исходного видео Omni Reference рассчитывается по тарифу K-Frames.",
+      "verifiedAt": "2026-09-19",
+      "sourceNote": "Omni Reference с исходным видео использует нелинейный тариф Dreamina без учёта временной скидки; Dreamina Plus отличается только курсом токена. Между контрольными длительностями применяется линейная интерполяция. Без исходного видео Omni Reference рассчитывается по тарифу K-Frames.",
       "variants": [
         { "id": "480p", "label": "K-Frames / Omni без видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
         { "id": "720p", "label": "K-Frames / Omni без видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
         { "id": "1080p", "label": "K-Frames / Omni без видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-480p", "label": "Omni с исходным видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 28, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-720p", "label": "Omni с исходным видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 74, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-1080p", "label": "Omni с исходным видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 546, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
+        { "id": "omni-reference-480p", "label": "Omni с исходным видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 578, "10": 680, "20": 850, "30": 1020 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "note": "Цены без временной скидки; 4 секунды рассчитаны по линейной серии 17 токенов за дополнительную секунду." },
+        { "id": "omni-reference-720p", "label": "Omni с исходным видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 1258, "10": 1480, "20": 1850, "30": 2220 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "note": "Цена без временной скидки: 37 токенов за секунду плюс 1 110 токенов за видеореференс." },
+        { "id": "omni-reference-1080p", "label": "Omni с исходным видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 3094, "10": 3640, "20": 4550, "25": 5005, "30": 5460 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "note": "Цена без временной скидки: 91 токен за секунду плюс 2 730 токенов за видеореференс; 6 секунд стоят 3 276 токенов." }
       ]
     },
     {
