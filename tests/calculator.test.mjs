@@ -7,6 +7,7 @@ const calc = globalThis.window.AIVideoCalculator;
 
 assert.equal(calc.billableUnits({ type: 'rate_per_second', unitsPerSecond: 8 }, 5), 40);
 assert.equal(calc.billableUnits({ type: 'duration_table', unitsByDuration: { 5: 17, 10: 31 } }, 10), 31);
+assert.equal(calc.billableUnits({ type: 'duration_curve', unitsByDuration: { 4: 155, 10: 182.7, 20: 228.8 }, roundDigits: 1 }, 15), 205.8);
 assert.equal(calc.billableUnits({ type: 'fixed_generation', units: 24 }, 99), 24);
 assert.equal(calc.billableUnits({ type: 'manual_required' }, 5, 13.5), 13.5);
 assert.throws(() => calc.billableUnits({ type: 'manual_required' }, 5, 0), /Укажите расход/);
@@ -59,10 +60,33 @@ const manualRateSettings = {
   }
 };
 const manualRate = calc.calculateSelection(pricing, manualRateSettings, 'syntx-seedance-25', 'omni-reference-720', 15);
-assert.equal(manualRate.pricingMode, 'manual_tokens_per_second');
-assert.equal(manualRate.manualTokensPerSecond, 30);
-assert.equal(manualRate.units, 450);
-assert.equal(manualRate.rub, 450 * (1690 / 680));
+assert.equal(manualRate.pricingMode, 'provider_units', 'built-in curve takes precedence over an old manual override');
+assert.equal(manualRate.units, 462.6);
+assert.equal(manualRate.rub, 462.6 * (1690 / 680));
+
+const syntxOmniExpected = {
+  'omni-reference-480': { 4: 155, 10: 182.7, 20: 228.8, 30: 274.9 },
+  'omni-reference-720': { 4: 348.5, 10: 410.7, 20: 514.4, 30: 618 },
+  'omni-reference-1080': { 4: 862.5, 10: 1016.4, 20: 1273, 30: 1529.6 }
+};
+for (const [variantId, durations] of Object.entries(syntxOmniExpected)) {
+  for (const [duration, expectedUnits] of Object.entries(durations)) {
+    const result = calc.calculateSelection(pricing, settings, 'syntx-seedance-25', variantId, Number(duration));
+    assert.equal(result.units, expectedUnits, `SYNTX Seedance 2.5 ${variantId} / ${duration} сек`);
+  }
+}
+
+const syntxKeyframesExpected = {
+  'k-frames-480': { 4: 30.8, 30: 231.3 },
+  'k-frames-720': { 4: 69.3, 30: 520 },
+  'k-frames-1080': { 4: 171.6, 10: 429, 30: 1287 }
+};
+for (const [variantId, durations] of Object.entries(syntxKeyframesExpected)) {
+  for (const [duration, expectedUnits] of Object.entries(durations)) {
+    const result = calc.calculateSelection(pricing, settings, 'syntx-seedance-25', variantId, Number(duration));
+    assert.equal(result.units, expectedUnits, `SYNTX Seedance 2.5 ${variantId} / ${duration} сек`);
+  }
+}
 
 const project = calc.calculateProject([
   { rub: 100, qty: 6, generationsPerVideo: 3 }

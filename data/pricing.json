@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "3.11.0-2026-09-15",
-  "updated": "2026-09-15",
+  "dataVersion": "3.16.0-2026-09-19",
+  "updated": "2026-09-19",
   "currency": "RUB",
   "providers": {
     "kling": {
@@ -439,14 +439,14 @@
       "name": "Seedance 2.5",
       "status": "manual",
       "verifiedAt": "2026-09-15",
-      "sourceNote": "Пользователь подтвердил отдельные тарифы First & Last Frame и Omni Reference; расчёт линейный до 30 секунд.",
+      "sourceNote": "Omni Reference с исходным видео использует повышенный тариф. Без исходного видео Omni Reference рассчитывается по тарифу K-Frames.",
       "variants": [
-        { "id": "480p", "label": "First & Last Frame · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "720p", "label": "First & Last Frame · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "1080p", "label": "First & Last Frame · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-480p", "label": "Omni Reference · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 28, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-720p", "label": "Omni Reference · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 74, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-1080p", "label": "Omni Reference · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 546, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
+        { "id": "480p", "label": "K-Frames / Omni без видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "720p", "label": "K-Frames / Omni без видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "1080p", "label": "K-Frames / Omni без видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-480p", "label": "Omni с исходным видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 28, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-720p", "label": "Omni с исходным видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 74, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-1080p", "label": "Omni с исходным видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 546, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
       ]
     },
     {
@@ -490,14 +490,14 @@
       "name": "Seedance 2.5",
       "status": "manual",
       "verifiedAt": "2026-09-15",
-      "sourceNote": "Тарифы First & Last Frame и Omni Reference с отдельным курсом Dreamina Plus; расчёт линейный до 30 секунд.",
+      "sourceNote": "Omni Reference с исходным видео использует повышенный тариф Dreamina Plus. Без исходного видео Omni Reference рассчитывается по тарифу K-Frames.",
       "variants": [
-        { "id": "480p", "label": "First & Last Frame · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "720p", "label": "First & Last Frame · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "1080p", "label": "First & Last Frame · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-480p", "label": "Omni Reference · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 28, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-720p", "label": "Omni Reference · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 74, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
-        { "id": "omni-reference-1080p", "label": "Omni Reference · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 546, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
+        { "id": "480p", "label": "K-Frames / Omni без видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "720p", "label": "K-Frames / Omni без видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 37, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "1080p", "label": "K-Frames / Omni без видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 91, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-480p", "label": "Omni с исходным видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 28, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-720p", "label": "Omni с исходным видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 74, "durationRange": { "min": 5, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-1080p", "label": "Omni с исходным видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 546, "durationRange": { "min": 5, "max": 30, "step": 1 } } }
       ]
     },
     {
@@ -754,14 +754,16 @@
       "name": "Seedance 2.5",
       "status": "manual",
       "catalogVerifiedAt": "2026-09-02",
+      "verifiedAt": "2026-09-19",
       "sourceId": "syntx-video-catalog",
+      "sourceNote": "Omni Reference с исходным видео использует повышенный тариф. Без исходного видео Omni Reference рассчитывается по тарифу K-Frames. Значения подтверждены пользователем 19.09.2026.",
       "variants": [
-        { "id": "omni-reference-480", "label": "Omni Reference · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "omni-reference-720", "label": "Omni Reference · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "omni-reference-1080", "label": "Omni Reference · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "k-frames-480", "label": "K-Frames · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "k-frames-720", "label": "K-Frames · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "k-frames-1080", "label": "K-Frames · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
+        { "id": "omni-reference-480", "label": "Omni с исходным видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 155, "10": 182.7, "20": 228.8, "30": 274.9 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Повышенный тариф при использовании исходного видео." },
+        { "id": "omni-reference-720", "label": "Omni с исходным видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 348.5, "10": 410.7, "20": 514.4, "30": 618 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Повышенный тариф при использовании исходного видео." },
+        { "id": "omni-reference-1080", "label": "Omni с исходным видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 862.5, "10": 1016.4, "20": 1273, "30": 1529.6 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Повышенный тариф при использовании исходного видео." },
+        { "id": "k-frames-480", "label": "K-Frames / Omni без видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 30.8, "30": 231.3 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Применяется также для Omni Reference без исходного видео." },
+        { "id": "k-frames-720", "label": "K-Frames / Omni без видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 69.3, "30": 520 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Применяется также для Omni Reference без исходного видео." },
+        { "id": "k-frames-1080", "label": "K-Frames / Omni без видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 171.6, "10": 429, "30": 1287 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Применяется также для Omni Reference без исходного видео; 42,9 токена/сек." },
         { "id": "extended-480", "label": "Extended · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
         { "id": "extended-720", "label": "Extended · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
         { "id": "extended-1080", "label": "Extended · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },

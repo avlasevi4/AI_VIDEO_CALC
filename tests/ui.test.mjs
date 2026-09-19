@@ -74,6 +74,7 @@ assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /provider !== PRIVATE_PROVIDER_ID \|\| Boolean\(cloudSession\)/, 'Dreamina Plus requires an authenticated owner session');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /if \(!canUseProvider\(provider\)\) return \[\]/, 'private provider models cannot be used by anonymous calculator calls');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /refreshProviderAccess\(\)/, 'provider visibility refreshes with authorization state');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /variants\.filter\(variant => variant\.billing\?\.type === 'manual_required'\)/, 'built-in tariff curves are excluded from the manual tariff editor');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /switchProjectLibrary\(session \? 'owner' : 'guest'\)/, 'authorization switches between isolated owner and guest libraries');
 
 console.log('UI structure tests OK');

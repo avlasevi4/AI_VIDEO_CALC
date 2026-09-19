@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const pricing = JSON.parse(await readFile(new URL('../data/pricing.json', import.meta.url), 'utf8'));
-const billingTypes = new Set(['rate_per_second', 'duration_table', 'fixed_generation', 'manual_required']);
+const billingTypes = new Set(['rate_per_second', 'duration_table', 'duration_curve', 'fixed_generation', 'manual_required']);
 const statuses = new Set(['verified', 'manual', 'unverified']);
 
 assert.equal(pricing.schemaVersion, 2, 'Ожидалась schemaVersion 2');
@@ -37,6 +37,7 @@ for (const model of pricing.models) {
     if (variant.billing.type === 'rate_per_second') assert.ok(variant.billing.unitsPerSecond > 0, `Нет unitsPerSecond у ${model.id}/${variant.id}`);
     if (variant.billing.type === 'fixed_generation') assert.ok(variant.billing.units > 0, `Нет units у ${model.id}/${variant.id}`);
     if (variant.billing.type === 'duration_table') assert.ok(Object.keys(variant.billing.unitsByDuration || {}).length, `Пустая duration table у ${model.id}/${variant.id}`);
+    if (variant.billing.type === 'duration_curve') assert.ok(Object.keys(variant.billing.unitsByDuration || {}).length >= 2, `Недостаточно точек duration curve у ${model.id}/${variant.id}`);
     assert.ok(variant.billing.allowedDurations?.length || variant.billing.durationRange, `Не задана длительность у ${model.id}/${variant.id}`);
   }
 }

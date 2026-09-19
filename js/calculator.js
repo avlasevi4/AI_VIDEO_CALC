@@ -45,6 +45,21 @@
         if (!(key in billing.unitsByDuration)) throw new Error('Для этой длительности нет тарифа');
         return safeNumber(billing.unitsByDuration[key]);
       }
+      case 'duration_curve': {
+        const points = Object.entries(billing.unitsByDuration || {})
+          .map(([seconds, units]) => [safeNumber(seconds), safeNumber(units)])
+          .filter(([seconds, units]) => seconds > 0 && units > 0)
+          .sort((a, b) => a[0] - b[0]);
+        const exact = points.find(([seconds]) => seconds === d);
+        if (exact) return exact[1];
+        const lower = [...points].reverse().find(([seconds]) => seconds < d);
+        const upper = points.find(([seconds]) => seconds > d);
+        if (!lower || !upper) throw new Error('Для этой длительности нет тарифа');
+        const interpolated = lower[1] + ((d - lower[0]) / (upper[0] - lower[0])) * (upper[1] - lower[1]);
+        const precision = Math.max(0, Math.min(4, Math.round(safeNumber(billing.roundDigits, 1))));
+        const factor = 10 ** precision;
+        return Math.round((interpolated + Number.EPSILON) * factor) / factor;
+      }
       case 'fixed_generation':
         return safeNumber(billing.units);
       case 'manual_required': {
@@ -65,7 +80,7 @@
     const storedTariff = settings.manualTokenTariffs?.[tariffKey];
     const manualTokensPerSecond = Math.max(0, safeNumber(typeof storedTariff === 'object' ? storedTariff?.unitsPerSecond : storedTariff, 0));
     const normalizedDuration = safeNumber(duration, 5);
-    if (model.provider === 'syntex' && manualTokensPerSecond > 0) {
+    if (model.provider === 'syntex' && variant.billing.type === 'manual_required' && manualTokensPerSecond > 0) {
       const units = manualTokensPerSecond * normalizedDuration;
       const unitRub = unitPriceRub(model.provider, settings, pricing);
       const rub = units * unitRub;

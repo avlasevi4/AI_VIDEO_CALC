@@ -898,7 +898,8 @@
 
   function manualTariffVariant() {
     const model = manualTariffModel();
-    return model?.variants.find(variant => variant.id === $('manualTariffVariant')?.value) || model?.variants[0];
+    const variants = model?.variants.filter(variant => variant.billing?.type === 'manual_required') || [];
+    return variants.find(variant => variant.id === $('manualTariffVariant')?.value) || variants[0];
   }
 
   function renderManualTariffEditor() {
@@ -925,9 +926,10 @@
   function renderManualTariffVariants() {
     const model = manualTariffModel();
     if (!model) return;
+    const variants = model.variants.filter(variant => variant.billing?.type === 'manual_required');
     const previous = $('manualTariffVariant').value;
-    const selected = model.variants.some(variant => variant.id === previous) ? previous : model.variants[0].id;
-    $('manualTariffVariant').innerHTML = model.variants.map(variant => `<option value="${esc(variant.id)}" ${variant.id === selected ? 'selected' : ''}>${esc(variant.label)}</option>`).join('');
+    const selected = variants.some(variant => variant.id === previous) ? previous : variants[0]?.id;
+    $('manualTariffVariant').innerHTML = variants.map(variant => `<option value="${esc(variant.id)}" ${variant.id === selected ? 'selected' : ''}>${esc(variant.label)}</option>`).join('');
     renderManualTariffDuration();
   }
 
@@ -982,7 +984,7 @@
         const sourceUnits = Number(typeof saved === 'object' ? saved.sourceUnits : saved);
         return { key, unitsPerSecond, sourceDuration, sourceUnits, model, variant };
       })
-      .filter(item => item.unitsPerSecond > 0)
+      .filter(item => item.unitsPerSecond > 0 && (!item.variant || item.variant.billing?.type === 'manual_required'))
       .sort((a, b) => `${a.model?.name || a.key}`.localeCompare(`${b.model?.name || b.key}`, 'ru'));
 
     if (!entries.length) {
