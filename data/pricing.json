@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "3.4.0-2026-09-19",
+  "dataVersion": "3.5.0-2026-09-19",
   "updated": "2026-09-19",
-  "baseTariffDate": "2026-09-15",
+  "baseTariffDate": "2026-09-19",
   "currency": "RUB",
   "providers": {
     "kling": {

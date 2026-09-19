@@ -33,8 +33,8 @@ assert.match(html, /data-app-view="projects"/, 'projects have a primary navigati
 assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation tab');
 assert.match(html, /data-provider="dreamina"/, 'Dreamina has a calculator provider tab');
 assert.match(html, /id="customProviderTabs"/, 'custom services have a dedicated calculator provider area');
-assert.match(html, /js\/app\.js\?v=3\.4\.0/, 'release scripts bypass a stale PWA asset cache');
-assert.match(html, /css\/app\.css\?v=3\.4\.0/, 'release styles bypass a stale PWA asset cache');
+assert.match(html, /js\/app\.js\?v=3\.5\.0/, 'release scripts bypass a stale PWA asset cache');
+assert.match(html, /css\/app\.css\?v=3\.5\.0/, 'release styles bypass a stale PWA asset cache');
 assert.match(html, /class="provider-tab provider-tab-plus provider-plus-standalone hidden"[^>]*data-provider="dreamina-plus"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus is a standalone button hidden before owner authorization');
 assert.match(html, /class="provider-tabs"[^>]*aria-label="Публичные провайдеры генерации"[\s\S]*data-provider="kling"[\s\S]*data-provider="syntex"[\s\S]*data-provider="dreamina"[\s\S]*<\/div>\s*<div id="customProviderTabs"/, 'public provider plate contains exactly the three built-in public services before the custom service area');
 assert.match(html, /id="dreaminaPackagePreset"/, 'Dreamina offers selectable official package presets');
