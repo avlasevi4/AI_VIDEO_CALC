@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   const CACHE_KEY = 'ai-video-calc-v2-pricing-cache';
-  const PRICING_URL = './data/pricing.json?v=3.6.0';
+  const PRICING_URL = './data/pricing.json?v=3.7.0';
 
   async function loadPricing(forceNetwork = false) {
     if (window.__INLINE_PRICING__ && !forceNetwork) {

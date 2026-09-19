@@ -239,16 +239,15 @@
   }
 
   function normalizePackageSettings() {
-    if (!KLING_PACKAGE_PRESETS[settings.klingPackagePreset]) settings.klingPackagePreset = presetForValues(KLING_PACKAGE_PRESETS, settings.klingPackageUsd, settings.klingPackageCredits);
-    if (!SYNTEX_PACKAGE_PRESETS[settings.syntexPackagePreset]) settings.syntexPackagePreset = presetForValues(SYNTEX_PACKAGE_PRESETS, settings.syntexPackageRub, settings.syntexPackageTokens);
-    if (settings.dreaminaPackagePreset !== 'custom' && (settings.dreaminaPackageCatalogVersion !== PACKAGE_CATALOG_VERSION || !DREAMINA_PACKAGE_PRESETS[settings.dreaminaPackagePreset])) {
-      const basic = DREAMINA_PACKAGE_PRESETS['basic-monthly'];
-      settings.dreaminaPackagePreset = 'basic-monthly';
-      settings.dreaminaPackageUsd = basic.usd;
-      settings.dreaminaPackageTokens = basic.tokens;
-    } else if (!DREAMINA_PACKAGE_PRESETS[settings.dreaminaPackagePreset]) {
-      settings.dreaminaPackagePreset = 'custom';
-    }
+    const normalizePreset = (current, presets, price, units) => {
+      if (current === 'custom') return 'custom';
+      const matching = presetForValues(presets, price, units);
+      return matching === current ? current : matching;
+    };
+    settings.klingPackagePreset = normalizePreset(settings.klingPackagePreset, KLING_PACKAGE_PRESETS, settings.klingPackageUsd, settings.klingPackageCredits);
+    settings.syntexPackagePreset = normalizePreset(settings.syntexPackagePreset, SYNTEX_PACKAGE_PRESETS, settings.syntexPackageRub, settings.syntexPackageTokens);
+    const dreaminaPresets = Object.fromEntries(Object.entries(DREAMINA_PACKAGE_PRESETS).map(([id, preset]) => [id, { price: preset.usd, units: preset.tokens }]));
+    settings.dreaminaPackagePreset = normalizePreset(settings.dreaminaPackagePreset, dreaminaPresets, settings.dreaminaPackageUsd, settings.dreaminaPackageTokens);
     settings.dreaminaPackageCatalogVersion = PACKAGE_CATALOG_VERSION;
     settings.packageCatalogVersion = PACKAGE_CATALOG_VERSION;
   }
@@ -2487,7 +2486,7 @@
     downloadJson({
       type: 'ai-video-calc-tariffs',
       schemaVersion: 1,
-      appVersion: '3.6',
+      appVersion: '3.7',
       exportedAt: new Date().toISOString(),
       providers
     }, 'ai-video-calc-tariffs.json');
@@ -2588,14 +2587,14 @@
   function exportData() {
     syncActiveProjectState(false);
     const payload = {
-      app: 'AI VIDEO CALC 3.6',
+      app: 'AI VIDEO CALC 3.7',
       schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       settings,
       activeProjectId,
       projects
     };
-    downloadJson(payload, 'ai-video-calc-v3.6-data.json');
+    downloadJson(payload, 'ai-video-calc-v3.7-data.json');
   }
 
   async function importData(event) {
