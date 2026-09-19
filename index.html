@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101a">
-  <meta name="description" content="AI VIDEO CALC 3.3 — проекты, сметы, расходы и общие тарифы AI-видео">
+  <meta name="description" content="AI VIDEO CALC 3.4 — проекты, сметы, расходы и общие тарифы AI-видео">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./icons/pwa-logo-v5-192.png">
   <link rel="apple-touch-icon" href="./icons/pwa-logo-v5-192.png">
   <link rel="stylesheet" href="./css/app.css">
   <link rel="stylesheet" href="./css/v3.css">
-  <title>AI VIDEO CALC 3.3</title>
+  <title>AI VIDEO CALC 3.4</title>
 </head>
 <body>
 <main class="app" data-active-view="calculator">
@@ -23,7 +23,7 @@
     </div>
     <div class="hero-tools">
       <div class="version-stack">
-        <div class="version">v3.3</div>
+        <div class="version">v3.4</div>
         <button id="ownerAccessToggle" class="cloud-access-toggle" type="button" aria-label="Открыть облачную синхронизацию" aria-controls="ownerAccessPanel" aria-expanded="false" title="Облачная синхронизация">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 8.3 4.8 4.8 0 0 0 7 18Z"/><path d="m9.5 13 2.5-2.5 2.5 2.5M12 10.5V16"/></svg>
         </button>
@@ -74,6 +74,7 @@
           <button class="provider-tab" data-provider="syntex" type="button">SYNTX</button>
           <button class="provider-tab" data-provider="dreamina" type="button">DREAMINA</button>
         </div>
+        <div id="customProviderTabs" class="custom-provider-tabs hidden" aria-label="Пользовательские сервисы"></div>
         <button class="provider-tab provider-tab-plus provider-plus-standalone hidden" data-provider="dreamina-plus" data-private-provider="dreamina-plus" type="button">DREAMINA PLUS</button>
       </div>
 
@@ -321,22 +322,24 @@
     <summary class="card-summary compact-summary">
       <span>
         <strong>Актуальность тарифов</strong>
-        <small>Справочный блок для контроля тарифной базы Kling / SYNTX</small>
+        <small>Дата базы, синхронизация и перенос данных</small>
       </span>
       <span class="summary-tag">Справка</span>
     </summary>
-    <div class="details-body checker-body">
-      <div class="section-head checker-head">
-        <div>
-          <h2>Проверка источников и тарифной базы</h2>
-          <div class="muted">Этот блок можно разворачивать только при необходимости — он не занимает место постоянно.</div>
-        </div>
-        <button id="checkPricing" class="btn secondary" type="button">Проверить сейчас</button>
+    <div class="details-body tariff-reference" aria-label="Справка по тарифам и данным">
+      <div class="tariff-reference-lead">
+        <strong>Тарифная база обновлена <span id="tariffHelpUpdated">—</span></strong>
+        <p>Ниже находятся курсы, пакеты сервисов, базовые тарифы моделей и ваши ручные поправки. Дата показывает состояние встроенной таблицы приложения, а не результат автоматической проверки сайтов прямо сейчас.</p>
       </div>
-      <div id="checkSummary" class="check-summary">Проверка ещё не запускалась.</div>
-      <div id="checkList" class="check-list"></div>
-      <div class="tiny check-note">Локальная HTML-версия умеет проверить структуру базы, контрольные значения и доступность источников. Содержимое внешних страниц может быть недоступно браузеру из-за CORS; полная автоматическая сверка цен будет выполняться через GitHub Actions.</div>
-      <div id="sourceLinks" class="source-links"></div>
+      <div class="tariff-reference-grid">
+        <article><strong>Ручные тарифы</strong><span>Выберите сервис, модель, режим и длительность. Введённое количество токенов заменит базовое значение только для этой комбинации.</span></article>
+        <article><strong>Свой сервис</strong><span>Можно добавить собственный сервис, цену одного токена, модель и режим. После сохранения сервис появится в калькуляторе и проектах.</span></article>
+        <article><strong>Синхронизация</strong><span id="tariffHelpSync">Без входа ваши тарифы хранятся только в этом браузере.</span></article>
+        <article><strong>Экспорт и импорт</strong><span>Экспорт создаёт резервный JSON с настройками и проектами. Импорт переносит этот файл на другое устройство или восстанавливает данные.</span></article>
+        <article><strong>Поделиться тарифами</strong><span>Отдельный файл тарифов не содержит проекты и аккаунт. Dreamina Plus из файла устанавливается у получателя как доступный вручную сервис.</span></article>
+        <article><strong>Загрузить базу заново</strong><span>Повторно скачивает встроенный pricing.json с GitHub, обходя кэш. Проекты, свои сервисы и ручные тарифы не удаляются.</span></article>
+        <article><strong>Сброс локальных данных</strong><span>Удаляет проекты и настройки только из этого браузера. Облачные копии владельца не удаляются и после входа могут загрузиться снова.</span></article>
+      </div>
     </div>
   </details>
 
@@ -422,6 +425,26 @@
         <div class="plus-rate">100 ₽ <span>за</span> 10 500 токенов</div>
         <div class="tiny">Фиксированный специальный курс, без пересчёта USD. Цена 1 токена: <strong id="dreaminaPlusUnitPrice">—</strong></div>
       </div>
+      <section class="subcard custom-service-card" aria-labelledby="customServiceTitle">
+        <div class="manual-tariff-head">
+          <div>
+            <h3 id="customServiceTitle">Свой сервис и модели</h3>
+            <p>Создайте сервис с собственной ценой токена. Для каждой модели и режима задайте контрольную длительность и расход токенов — калькулятор определит расход за секунду.</p>
+          </div>
+          <span class="summary-tag">Своя база</span>
+        </div>
+        <div class="custom-service-editor">
+          <div class="field"><label for="customServiceName">Название сервиса</label><input id="customServiceName" type="text" maxlength="60" placeholder="Например: My AI"></div>
+          <div class="field"><label for="customTokenRub">Стоимость 1 токена, ₽</label><input id="customTokenRub" type="number" min="0.000001" step="0.000001" inputmode="decimal" placeholder="Например: 0,25"></div>
+          <div class="field"><label for="customModelName">Название модели</label><input id="customModelName" type="text" maxlength="80" placeholder="Например: Video Pro"></div>
+          <div class="field"><label for="customVariantName">Режим / качество</label><input id="customVariantName" type="text" maxlength="100" placeholder="Например: 1080p Fast"></div>
+          <div class="field"><label for="customSourceDuration">Контрольная длительность, сек</label><input id="customSourceDuration" type="number" min="1" max="600" step="1" inputmode="numeric" value="5"></div>
+          <div class="field"><label for="customSourceUnits">Расход за эту длительность, токенов</label><input id="customSourceUnits" type="number" min="0.0001" step="0.0001" inputmode="decimal" placeholder="Например: 100"></div>
+          <button id="saveCustomServiceTariff" class="btn primary" type="button">Добавить тариф</button>
+        </div>
+        <div id="customServiceMessage" class="tiny manual-tariff-message">Без входа собственные сервисы сохраняются в этом браузере; после входа владельца синхронизируются с облаком.</div>
+        <div id="customServiceList" class="manual-tariff-list"></div>
+      </section>
       <section class="subcard manual-tariff-card" aria-labelledby="manualTariffTitle">
         <div class="manual-tariff-head">
           <div>
@@ -444,17 +467,23 @@
       </section>
       <div class="subcard">
         <h3>Данные</h3>
-        <button id="refreshPricing" class="btn secondary" type="button">Обновить pricing.json</button>
+        <button id="refreshPricing" class="btn secondary" type="button">Загрузить базу тарифов заново</button>
+        <div class="tiny top-gap-small">Повторно загружает встроенный файл тарифов с GitHub без кэша. Проекты и ваши пользовательские настройки остаются без изменений.</div>
         <div class="actions"><button id="exportData" class="btn secondary" type="button">Экспорт JSON</button><button id="importData" class="btn secondary" type="button">Импорт JSON</button></div>
+        <div class="tiny top-gap-small">Экспорт сохраняет резервную копию проектов, настроек, ручных тарифов и собственных сервисов. Импорт восстанавливает её на этом или другом устройстве.</div>
         <input id="importFile" class="hidden" type="file" accept="application/json,.json">
+        <div class="actions"><button id="exportTariffs" class="btn secondary" type="button">Экспорт тарифов</button><button id="importTariffs" class="btn secondary" type="button">Загрузить тарифы</button></div>
+        <div class="tiny top-gap-small">Файл тарифов не содержит проекты, почту или данные входа. У владельца в него включается Dreamina Plus; у получателя она появится как вручную установленный сервис.</div>
+        <input id="importTariffsFile" class="hidden" type="file" accept="application/json,.json">
         <button id="resetData" class="btn secondary top-gap" type="button">Сбросить локальные данные</button>
+        <div class="tiny top-gap-small">Очищает данные только в этом браузере. Облачные проекты и тарифы владельца не удаляются.</div>
       </div>
     </div>
     <div id="dataStatus" class="data-status">Загрузка тарифной базы…</div>
   </details>
   </section>
 
-  <footer class="footer">AI VIDEO CALC <span>3.3</span> · 19.09.2026</footer>
+  <footer class="footer">AI VIDEO CALC <span>3.4</span> · 19.09.2026</footer>
 </main>
 
 <dialog id="projectNameDialog" class="project-dialog" aria-labelledby="projectNameTitle">

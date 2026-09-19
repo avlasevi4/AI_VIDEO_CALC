@@ -155,12 +155,14 @@ details:not([open])>.card-summary::after,.details:not([open])>summary::after,.pr
 .provider-tab.active{background:var(--surface-3);color:var(--text);box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 5px 14px rgba(0,0,0,.16)}
 .provider-tab-plus{color:#d9bdff}.provider-tab-plus:hover{color:#f0e4ff;background:rgba(181,108,255,.08)}.provider-tab-plus.active{color:#fff;background:linear-gradient(135deg,rgba(181,108,255,.32),rgba(86,130,255,.22));box-shadow:inset 0 0 0 1px rgba(210,173,255,.28),0 5px 18px rgba(81,47,145,.28)}
 .provider-plus-standalone{min-width:150px;padding:0 14px;border:1px solid rgba(210,173,255,.26);background:linear-gradient(135deg,rgba(181,108,255,.15),rgba(86,130,255,.11));box-shadow:0 5px 16px rgba(56,35,105,.18)}
+.custom-provider-tabs{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px}.custom-provider-tabs .provider-tab{min-width:150px;padding:8px 14px;border:1px solid rgba(114,216,238,.22);background:rgba(114,216,238,.055)}.custom-provider-tabs .provider-tab span,.custom-provider-tabs .provider-tab small{display:block}.custom-provider-tabs .provider-tab small{margin-top:2px;color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:.08em}.custom-provider-tabs .provider-tab.active{border-color:rgba(114,216,238,.48);background:linear-gradient(135deg,rgba(114,216,238,.18),rgba(86,130,255,.12))}
+.custom-provider-tabs .provider-tab.imported-provider-plus{border-color:rgba(210,173,255,.3);background:linear-gradient(135deg,rgba(181,108,255,.16),rgba(86,130,255,.11));color:#e5d3ff}.custom-provider-tabs .provider-tab.imported-provider-plus.active{border-color:rgba(210,173,255,.5);background:linear-gradient(135deg,rgba(181,108,255,.34),rgba(86,130,255,.22));color:#fff}
 
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
 .field{display:grid;gap:6px;min-width:0}
 .field.full{grid-column:1/-1}
 .field label{color:#8fa3b7;font-size:10px;font-weight:750;line-height:1.3;letter-spacing:.035em}
-.field select,.field input[type=number],
+.field select,.field input[type=number],.field input[type=text],
 .project-editor select,.project-editor input[type=number],
 .project-meta-grid input,.image-cost-box input,.actual-entry select,.actual-entry input[type=number],.qty input{
   display:block;
@@ -180,7 +182,7 @@ details:not([open])>.card-summary::after,.details:not([open])>summary::after,.pr
   background-repeat:no-repeat;
   background-position:right 13px center;
 }
-.field select:hover,.field input[type=number]:hover,.project-editor select:hover,.project-editor input[type=number]:hover,.project-meta-grid input:hover,.image-cost-box input:hover,.actual-entry select:hover,.actual-entry input[type=number]:hover,.qty input:hover{background-color:var(--control-hover);border-color:var(--line-strong)}
+.field select:hover,.field input[type=number]:hover,.field input[type=text]:hover,.project-editor select:hover,.project-editor input[type=number]:hover,.project-meta-grid input:hover,.image-cost-box input:hover,.actual-entry select:hover,.actual-entry input[type=number]:hover,.qty input:hover{background-color:var(--control-hover);border-color:var(--line-strong)}
 .field select:focus,.field input:focus,.project-editor select:focus,.project-editor input:focus,.project-meta-grid input:focus,.image-cost-box input:focus,.actual-entry select:focus,.actual-entry input:focus,.qty input:focus,.btn:focus-visible,.provider-tab:focus-visible,.rate-refresh:focus-visible{
   border-color:rgba(114,216,238,.6);
   box-shadow:0 0 0 3px var(--focus);
@@ -484,7 +486,7 @@ html.android-app .project-card>.section-head{padding-top:4px}
 
 .project-meta-grid{gap:12px;margin-bottom:13px}
 .field label{font-size:12px;letter-spacing:.02em}
-.field select,.field input[type=number],.project-editor select,.project-editor input[type=number],.project-meta-grid input,.image-cost-box input,.actual-entry select,.actual-entry input[type=number],.qty input{height:50px;padding-inline:14px;font-size:14px}
+.field select,.field input[type=number],.field input[type=text],.project-editor select,.project-editor input[type=number],.project-meta-grid input,.image-cost-box input,.actual-entry select,.actual-entry input[type=number],.qty input{height:50px;padding-inline:14px;font-size:14px}
 .check-toggle{min-height:50px;font-size:13px}
 .project-editor,.actual-entry{padding:16px;border-radius:17px}
 .project-editor-head>strong,.actual-entry-title{font-size:15px}
@@ -652,7 +654,7 @@ html.android-app .app-tabs{display:none}
   .project-editor,.actual-entry{padding:13px;border-radius:15px}
   .project-editor-head>strong,.actual-entry-title{font-size:13px}
   .project-editor-grid{gap:10px}
-  .field select,.field input[type=number],.project-editor select,.project-editor input[type=number],.project-meta-grid input,.image-cost-box input,.actual-entry select,.actual-entry input[type=number]{height:44px;padding-inline:12px;font-size:13px}
+  .field select,.field input[type=number],.field input[type=text],.project-editor select,.project-editor input[type=number],.project-meta-grid input,.image-cost-box input,.actual-entry select,.actual-entry input[type=number]{height:44px;padding-inline:12px;font-size:13px}
   .field label{font-size:11px}
   .project-duration-slider{min-height:44px}.project-duration-slider output{min-height:34px}
   .project-line-result{margin-top:8px;padding:9px 2px 0;font-size:10px}
@@ -683,6 +685,9 @@ html.android-app .app-tabs{display:none}
 
 /* Ручные тарифы: пользовательский расход токенов за секунду для конкретной модели и режима. */
 .manual-tariff-card{grid-column:1/-1}
+.custom-service-card{grid-column:1/-1}
+.custom-service-editor{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}.custom-service-editor .btn{min-height:46px;justify-self:start}.custom-service-row{border-color:rgba(114,216,238,.2);background:rgba(114,216,238,.045)}
+.tariff-reference{display:grid;gap:16px}.tariff-reference-lead{padding:16px;border:1px solid rgba(114,216,238,.18);border-radius:14px;background:rgba(114,216,238,.045)}.tariff-reference-lead strong{font-size:16px}.tariff-reference-lead p{margin:7px 0 0;color:var(--muted);font-size:12px;line-height:1.55}.tariff-reference-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.tariff-reference-grid article{padding:14px;border:1px solid var(--line-soft);border-radius:13px;background:var(--surface-2)}.tariff-reference-grid article:last-child:nth-child(odd){grid-column:1/-1}.tariff-reference-grid strong,.tariff-reference-grid span{display:block}.tariff-reference-grid strong{font-size:12px}.tariff-reference-grid span{margin-top:5px;color:var(--muted);font-size:10.5px;line-height:1.5}
 .dreamina-plus-card{border-color:rgba(181,108,255,.34);background:linear-gradient(145deg,rgba(181,108,255,.09),rgba(86,130,255,.035))}.dreamina-plus-card h3{color:#e2cbff}.plus-rate{margin:10px 0 8px;color:#f2eaff;font-size:22px;font-weight:820;letter-spacing:-.025em}.plus-rate span{margin:0 5px;color:var(--muted);font-size:11px;font-weight:650;letter-spacing:0}
 .manual-tariff-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:12px}
 .manual-tariff-head h3{margin-bottom:5px}
@@ -698,8 +703,8 @@ html.android-app .app-tabs{display:none}
 .manual-tariff-row div{min-width:0}.manual-tariff-row span,.manual-tariff-row strong{display:block}.manual-tariff-row div>strong{font-size:11px}.manual-tariff-row span{margin-top:3px;color:var(--muted);font-size:9.5px;line-height:1.35}.manual-tariff-row>strong{color:var(--money);font-size:12px;white-space:nowrap}
 .manual-tariff-remove{width:34px;height:34px;padding:0;border:0;border-radius:9px;background:transparent;color:var(--danger);font-size:19px;line-height:1}.manual-tariff-remove:hover{background:var(--danger-soft)}
 
-@media(max-width:900px){.manual-tariff-editor{grid-template-columns:repeat(3,minmax(0,1fr))}.manual-tariff-editor .btn{justify-self:start}}
-@media(max-width:680px){.manual-tariff-head{display:block}.manual-tariff-head .summary-tag{display:inline-flex;margin-top:8px}.manual-tariff-editor{grid-template-columns:1fr}.manual-tariff-editor .btn,.manual-tariff-actions .btn{width:100%;justify-self:stretch}.manual-tariff-actions{display:block}.manual-tariff-row{grid-template-columns:minmax(0,1fr) auto}.manual-tariff-remove{grid-column:2;grid-row:1/3}}
+@media(max-width:900px){.manual-tariff-editor,.custom-service-editor{grid-template-columns:repeat(2,minmax(0,1fr))}.manual-tariff-editor .btn,.custom-service-editor .btn{justify-self:start}}
+@media(max-width:680px){.manual-tariff-head{display:block}.manual-tariff-head .summary-tag{display:inline-flex;margin-top:8px}.manual-tariff-editor,.custom-service-editor,.tariff-reference-grid{grid-template-columns:1fr}.manual-tariff-editor .btn,.custom-service-editor .btn,.manual-tariff-actions .btn{width:100%;justify-self:stretch}.manual-tariff-actions{display:block}.manual-tariff-row{grid-template-columns:minmax(0,1fr) auto}.manual-tariff-remove{grid-column:2;grid-row:1/3}.custom-provider-tabs{display:grid;grid-template-columns:1fr}.custom-provider-tabs .provider-tab{width:100%}}
 @media(max-width:680px){.package-save-row .package-save{flex:1}.package-save-row #refreshRate{flex:1;min-width:180px}}
 @media(max-width:680px){.package-save-row .package-save{flex:1}.package-save-row #refreshRate{flex:1;min-width:180px}}
 @media(max-width:680px){.provider-selector-row{grid-template-columns:1fr}.provider-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.provider-plus-standalone{width:100%;min-height:44px}.provider-tab{font-size:10.5px}}

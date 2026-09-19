@@ -93,6 +93,33 @@ const baseAfterOverride = calc.calculateSelection(pricing, exactOverrideSettings
 assert.equal(baseAfterOverride.pricingMode, 'provider_units');
 assert.equal(baseAfterOverride.units, 8.6);
 
+const customPricing = JSON.parse(JSON.stringify(pricing));
+customPricing.providers['custom-provider'] = {
+  name: 'My AI',
+  custom: true,
+  unitPriceRub: 0.25,
+  package: { price: 0.25, currency: 'RUB', units: 1 }
+};
+customPricing.models.push({
+  id: 'custom-model',
+  provider: 'custom-provider',
+  name: 'Video Pro',
+  variants: [{ id: 'custom-mode', label: '1080p Fast', billing: { type: 'rate_per_second', unitsPerSecond: 10 } }]
+});
+const customResult = calc.calculateSelection(customPricing, settings, 'custom-model', 'custom-mode', 6);
+assert.equal(customResult.units, 60);
+assert.equal(customResult.unitRub, 0.25);
+assert.equal(customResult.rub, 15);
+assert.equal(customResult.usd, null);
+
+const customOverride = calc.calculateSelection(customPricing, {
+  ...settings,
+  manualTokenTariffs: { 'custom-model::custom-mode': { unitsByDuration: { 6: 72 } } }
+}, 'custom-model', 'custom-mode', 6);
+assert.equal(customOverride.pricingMode, 'manual_duration_override');
+assert.equal(customOverride.units, 72);
+assert.equal(customOverride.rub, 18);
+
 const syntxOmniExpected = {
   'omni-reference-480': { 4: 155, 10: 182.7, 20: 228.8, 30: 274.9 },
   'omni-reference-720': { 4: 348.5, 10: 410.7, 20: 514.4, 30: 618 },

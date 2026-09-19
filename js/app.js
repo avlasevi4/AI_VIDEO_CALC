@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'ai-video-calc-v2-settings';
-  const PROVIDER_IDS = ['kling', 'syntex', 'dreamina', 'dreamina-plus'];
+  const BUILTIN_PROVIDER_IDS = ['kling', 'syntex', 'dreamina', 'dreamina-plus'];
   const PRIVATE_PROVIDER_ID = 'dreamina-plus';
   const KLING_PACKAGE_PRESETS = {
     'standard-monthly': { price: 8.80, units: 660 },
@@ -37,6 +37,7 @@
   };
   const PACKAGE_CATALOG_VERSION = '2026-09-19-official';
   let pricing = null;
+  let basePricing = null;
   let pricingSource = '—';
   let currentProvider = 'kling';
   let projects = [];
@@ -69,6 +70,7 @@
     packageCatalogVersion: PACKAGE_CATALOG_VERSION,
     syntexManualUnits: {},
     manualTokenTariffs: {},
+    customTariffs: [],
     sharedTariffsUpdatedAt: '',
     lastProjectModelByProvider: { kling: 'kling-30' },
     lastCalculatorModelByProvider: { kling: 'kling-30' },
@@ -123,6 +125,7 @@
       normalizePackageSettings();
       if (!settings.syntexManualUnits || typeof settings.syntexManualUnits !== 'object') settings.syntexManualUnits = {};
       if (!settings.manualTokenTariffs || typeof settings.manualTokenTariffs !== 'object') settings.manualTokenTariffs = {};
+      if (!Array.isArray(settings.customTariffs)) settings.customTariffs = [];
       // Сохраняем значения, введённые в предыдущем формате (₽/сек), в эквиваленте токенов.
       if (settings.manualRubTariffs && typeof settings.manualRubTariffs === 'object') {
         const tokenRub = Number(settings.syntexPackageRub) / Math.max(1, Number(settings.syntexPackageTokens));
@@ -206,7 +209,8 @@
       dreaminaPackageCatalogVersion: settings.dreaminaPackageCatalogVersion,
       packageCatalogVersion: settings.packageCatalogVersion,
       manualTokenTariffs: settings.manualTokenTariffs,
-      syntexManualUnits: settings.syntexManualUnits
+      syntexManualUnits: settings.syntexManualUnits,
+      customTariffs: settings.customTariffs
     };
   }
 
@@ -224,8 +228,10 @@
       if (value && Object.prototype.hasOwnProperty.call(value, key)) settings[key] = value[key];
     });
     normalizePackageSettings();
+    if (!Array.isArray(settings.customTariffs)) settings.customTariffs = [];
     settings.sharedTariffsUpdatedAt = updatedAt || settings.sharedTariffsUpdatedAt || '';
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    if (basePricing) rebuildPricingWithCustomServices();
   }
 
   function presetForValues(presets, price, units) {
@@ -247,6 +253,71 @@
     settings.packageCatalogVersion = PACKAGE_CATALOG_VERSION;
   }
 
+  function makeCustomId(prefix) {
+    return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function rebuildPricingWithCustomServices() {
+    if (!basePricing) return;
+    pricing = JSON.parse(JSON.stringify(basePricing));
+    const rows = Array.isArray(settings.customTariffs) ? settings.customTariffs : [];
+    const groups = new Map();
+    rows.forEach(row => {
+      if (!row?.providerId || !row?.modelId || !row?.variantId) return;
+      if (!groups.has(row.providerId)) groups.set(row.providerId, []);
+      groups.get(row.providerId).push(row);
+    });
+
+    groups.forEach((providerRows, providerId) => {
+      const first = providerRows[0];
+      const tokenRub = Math.max(0, Number(first.tokenRub) || 0);
+      pricing.providers[providerId] = {
+        name: first.providerName || 'Свой сервис',
+        unit: 'tokens',
+        custom: true,
+        appearance: first.appearance || 'custom',
+        unitPriceRub: tokenRub,
+        package: { price: tokenRub, currency: 'RUB', units: 1 },
+        status: 'manual',
+        sourceNote: 'Пользовательский сервис и тариф.'
+      };
+      const modelGroups = new Map();
+      providerRows.forEach(row => {
+        if (!modelGroups.has(row.modelId)) modelGroups.set(row.modelId, []);
+        modelGroups.get(row.modelId).push(row);
+      });
+      modelGroups.forEach((modelRows, modelId) => {
+        pricing.models.push({
+          id: modelId,
+          provider: providerId,
+          name: modelRows[0].modelName || 'Своя модель',
+          custom: true,
+          status: 'manual',
+          variants: modelRows.map(row => ({
+            id: row.variantId,
+            label: row.variantName || 'Свой режим',
+            resolution: '—',
+            audio: '—',
+            custom: true,
+            status: 'manual',
+            note: `Пользовательский тариф: ${fmtNum(row.sourceUnits, 4)} токенов за ${fmtNum(row.sourceDuration, 2)} сек.`,
+            billing: row.billing && typeof row.billing === 'object'
+              ? JSON.parse(JSON.stringify(row.billing))
+              : {
+                  type: 'rate_per_second',
+                  unitsPerSecond: Math.max(0, Number(row.unitsPerSecond) || 0),
+                  durationRange: { min: 1, max: 600, step: 1 },
+                  roundDigits: 4
+                }
+          }))
+        });
+      });
+    });
+
+    if (!availableProviderIds().includes(currentProvider)) currentProvider = 'kling';
+    renderCustomProviderTabs();
+  }
+
   async function synchronizeCloudTariffs() {
     if (!cloudSession) return;
     try {
@@ -263,6 +334,7 @@
       hydrateSettings();
       renderHeadlineRate();
       renderManualTariffEditor();
+      renderTariffReference();
       renderManualUnits();
       renderResult();
       renderProject();
@@ -310,15 +382,15 @@
     renderHeadlineRate();
 
     const loaded = await window.AIVideoPricing.loadPricing(false);
-    pricing = loaded.data;
+    basePricing = loaded.data;
+    rebuildPricingWithCustomServices();
     pricingSource = loaded.source;
     renderDataStatus(loaded.warning);
-    renderSourceLinks();
     renderManualTariffEditor();
-    setProvider(PROVIDER_IDS.includes(settings.lastCalculatorProvider) ? settings.lastCalculatorProvider : 'kling', false);
+    renderTariffReference();
+    setProvider(availableProviderIds().includes(settings.lastCalculatorProvider) ? settings.lastCalculatorProvider : 'kling', false);
     await initCloudAccess();
     renderProject();
-    runPricingCheck(false);
 
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -523,12 +595,15 @@
     });
     $('saveManualTariff').addEventListener('click', saveManualTokenTariff);
     $('resetManualTariffs').addEventListener('click', resetManualTokenTariffs);
-    $('checkPricing').addEventListener('click', () => runPricingCheck(true));
+    $('saveCustomServiceTariff').addEventListener('click', saveCustomServiceTariff);
     $('refreshRate').addEventListener('click', () => refreshRate(false));
     $('quickRefreshRate').addEventListener('click', () => refreshRate(false));
     $('exportData').addEventListener('click', exportData);
     $('importData').addEventListener('click', () => $('importFile').click());
     $('importFile').addEventListener('change', importData);
+    $('exportTariffs').addEventListener('click', exportTariffs);
+    $('importTariffs').addEventListener('click', () => $('importTariffsFile').click());
+    $('importTariffsFile').addEventListener('change', importTariffs);
     $('resetData').addEventListener('click', resetData);
   }
 
@@ -645,6 +720,7 @@
       $('authAccountEmail').textContent = cloudSession.user.email;
     }
     refreshProviderAccess();
+    renderTariffReference();
   }
 
   function toggleOwnerAccessPanel() {
@@ -762,12 +838,30 @@
     return provider !== PRIVATE_PROVIDER_ID || Boolean(cloudSession);
   }
 
+  function customProviderIds() {
+    return Object.keys(pricing?.providers || {}).filter(id => pricing.providers[id]?.custom && modelsForProvider(id).length);
+  }
+
   function availableProviderIds() {
-    return PROVIDER_IDS.filter(id => pricing?.providers?.[id] && canUseProvider(id));
+    const builtIn = BUILTIN_PROVIDER_IDS.filter(id => pricing?.providers?.[id] && canUseProvider(id));
+    return [...builtIn, ...customProviderIds().filter(id => !builtIn.includes(id))];
   }
 
   function safeProvider(provider) {
-    return PROVIDER_IDS.includes(provider) && canUseProvider(provider) ? provider : 'kling';
+    return availableProviderIds().includes(provider) ? provider : 'kling';
+  }
+
+  function renderCustomProviderTabs() {
+    const container = $('customProviderTabs');
+    if (!container || !pricing) return;
+    const ids = customProviderIds();
+    container.classList.toggle('hidden', !ids.length);
+    container.innerHTML = ids.map(id => {
+      const provider = pricing.providers[id];
+      const importedPlus = provider.appearance === 'plus';
+      return `<button class="provider-tab ${importedPlus ? 'provider-tab-plus imported-provider-plus ' : ''}${id === currentProvider ? 'active' : ''}" type="button" data-provider="${esc(id)}"><span>${esc(provider.name)}</span><small>${importedPlus ? 'Импортированный тариф' : 'Свой сервис'}</small></button>`;
+    }).join('');
+    container.querySelectorAll('.provider-tab').forEach(button => button.addEventListener('click', () => setProvider(button.dataset.provider)));
   }
 
   function refreshProviderAccess() {
@@ -777,7 +871,8 @@
       element.classList.toggle('hidden', !plusAvailable);
     });
 
-    if (!canUseProvider(currentProvider)) setProvider('kling', false);
+    renderCustomProviderTabs();
+    if (!availableProviderIds().includes(currentProvider)) setProvider('kling', false);
 
     if ($('actualProvider')) {
       actualDraft.provider = safeProvider(actualDraft.provider);
@@ -1015,12 +1110,106 @@
       const date = pricing.baseTariffDate || pricing.updated;
       $('baseTariffDate').textContent = `Базовые тарифы: ${new Date(date + 'T00:00:00').toLocaleDateString('ru-RU')}`;
     }
-    const availableProviders = ['syntex'].filter(provider => pricing.providers?.[provider] && modelsForProvider(provider).length);
+    const availableProviders = availableProviderIds().filter(provider => pricing.providers?.[provider] && modelsForProvider(provider).length);
     const previous = $('manualTariffProvider').value;
     const provider = availableProviders.includes(previous) ? previous : (availableProviders.includes('syntex') ? 'syntex' : availableProviders[0]);
     $('manualTariffProvider').innerHTML = availableProviders.map(id => `<option value="${esc(id)}" ${id === provider ? 'selected' : ''}>${esc(pricing.providers[id].name)}</option>`).join('');
     renderManualTariffModels();
     renderManualTariffList();
+    renderCustomServiceList();
+  }
+
+  function localizedNumber(value) {
+    return Number(String(value ?? '').trim().replace(',', '.'));
+  }
+
+  function saveCustomServiceTariff() {
+    const providerName = $('customServiceName').value.trim();
+    const modelName = $('customModelName').value.trim();
+    const variantName = $('customVariantName').value.trim();
+    const tokenRub = localizedNumber($('customTokenRub').value);
+    const sourceDuration = localizedNumber($('customSourceDuration').value);
+    const sourceUnits = localizedNumber($('customSourceUnits').value);
+    const message = $('customServiceMessage');
+    if (!providerName || !modelName || !variantName || !(tokenRub > 0) || !(sourceDuration > 0) || !(sourceUnits > 0)) {
+      message.textContent = 'Заполните название сервиса, модель, режим, стоимость токена, длительность и расход токенов. Все числа должны быть больше нуля.';
+      return;
+    }
+
+    settings.customTariffs ||= [];
+    const normalize = value => String(value || '').trim().toLocaleLowerCase('ru-RU');
+    const existingProvider = settings.customTariffs.find(row => normalize(row.providerName) === normalize(providerName));
+    const providerId = existingProvider?.providerId || makeCustomId('custom-provider');
+    settings.customTariffs.forEach(row => {
+      if (row.providerId === providerId) {
+        row.providerName = providerName;
+        row.tokenRub = tokenRub;
+      }
+    });
+    const existingModel = settings.customTariffs.find(row => row.providerId === providerId && normalize(row.modelName) === normalize(modelName));
+    const modelId = existingModel?.modelId || makeCustomId('custom-model');
+    settings.customTariffs.forEach(row => {
+      if (row.providerId === providerId && row.modelId === modelId) row.modelName = modelName;
+    });
+    const existing = settings.customTariffs.find(row => row.providerId === providerId && row.modelId === modelId && normalize(row.variantName) === normalize(variantName));
+    const saved = {
+      id: existing?.id || makeCustomId('custom-tariff'),
+      providerId,
+      providerName,
+      tokenRub,
+      modelId,
+      modelName,
+      variantId: existing?.variantId || makeCustomId('custom-variant'),
+      variantName,
+      sourceDuration,
+      sourceUnits,
+      unitsPerSecond: sourceUnits / sourceDuration,
+      updatedAt: new Date().toISOString()
+    };
+    if (existing) Object.assign(existing, saved);
+    else settings.customTariffs.push(saved);
+
+    saveTariffSettings();
+    saveLocal();
+    rebuildPricingWithCustomServices();
+    refreshProviderAccess();
+    renderManualTariffEditor();
+    renderTariffReference();
+    renderModels();
+    renderProject();
+    message.textContent = `${existing ? 'Тариф обновлён' : 'Тариф добавлен'}: ${providerName} · ${modelName} · ${variantName}.`;
+    ['customVariantName', 'customSourceUnits'].forEach(id => { $(id).value = ''; });
+  }
+
+  function renderCustomServiceList() {
+    const list = $('customServiceList');
+    if (!list) return;
+    const rows = Array.isArray(settings.customTariffs) ? settings.customTariffs : [];
+    if (!rows.length) {
+      list.innerHTML = '<div class="manual-tariff-empty">Собственных сервисов и моделей пока нет.</div>';
+      return;
+    }
+    list.innerHTML = rows.map(row => `
+      <article class="manual-tariff-row custom-service-row" data-id="${esc(row.id)}">
+        <div><strong>${esc(row.providerName)} · ${esc(row.modelName)}</strong><span>${esc(row.variantName)} · ${fmtNum(row.sourceUnits, 4)} токенов за ${fmtNum(row.sourceDuration, 2)} сек · 1 токен = ${fmtNum(row.tokenRub, 6)} ₽</span></div>
+        <strong>${fmtNum(row.unitsPerSecond, 4)} ток./сек</strong>
+        <button class="manual-tariff-remove" type="button" aria-label="Удалить пользовательский тариф ${esc(row.modelName)}">×</button>
+      </article>`).join('');
+    list.querySelectorAll('.manual-tariff-remove').forEach(button => button.addEventListener('click', () => {
+      const id = button.closest('.custom-service-row')?.dataset.id;
+      const row = settings.customTariffs.find(item => item.id === id);
+      if (!row || !confirm(`Удалить тариф «${row.providerName} · ${row.modelName} · ${row.variantName}»? Фактические записи сохранят фиксированные суммы, а строки сметы с этой моделью потребуется заменить.`)) return;
+      settings.customTariffs = settings.customTariffs.filter(item => item.id !== id);
+      saveTariffSettings();
+      saveLocal();
+      rebuildPricingWithCustomServices();
+      refreshProviderAccess();
+      renderManualTariffEditor();
+      renderTariffReference();
+      setProvider(safeProvider(currentProvider), false);
+      renderProject();
+      $('customServiceMessage').textContent = 'Пользовательский тариф удалён.';
+    }));
   }
 
   function renderManualTariffModels() {
@@ -1517,7 +1706,7 @@
   }
 
   function normalizeProjectItem(item) {
-    if (!PROVIDER_IDS.includes(item.provider)) item.provider = 'kling';
+    if (!availableProviderIds().includes(item.provider)) item.provider = 'kling';
     const model = getProjectModel(item);
     if (!model) return item;
     item.modelId = model.id;
@@ -2153,110 +2342,15 @@
     renderUnitPrices();
   }
 
-  function renderSourceLinks() {
-    const box = $('sourceLinks');
-    if (!pricing?.verification?.sources) {
-      box.innerHTML = '';
-      return;
-    }
-    box.innerHTML = pricing.verification.sources.map(source => `<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.title)}</a>`).join('');
-  }
-
-  function addCheck(rows, type, title, detail) {
-    rows.push({ type, title, detail });
-  }
-
-  function ageDays(dateText) {
-    const t = Date.parse(dateText + 'T00:00:00Z');
-    return Number.isFinite(t) ? Math.floor((Date.now() - t) / 86400000) : 9999;
-  }
-
-  function localPricingChecks() {
-    const rows = [];
-    const verification = pricing.verification || {};
-    const age = ageDays(pricing.updated);
-    addCheck(rows, age <= 30 ? 'pass' : 'warn', 'Дата тарифной базы', `${pricing.updated} · ${age < 0 ? 0 : age} дн. назад`);
-
-    const kling = pricing.models.find(model => model.id === 'kling-30');
-    const expected = verification.kling30Rates || [];
-    let klingOk = !!kling;
-    for (const ref of expected) {
-      const variant = kling?.variants.find(x => x.id === ref.variantId);
-      if (!variant || Number(variant.billing?.unitsPerSecond) !== Number(ref.unitsPerSecond)) klingOk = false;
-    }
-    addCheck(rows, klingOk ? 'pass' : 'fail', 'Kling 3.0 · контрольные ставки', klingOk ? '720p/1080p совпадают с контрольным официальным снимком от 19.08.2026.' : 'Есть расхождение с контрольными значениями.');
-
-    const ids = new Set(pricing.models.filter(model => model.provider === 'syntex').map(model => model.id));
-    const required = verification.requiredSyntexModelIds || [];
-    const missing = required.filter(id => !ids.has(id));
-    addCheck(rows, missing.length ? 'fail' : 'pass', 'Каталог SYNTX', missing.length ? `Не хватает ${missing.length} групп: ${missing.join(', ')}` : `В базе ${ids.size} групп видеомоделей/инструментов; контрольный список присутствует полностью.`);
-
-    const unpriced = pricing.models.filter(model => model.provider === 'syntex').flatMap(model => model.variants.map(variant => ({ model, variant }))).filter(x => x.variant.billing?.type === 'manual_required').length;
-    addCheck(rows, 'info', 'Неподтверждённые цены SYNTX', `${unpriced} режимов находятся в каталоге, но требуют фактического расхода токенов; приложение их не выдумывает.`);
-    return rows;
-  }
-
-  async function probeSource(source) {
-    try {
-      const readable = await fetch(source.url, { cache: 'no-store' });
-      if (!readable.ok) throw new Error('HTTP ' + readable.status);
-      const text = await readable.text();
-      if (source.id === 'syntx-status') {
-        const needles = ['Kling', 'Veo 3.1', 'Seedance TWO', 'Wan 2.7', 'Happy Horse', 'FLUX 3'];
-        const missing = needles.filter(x => !text.includes(x));
-        return { type: missing.length ? 'warn' : 'pass', title: source.title, detail: missing.length ? `Источник прочитан, но не найдены: ${missing.join(', ')}.` : 'Источник прочитан: контрольные текущие семейства/режимы найдены.' };
-      }
-      if (source.id === 'syntx-video-docs') {
-        const needles = ['KLING', 'Seedance', 'RUNWAY', 'Higgsfield', 'Hailuo MiniMax', 'Veo'];
-        const missing = needles.filter(x => !text.toLowerCase().includes(x.toLowerCase()));
-        return { type: missing.length ? 'warn' : 'pass', title: source.title, detail: missing.length ? `Каталог прочитан, но часть контрольных названий не найдена: ${missing.join(', ')}.` : 'Каталог SYNTX прочитан и содержит контрольные видеомодели.' };
-      }
-      if (source.id === 'kling-3-official-guide') {
-        const normalized = text.replace(/\s+/g, ' ');
-        const ok = /8\s*credits/i.test(normalized) && /12\s*credits/i.test(normalized);
-        return { type: ok ? 'pass' : 'info', title: source.title, detail: ok ? 'Официальная страница прочитана; контрольные 8 и 12 credits найдены.' : 'Официальная страница доступна, но автоматический поиск ставок в её HTML не дал надёжного результата.' };
-      }
-      return { type: 'pass', title: source.title, detail: 'Источник доступен и читается браузером.' };
-    } catch (readError) {
-      try {
-        await fetch(source.url, { mode: 'no-cors', cache: 'no-store' });
-        return { type: 'info', title: source.title, detail: 'Источник доступен по сети, но браузер не разрешил прочитать содержимое (CORS). Полная сверка будет выполняться через GitHub Actions.' };
-      } catch (error) {
-        return { type: 'warn', title: source.title, detail: 'Источник не удалось проверить из локального браузера: ' + error.message };
-      }
-    }
-  }
-
-  function renderCheckRows(rows) {
-    $('checkList').innerHTML = rows.map(row => `<div class="check-row ${esc(row.type)}"><div class="icon">${row.type === 'pass' ? '✓' : row.type === 'fail' ? '×' : row.type === 'warn' ? '!' : 'i'}</div><div><strong>${esc(row.title)}</strong><small>${esc(row.detail)}</small></div></div>`).join('');
-  }
-
-  async function runPricingCheck(withNetwork) {
+  function renderTariffReference() {
     if (!pricing) return;
-    const button = $('checkPricing');
-    if (withNetwork) {
-      button.disabled = true;
-      button.textContent = 'Проверяю…';
-    }
-
-    const rows = localPricingChecks();
-    renderCheckRows(rows);
-    $('checkSummary').textContent = 'Локальная проверка базы выполнена.';
-
-    if (withNetwork) {
-      const sources = (pricing.verification?.sources || []).filter(source => ['official-rate', 'catalog', 'catalog-status'].includes(source.kind));
-      const probes = await Promise.all(sources.map(probeSource));
-      rows.push(...probes);
-      renderCheckRows(rows);
-      settings.lastPricingCheck = new Date().toISOString();
-      saveLocal();
-      const problems = rows.filter(row => row.type === 'fail').length;
-      const warnings = rows.filter(row => row.type === 'warn').length;
-      $('checkSummary').textContent = `Проверено ${new Date().toLocaleString('ru-RU')}: критических расхождений ${problems}, предупреждений ${warnings}.`;
-      button.disabled = false;
-      button.textContent = 'Проверить сейчас';
-    } else if (settings.lastPricingCheck) {
-      $('checkSummary').textContent = `Локальная проверка базы выполнена. Последняя сетевая попытка: ${new Date(settings.lastPricingCheck).toLocaleString('ru-RU')}.`;
+    const rawDate = pricing.baseTariffDate || pricing.updated;
+    const parsed = rawDate ? new Date(`${rawDate}T00:00:00`) : null;
+    if ($('tariffHelpUpdated')) $('tariffHelpUpdated').textContent = parsed && !Number.isNaN(parsed.getTime()) ? parsed.toLocaleDateString('ru-RU') : '—';
+    if ($('tariffHelpSync')) {
+      $('tariffHelpSync').textContent = cloudSession
+        ? 'Вы вошли как владелец: пакеты, ручные тарифы и собственные сервисы синхронизируются через ваш профиль. Проекты синхронизируются отдельно в той же учётной записи.'
+        : 'Без входа проекты, ручные тарифы и собственные сервисы хранятся только в этом браузере. Для переноса используйте экспорт и импорт JSON.';
     }
   }
 
@@ -2266,19 +2360,20 @@
     button.textContent = 'Обновляю…';
     try {
       const loaded = await window.AIVideoPricing.loadPricing(true);
-      pricing = loaded.data;
+      basePricing = loaded.data;
+      rebuildPricingWithCustomServices();
       pricingSource = loaded.source;
       renderDataStatus(loaded.warning);
-      renderSourceLinks();
+      renderTariffReference();
+      refreshProviderAccess();
       renderManualTariffEditor();
       renderModels();
       renderProject();
-      runPricingCheck(false);
     } catch (error) {
       $('dataStatus').textContent = 'Не удалось обновить тарифы: ' + error.message;
     } finally {
       button.disabled = false;
-      button.textContent = 'Обновить pricing.json';
+      button.textContent = 'Загрузить базу тарифов заново';
     }
   }
 
@@ -2339,22 +2434,158 @@
     return { rate: Number(data?.Valute?.USD?.Value), source: 'ЦБ РФ / cbr-xml-daily', date: data?.Date || '' };
   }
 
+  function downloadJson(payload, filename) {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 500);
+  }
+
+  function portableProvider(providerId) {
+    const provider = pricing?.providers?.[providerId];
+    if (!provider) return null;
+    const models = pricing.models.filter(model => model.provider === providerId).map(model => ({
+      key: model.id,
+      name: model.name,
+      variants: model.variants.map(variant => ({
+        key: variant.id,
+        name: variant.label,
+        billing: JSON.parse(JSON.stringify(variant.billing || {}))
+      })).filter(variant => variant.billing?.type && variant.billing.type !== 'manual_required')
+    })).filter(model => model.variants.length);
+    if (!models.length) return null;
+    const customRow = settings.customTariffs?.find(row => row.providerId === providerId);
+    return {
+      key: customRow?.portableProviderKey || providerId,
+      name: provider.name,
+      tokenRub: window.AIVideoCalculator.unitPriceRub(providerId, settings, pricing),
+      appearance: providerId === PRIVATE_PROVIDER_ID || provider.appearance === 'plus' ? 'plus' : 'custom',
+      models
+    };
+  }
+
+  function exportTariffs() {
+    const providerIds = [...customProviderIds()];
+    if (canUseProvider(PRIVATE_PROVIDER_ID)) providerIds.unshift(PRIVATE_PROVIDER_ID);
+    const providers = [...new Set(providerIds)].map(portableProvider).filter(Boolean);
+    if (!providers.length) {
+      $('dataStatus').textContent = 'Нет собственных или доступных приватных тарифов для экспорта.';
+      return;
+    }
+    downloadJson({
+      type: 'ai-video-calc-tariffs',
+      schemaVersion: 1,
+      appVersion: '3.4',
+      exportedAt: new Date().toISOString(),
+      providers
+    }, 'ai-video-calc-tariffs.json');
+    $('dataStatus').textContent = `Файл тарифов подготовлен: ${providers.length} сервис(а). Проекты и данные аккаунта в него не включены.`;
+  }
+
+  function billingExample(billing) {
+    if (!billing || typeof billing !== 'object') return null;
+    if (billing.type === 'rate_per_second') {
+      const units = Number(billing.unitsPerSecond);
+      return units > 0 ? { duration: 1, units, unitsPerSecond: units } : null;
+    }
+    if (billing.type === 'fixed_generation') {
+      const units = Number(billing.units);
+      return units > 0 ? { duration: 1, units, unitsPerSecond: units } : null;
+    }
+    if (['duration_table', 'duration_curve'].includes(billing.type)) {
+      const point = Object.entries(billing.unitsByDuration || {})
+        .map(([duration, units]) => ({ duration: Number(duration), units: Number(units) }))
+        .filter(item => item.duration > 0 && item.units > 0)
+        .sort((a, b) => a.duration - b.duration)[0];
+      return point ? { ...point, unitsPerSecond: point.units / point.duration } : null;
+    }
+    return null;
+  }
+
+  async function importTariffs(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (data?.type !== 'ai-video-calc-tariffs' || Number(data.schemaVersion) !== 1 || !Array.isArray(data.providers)) {
+        throw new Error('Это не файл тарифов AI VIDEO CALC');
+      }
+      if (data.providers.length > 50) throw new Error('В файле слишком много сервисов');
+      settings.customTariffs ||= [];
+      let imported = 0;
+      for (const providerData of data.providers) {
+        const providerName = String(providerData?.name || '').trim().slice(0, 60);
+        const tokenRub = Number(providerData?.tokenRub);
+        const providerKey = String(providerData?.key || providerName).trim().slice(0, 120);
+        if (!providerName || !providerKey || !(tokenRub > 0) || !Array.isArray(providerData.models)) continue;
+        const previousRows = settings.customTariffs.filter(row => row.portableProviderKey === providerKey || row.providerId === providerKey);
+        const providerId = previousRows[0]?.providerId || makeCustomId('custom-provider');
+        settings.customTariffs = settings.customTariffs.filter(row => row.portableProviderKey !== providerKey);
+        for (const modelData of providerData.models.slice(0, 200)) {
+          const modelName = String(modelData?.name || '').trim().slice(0, 80);
+          const modelKey = String(modelData?.key || modelName).trim().slice(0, 140);
+          if (!modelName || !modelKey || !Array.isArray(modelData.variants)) continue;
+          const previousModel = previousRows.find(row => row.portableModelKey === modelKey || row.modelId === modelKey);
+          const modelId = previousModel?.modelId || makeCustomId('custom-model');
+          for (const variantData of modelData.variants.slice(0, 300)) {
+            const variantName = String(variantData?.name || '').trim().slice(0, 100);
+            const variantKey = String(variantData?.key || variantName).trim().slice(0, 160);
+            const billing = variantData?.billing && typeof variantData.billing === 'object' ? JSON.parse(JSON.stringify(variantData.billing)) : null;
+            const example = billingExample(billing);
+            if (!variantName || !variantKey || !example) continue;
+            const previousVariant = previousRows.find(row => (row.portableModelKey === modelKey || row.modelId === modelKey) && (row.portableVariantKey === variantKey || row.variantId === variantKey));
+            settings.customTariffs.push({
+              id: previousVariant?.id || makeCustomId('custom-tariff'),
+              providerId,
+              providerName,
+              tokenRub,
+              appearance: providerData.appearance === 'plus' ? 'plus' : 'custom',
+              portableProviderKey: providerKey,
+              modelId,
+              modelName,
+              portableModelKey: modelKey,
+              variantId: previousVariant?.variantId || makeCustomId('custom-variant'),
+              variantName,
+              portableVariantKey: variantKey,
+              sourceDuration: example.duration,
+              sourceUnits: example.units,
+              unitsPerSecond: example.unitsPerSecond,
+              billing,
+              updatedAt: new Date().toISOString()
+            });
+            imported += 1;
+          }
+        }
+      }
+      if (!imported) throw new Error('В файле нет поддерживаемых тарифов');
+      saveTariffSettings();
+      saveLocal();
+      rebuildPricingWithCustomServices();
+      refreshProviderAccess();
+      renderManualTariffEditor();
+      renderTariffReference();
+      setProvider(safeProvider(currentProvider), false);
+      renderProject();
+      $('dataStatus').textContent = `Импортировано тарифных режимов: ${imported}. Новые сервисы доступны в калькуляторе и проектах.`;
+    } catch (error) {
+      $('dataStatus').textContent = 'Не удалось загрузить тарифы: ' + error.message;
+    }
+    event.target.value = '';
+  }
+
   function exportData() {
     syncActiveProjectState(false);
     const payload = {
-      app: 'AI VIDEO CALC 3.0',
+      app: 'AI VIDEO CALC 3.4',
       schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       settings,
       activeProjectId,
       projects
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'ai-video-calc-v3-data.json';
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(link.href), 500);
+    downloadJson(payload, 'ai-video-calc-v3.4-data.json');
   }
 
   async function importData(event) {
@@ -2364,6 +2595,10 @@
       const data = JSON.parse(await file.text());
       settings = { ...settings, ...(data.settings || {}) };
       if (!settings.syntexManualUnits) settings.syntexManualUnits = {};
+      if (!settings.manualTokenTariffs || typeof settings.manualTokenTariffs !== 'object') settings.manualTokenTariffs = {};
+      if (!Array.isArray(settings.customTariffs)) settings.customTariffs = [];
+      normalizePackageSettings();
+      rebuildPricingWithCustomServices();
       if (Array.isArray(data.projects)) {
         projects = data.projects.map(project => window.AIVideoProjectStore.normalizeProject(project, defaultProjectMeta()));
         activeProjectId = '';
@@ -2380,6 +2615,9 @@
       saveLocal();
       saveTariffSettings();
       hydrateSettings();
+      refreshProviderAccess();
+      renderTariffReference();
+      renderManualTariffEditor();
       renderHeadlineRate();
       renderManualUnits();
       renderResult();

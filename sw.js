@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.3-syntx-project-totals-20260919';
+const CACHE_NAME = 'ai-video-calc-v3.4-custom-services-20260919';
 const ASSETS = [
   './',
   './index.html',

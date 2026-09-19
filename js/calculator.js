@@ -32,6 +32,12 @@
       return safeNumber(provider.package.price, 100) / Math.max(1, safeNumber(provider.package.units, 10500));
     }
 
+    if (provider.custom) {
+      const direct = safeNumber(provider.unitPriceRub, 0);
+      if (direct > 0) return direct;
+      return safeNumber(provider.package?.price, 0) / Math.max(1, safeNumber(provider.package?.units, 1));
+    }
+
     throw new Error('Не поддерживается цена единицы провайдера');
   }
 
@@ -87,7 +93,7 @@
     const manualTokensPerSecond = Math.max(0, safeNumber(typeof storedTariff === 'object' ? storedTariff?.unitsPerSecond : storedTariff, 0));
     const normalizedDuration = safeNumber(duration, 5);
     const manualDurationUnits = Math.max(0, safeNumber(storedTariff?.unitsByDuration?.[String(normalizedDuration)], 0));
-    if (model.provider === 'syntex' && manualDurationUnits > 0) {
+    if (manualDurationUnits > 0) {
       const unitRub = unitPriceRub(model.provider, settings, pricing);
       return {
         model,
@@ -101,7 +107,7 @@
         pricingMode: 'manual_duration_override'
       };
     }
-    if (model.provider === 'syntex' && variant.billing.type === 'manual_required' && manualTokensPerSecond > 0) {
+    if (variant.billing.type === 'manual_required' && manualTokensPerSecond > 0) {
       const units = manualTokensPerSecond * normalizedDuration;
       const unitRub = unitPriceRub(model.provider, settings, pricing);
       const rub = units * unitRub;

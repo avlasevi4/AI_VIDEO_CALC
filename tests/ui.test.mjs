@@ -32,8 +32,9 @@ assert.match(html, /class="app-tab active"[^>]*data-app-view="calculator"/, 'cal
 assert.match(html, /data-app-view="projects"/, 'projects have a primary navigation tab');
 assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation tab');
 assert.match(html, /data-provider="dreamina"/, 'Dreamina has a calculator provider tab');
+assert.match(html, /id="customProviderTabs"/, 'custom services have a dedicated calculator provider area');
 assert.match(html, /class="provider-tab provider-tab-plus provider-plus-standalone hidden"[^>]*data-provider="dreamina-plus"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus is a standalone button hidden before owner authorization');
-assert.match(html, /class="provider-tabs"[^>]*aria-label="Публичные провайдеры генерации"[\s\S]*data-provider="kling"[\s\S]*data-provider="syntex"[\s\S]*data-provider="dreamina"[\s\S]*<\/div>\s*<button class="provider-tab provider-tab-plus provider-plus-standalone hidden"/, 'public provider plate contains exactly the three public services before the standalone Plus button');
+assert.match(html, /class="provider-tabs"[^>]*aria-label="Публичные провайдеры генерации"[\s\S]*data-provider="kling"[\s\S]*data-provider="syntex"[\s\S]*data-provider="dreamina"[\s\S]*<\/div>\s*<div id="customProviderTabs"/, 'public provider plate contains exactly the three built-in public services before the custom service area');
 assert.match(html, /id="dreaminaPackagePreset"/, 'Dreamina offers selectable official package presets');
 assert.match(html, /id="klingPackagePreset"/, 'Kling offers selectable current package presets');
 assert.match(html, /id="syntexPackagePreset"/, 'SYNTX offers selectable current package presets');
@@ -71,6 +72,19 @@ assert.match(html, /тарифы синхронизируются с личны�
 assert.match(html, /id="saveManualTariff"/, 'manual tariff editor can save an exact-duration token tariff');
 assert.match(html, /id="baseTariffDate"/, 'manual tariff editor shows the base tariff date');
 assert.match(html, /id="resetManualTariffs"/, 'manual tariff overrides can be reset to the base tariff table');
+assert.match(html, /id="customServiceName"/, 'user can name a custom service');
+assert.match(html, /id="customTokenRub"/, 'user can set the ruble cost of one custom token');
+assert.match(html, /id="customModelName"/, 'user can name a custom model');
+assert.match(html, /id="customVariantName"/, 'user can add a custom mode');
+assert.match(html, /id="saveCustomServiceTariff"/, 'custom service tariff has an explicit save action');
+assert.match(html, /id="exportTariffs"/, 'tariffs can be exported without project data');
+assert.match(html, /id="importTariffs"/, 'a shared tariff bundle can be installed');
+assert.match(html, /id="importTariffsFile"/, 'tariff import uses a dedicated file input');
+assert.match(html, /Dreamina Plus из файла устанавливается/, 'help explains portable Dreamina Plus access');
+assert.match(html, /id="tariffHelpUpdated"/, 'tariff relevance is presented as a dated reference');
+assert.doesNotMatch(html, /id="checkPricing"/, 'tariff reference has no misleading live-check action');
+assert.match(html, /Загрузить базу тарифов заново/, 'pricing JSON reload is described in plain language');
+assert.match(html, /Экспорт сохраняет резервную копию проектов/, 'export and import explain cross-device backup transfer');
 assert.match(html, /id="compareCalculatorSyntex"/, 'single-generation result can be compared with SYNTX');
 assert.match(html, /id="compareEstimateSyntex"/, 'project estimate can be compared with SYNTX');
 assert.match(html, /id="compareActualSyntex"/, 'actual project cost can be compared with SYNTX');
@@ -80,6 +94,7 @@ assert.match(css, /\.project-completion-panel\s*\{/, 'completion has a dedicated
 assert.match(css, /\.app-tabs\s*\{/, 'primary navigation is styled');
 assert.match(css, /\.stepper\s*\{/, 'quantity stepper is styled');
 assert.match(css, /\.manual-tariff-editor\s*\{/, 'manual tariff editor is styled');
+assert.match(css, /\.custom-service-editor\s*\{/, 'custom service editor is styled');
 assert.match(css, /\.provider-tabs\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/, 'public provider plate always has three columns');
 assert.doesNotMatch(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /стоимость зафиксирована при записи/, 'actual generation rows do not repeat verbose fixed-cost text');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /orientation\?\.unlock/, 'PWA releases an orientation lock left by an older installation');
@@ -93,6 +108,8 @@ assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /provider !== PRIVATE_PROVIDER_ID \|\| Boolean\(cloudSession\)/, 'Dreamina Plus requires an authenticated owner session');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /if \(!canUseProvider\(provider\)\) return \[\]/, 'private provider models cannot be used by anonymous calculator calls');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /refreshProviderAccess\(\)/, 'provider visibility refreshes with authorization state');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /type: 'ai-video-calc-tariffs'/, 'tariff bundles have a dedicated schema marker');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /providerId === PRIVATE_PROVIDER_ID \|\| provider\.appearance === 'plus'/, 'shared Dreamina Plus keeps a distinct imported appearance');
 assert.doesNotMatch(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /variants\.filter\(variant => variant\.billing\?\.type === 'manual_required'\)/, 'built-in SYNTX tariffs can be overridden in the manual editor');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /unitsByDuration:/, 'manual tariff overrides are stored for an exact duration');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /function syntexEquivalent\(/, 'provider models are mapped to exact SYNTX equivalents');
