@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.18-syntx-veo-omni-flash-20260919';
+const CACHE_NAME = 'ai-video-calc-v3.19-package-save-syntx-compare-20260919';
 const ASSETS = [
   './',
   './index.html',

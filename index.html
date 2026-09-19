@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101a">
-  <meta name="description" content="AI VIDEO CALC 3.18 — проекты, сметы, расходы и общие тарифы AI-видео">
+  <meta name="description" content="AI VIDEO CALC 3.19 — проекты, сметы, расходы и общие тарифы AI-видео">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./icons/pwa-logo-v5-192.png">
   <link rel="apple-touch-icon" href="./icons/pwa-logo-v5-192.png">
   <link rel="stylesheet" href="./css/app.css">
   <link rel="stylesheet" href="./css/v3.css">
-  <title>AI VIDEO CALC 3.18</title>
+  <title>AI VIDEO CALC 3.19</title>
 </head>
 <body>
 <main class="app" data-active-view="calculator">
@@ -23,7 +23,7 @@
     </div>
     <div class="hero-tools">
       <div class="version-stack">
-        <div class="version">v3.18</div>
+        <div class="version">v3.19</div>
         <button id="ownerAccessToggle" class="cloud-access-toggle" type="button" aria-label="Открыть облачную синхронизацию" aria-controls="ownerAccessPanel" aria-expanded="false" title="Облачная синхронизация">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 8.3 4.8 4.8 0 0 0 7 18Z"/><path d="m9.5 13 2.5-2.5 2.5 2.5M12 10.5V16"/></svg>
         </button>
@@ -104,7 +104,7 @@
 
       <div class="result">
         <div id="resultPrice" class="result-price">—</div>
-        <div class="syntex-compare-wrap"><button id="compareCalculatorSyntex" class="syntex-compare" type="button" aria-expanded="false"><span class="syntex-mark" aria-hidden="true">SX</span>Сравнить в SYNTX</button><span id="calculatorSyntexComparison" class="syntex-comparison hidden"></span></div>
+        <div class="syntex-compare-wrap"><button id="compareCalculatorSyntex" class="syntex-compare" type="button" aria-label="Сравнить стоимость в SYNTX" title="Сравнить в SYNTX" aria-expanded="false"><img class="syntex-mark" src="https://syntx.ai/favicons/favicon.svg" alt=""></button><span id="calculatorSyntexComparison" class="syntex-comparison hidden"></span></div>
         <div id="resultMeta" class="result-meta"></div>
         <div id="resultStatus" class="status manual">● manual</div>
       </div>
@@ -198,7 +198,7 @@
             <div class="metric"><span>Готовые видео</span><strong id="baseTotal">0 ₽</strong><small id="baseCount">0 шт.</small></div>
             <div class="metric"><span>Повторные генерации</span><strong id="retryTotal">0 ₽</strong><small id="retryCount">0 шт.</small></div>
             <div class="metric"><span>Изображения</span><strong id="estimateImageTotal">0 ₽</strong><small id="estimateImageCount">выключено</small></div>
-            <div class="metric total-main"><span>Сметная себестоимость</span><strong id="grandTotal">0 ₽</strong><small id="grandCount">0 генераций</small><div class="syntex-compare-wrap"><button id="compareEstimateSyntex" class="syntex-compare" type="button" aria-expanded="false"><span class="syntex-mark" aria-hidden="true">SX</span>В SYNTX</button><span id="estimateSyntexComparison" class="syntex-comparison hidden"></span></div></div>
+            <div class="metric total-main"><span>Сметная себестоимость</span><strong id="grandTotal">0 ₽</strong><small id="grandCount">0 генераций</small><div class="syntex-compare-wrap"><button id="compareEstimateSyntex" class="syntex-compare" type="button" aria-label="Сравнить смету в SYNTX" title="Сравнить в SYNTX" aria-expanded="false"><img class="syntex-mark" src="https://syntx.ai/favicons/favicon.svg" alt=""></button><span id="estimateSyntexComparison" class="syntex-comparison hidden"></span></div></div>
           </div>
 
           <div class="work-price-box" aria-labelledby="workPriceHeading">
@@ -287,7 +287,7 @@
           <div class="totals actual-totals">
             <div class="metric"><span>Фактические видеогенерации</span><strong id="actualVideoTotal">0 ₽</strong><small id="actualVideoCount">0 шт.</small></div>
             <div class="metric"><span>Фактические изображения</span><strong id="actualImagesTotal">0 ₽</strong><small id="actualImagesCount">выключено</small></div>
-            <div class="metric total-main"><span>Фактическая себестоимость</span><strong id="actualTotal">0 ₽</strong><small>зафиксированный расход</small><div class="syntex-compare-wrap"><button id="compareActualSyntex" class="syntex-compare" type="button" aria-expanded="false"><span class="syntex-mark" aria-hidden="true">SX</span>В SYNTX</button><span id="actualSyntexComparison" class="syntex-comparison hidden"></span></div></div>
+            <div class="metric total-main"><span>Фактическая себестоимость</span><strong id="actualTotal">0 ₽</strong><small>зафиксированный расход</small><div class="syntex-compare-wrap"><button id="compareActualSyntex" class="syntex-compare" type="button" aria-label="Сравнить фактические расходы в SYNTX" title="Сравнить в SYNTX" aria-expanded="false"><img class="syntex-mark" src="https://syntx.ai/favicons/favicon.svg" alt=""></button><span id="actualSyntexComparison" class="syntex-comparison hidden"></span></div></div>
           </div>
 
           <div class="comparison-box">
@@ -346,20 +346,61 @@
       <div class="subcard">
         <h3>Курс валют</h3>
         <div class="field"><label for="usdRub">USD → RUB</label><input id="usdRub" type="number" min="1" step="0.01"></div>
-        <button id="refreshRate" class="btn secondary top-gap" type="button">Обновить курс автоматически</button>
+        <div class="package-save-row"><button id="saveCurrencySettings" class="btn package-save" type="button">Сохранить</button><button id="refreshRate" class="btn secondary" type="button">Обновить автоматически</button></div>
+        <div id="currencySaveStatus" class="tiny package-save-status" aria-live="polite">Ручное изменение применяется после сохранения.</div>
         <div id="rateStatus" class="tiny top-gap-small">Можно изменить вручную или обновить из интернета.</div>
       </div>
       <div class="subcard">
         <h3>Kling AI</h3>
+        <div class="field"><label for="klingPackagePreset">Тарифный пакет</label><select id="klingPackagePreset">
+          <optgroup label="Ежемесячное продление · скидка 12%">
+            <option value="standard-monthly">Standard · 8,80 $ · 660 credits</option>
+            <option value="pro-monthly">Pro · 32,56 $ · 3 000 credits</option>
+            <option value="premier-monthly">Premier · 80,96 $ · 8 000 credits</option>
+            <option value="ultra-monthly">Ultra · 159,99 $ · 26 000 credits</option>
+          </optgroup>
+          <optgroup label="Первый месяц · разовая промо-цена">
+            <option value="standard-first-month">Standard · 6,99 $ · 660 credits</option>
+            <option value="pro-first-month">Pro · 25,99 $ · 3 000 credits</option>
+            <option value="premier-first-month">Premier · 64,99 $ · 8 000 credits</option>
+            <option value="ultra-first-month">Ultra · 127,99 $ · 26 000 credits</option>
+          </optgroup>
+          <optgroup label="Годовая подписка · скидка 34%">
+            <option value="standard-yearly">Standard · 79,20 $ · 7 920 credits</option>
+            <option value="pro-yearly">Pro · 293,04 $ · 36 000 credits</option>
+            <option value="premier-yearly">Premier · 728,64 $ · 96 000 credits</option>
+            <option value="ultra-yearly">Ultra · 1 429,99 $ · 312 000 credits</option>
+          </optgroup>
+          <option value="custom">Свой пакет</option>
+        </select></div>
         <div class="field"><label for="klingPackageUsd">Цена пакета, $</label><input id="klingPackageUsd" type="number" min="0" step="0.01"></div>
         <div class="field"><label for="klingPackageCredits">Credits в пакете</label><input id="klingPackageCredits" type="number" min="1" step="1"></div>
         <div class="tiny">Цена 1 credit: <strong id="klingUnitPrice">—</strong></div>
+        <div class="package-save-row"><button id="saveKlingSettings" class="btn package-save" type="button">Сохранить</button><span id="klingSaveStatus" class="tiny package-save-status" aria-live="polite"></span></div>
       </div>
       <div class="subcard">
         <h3>SYNTX</h3>
+        <div class="field"><label for="syntexPackagePreset">Тарифный пакет</label><select id="syntexPackagePreset">
+          <optgroup label="Месячная подписка">
+            <option value="basic-monthly">Basic · 890 ₽ · 260 токенов</option>
+            <option value="pro-monthly">Pro · 1 690 ₽ · 680 токенов</option>
+            <option value="vip-monthly">VIP · 3 990 ₽ · 1 700 токенов</option>
+            <option value="elite-monthly">Elite · 5 990 ₽ · 2 600 токенов</option>
+            <option value="ultra-elite-monthly">Ultra Elite · 11 990 ₽ · 3 000 токенов</option>
+          </optgroup>
+          <optgroup label="Годовая подписка · итог за 12 месяцев">
+            <option value="basic-yearly">Basic · 9 072 ₽ · 3 120 токенов</option>
+            <option value="pro-yearly">Pro · 17 232 ₽ · 8 160 токенов</option>
+            <option value="vip-yearly">VIP · 40 692 ₽ · 20 400 токенов</option>
+            <option value="elite-yearly">Elite · 61 092 ₽ · 31 200 токенов</option>
+            <option value="ultra-elite-yearly">Ultra Elite · 122 292 ₽ · 36 000 токенов</option>
+          </optgroup>
+          <option value="custom">Свой пакет</option>
+        </select></div>
         <div class="field"><label for="syntexPackageRub">Стоимость пакета, ₽</label><input id="syntexPackageRub" type="number" min="0" step="0.01"></div>
         <div class="field"><label for="syntexPackageTokens">Токенов в пакете</label><input id="syntexPackageTokens" type="number" min="1" step="1"></div>
         <div class="tiny">Цена 1 токена: <strong id="syntexUnitPrice">—</strong></div>
+        <div class="package-save-row"><button id="saveSyntexSettings" class="btn package-save" type="button">Сохранить</button><span id="syntexSaveStatus" class="tiny package-save-status" aria-live="polite"></span></div>
       </div>
       <div class="subcard">
         <h3>Dreamina</h3>
@@ -374,6 +415,7 @@
         <div class="field"><label for="dreaminaPackageUsd">Цена пакета, $</label><input id="dreaminaPackageUsd" type="number" min="0" step="0.01"></div>
         <div class="field"><label for="dreaminaPackageTokens">Токенов в пакете</label><input id="dreaminaPackageTokens" type="number" min="1" step="1"></div>
         <div class="tiny">Цена 1 токена рассчитывается по курсу USD: <strong id="dreaminaUnitPrice">—</strong>. По умолчанию: Basic — 15 $ / 1 575 кредитов. Basic, Standard и Advanced взяты из публичной официальной сетки Dreamina от 19.09.2026. Региональные и промо-предложения можно внести как «Свой пакет».</div>
+        <div class="package-save-row"><button id="saveDreaminaSettings" class="btn package-save" type="button">Сохранить</button><span id="dreaminaSaveStatus" class="tiny package-save-status" aria-live="polite"></span></div>
       </div>
       <div class="subcard dreamina-plus-card hidden" data-private-provider="dreamina-plus">
         <h3>Dreamina Plus</h3>
@@ -412,7 +454,7 @@
   </details>
   </section>
 
-  <footer class="footer">AI VIDEO CALC <span>3.18</span> · 19.09.2026</footer>
+  <footer class="footer">AI VIDEO CALC <span>3.19</span> · 19.09.2026</footer>
 </main>
 
 <dialog id="projectNameDialog" class="project-dialog" aria-labelledby="projectNameTitle">

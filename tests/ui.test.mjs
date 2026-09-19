@@ -35,10 +35,18 @@ assert.match(html, /data-provider="dreamina"/, 'Dreamina has a calculator provid
 assert.match(html, /class="provider-tab provider-tab-plus provider-plus-standalone hidden"[^>]*data-provider="dreamina-plus"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus is a standalone button hidden before owner authorization');
 assert.match(html, /class="provider-tabs"[^>]*aria-label="Публичные провайдеры генерации"[\s\S]*data-provider="kling"[\s\S]*data-provider="syntex"[\s\S]*data-provider="dreamina"[\s\S]*<\/div>\s*<button class="provider-tab provider-tab-plus provider-plus-standalone hidden"/, 'public provider plate contains exactly the three public services before the standalone Plus button');
 assert.match(html, /id="dreaminaPackagePreset"/, 'Dreamina offers selectable official package presets');
+assert.match(html, /id="klingPackagePreset"/, 'Kling offers selectable current package presets');
+assert.match(html, /id="syntexPackagePreset"/, 'SYNTX offers selectable current package presets');
+assert.match(html, /id="saveCurrencySettings"/, 'currency rate has an explicit save action');
+assert.match(html, /id="saveKlingSettings"/, 'Kling package has an explicit save action');
+assert.match(html, /id="saveSyntexSettings"/, 'SYNTX package has an explicit save action');
+assert.match(html, /id="saveDreaminaSettings"/, 'Dreamina package has an explicit save action');
+assert.match(html, /value="standard-monthly">Standard · 8,80 \$ · 660 credits/, 'Kling recurring Standard package uses the current account tariff');
+assert.match(html, /value="pro-monthly">Pro · 1 690 ₽ · 680 токенов/, 'SYNTX monthly Pro package uses the current account tariff');
 assert.match(html, /value="basic-monthly">Basic · 15 \$ · 1 575 кредитов/, 'Dreamina Basic monthly package is the first official preset');
 assert.match(html, /value="standard-monthly">Standard · 36 \$ · 3 885 кредитов/, 'Dreamina Standard uses the published USD package price');
 assert.match(html, /value="advanced-monthly">Advanced · 79 \$ · 8 645 кредитов/, 'Dreamina Advanced uses the published USD package price');
-assert.doesNotMatch(html, /169 SEK|basic-quarterly|basic-yearly|basic-one-month/, 'Dreamina presets contain no inferred SEK conversions');
+assert.doesNotMatch(html, /169 SEK|37,90 \$ · 4 725|141,57 \$ · 18 900|17,66 \$ · 1 575/, 'Dreamina presets contain no inferred SEK conversions');
 assert.doesNotMatch(html, /Pro · месяц|Max · месяц/, 'obsolete promotional Dreamina package names are removed');
 assert.match(html, /class="subcard dreamina-plus-card hidden"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus tariff card is hidden before owner authorization');
 assert.match(html, /100 ₽ <span>за<\/span> 10 500 токенов/, 'Dreamina Plus fixed exchange remains in the public application source');
@@ -66,6 +74,7 @@ assert.match(html, /id="resetManualTariffs"/, 'manual tariff overrides can be re
 assert.match(html, /id="compareCalculatorSyntex"/, 'single-generation result can be compared with SYNTX');
 assert.match(html, /id="compareEstimateSyntex"/, 'project estimate can be compared with SYNTX');
 assert.match(html, /id="compareActualSyntex"/, 'actual project cost can be compared with SYNTX');
+assert.match(html, /https:\/\/syntx\.ai\/favicons\/favicon\.svg/, 'SYNTX comparison uses the official service icon');
 assert.match(css, /\.project-workspace\s*\{/, 'active project has a distinct visual workspace');
 assert.match(css, /\.project-completion-panel\s*\{/, 'completion has a dedicated visual panel');
 assert.match(css, /\.app-tabs\s*\{/, 'primary navigation is styled');

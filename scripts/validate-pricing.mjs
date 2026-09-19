@@ -52,10 +52,10 @@ for (const [variantId, rate] of Object.entries(expectedKlingRates)) {
   assert.equal(variant?.status, 'verified', `Контрольная ставка Kling 3.0 ${variantId} должна быть verified`);
 }
 
-assert.equal(pricing.providers.kling.package.price, 10, 'Изменился ручной пакет Kling из v1.2');
-assert.equal(pricing.providers.kling.package.units, 660, 'Изменилось число credits Kling из v1.2');
-assert.equal(pricing.providers.syntex.package.price, 1690, 'Изменился ручной пакет SYNTX из v1.2');
-assert.equal(pricing.providers.syntex.package.units, 680, 'Изменилось число tokens SYNTX из v1.2');
+assert.equal(pricing.providers.kling.package.price, 8.8, 'Kling Standard должен стоить 8,80 USD при ежемесячном продлении');
+assert.equal(pricing.providers.kling.package.units, 660, 'Kling Standard должен содержать 660 credits');
+assert.equal(pricing.providers.syntex.package.price, 1690, 'SYNTX Pro должен стоить 1 690 ₽ в месяц');
+assert.equal(pricing.providers.syntex.package.units, 680, 'SYNTX Pro должен содержать 680 токенов');
 assert.equal(pricing.providers['dreamina-plus'].package.price, 100, 'Dreamina Plus должен стоить 100 ₽');
 assert.equal(pricing.providers['dreamina-plus'].package.units, 10500, 'В пакете Dreamina Plus должно быть 10 500 токенов');
 assert.equal(pricing.providers.dreamina.package.price, 15, 'Dreamina Basic должен стоить 15 USD');

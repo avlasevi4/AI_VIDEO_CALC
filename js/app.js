@@ -4,12 +4,38 @@
   const STORAGE_KEY = 'ai-video-calc-v2-settings';
   const PROVIDER_IDS = ['kling', 'syntex', 'dreamina', 'dreamina-plus'];
   const PRIVATE_PROVIDER_ID = 'dreamina-plus';
+  const KLING_PACKAGE_PRESETS = {
+    'standard-monthly': { price: 8.80, units: 660 },
+    'pro-monthly': { price: 32.56, units: 3000 },
+    'premier-monthly': { price: 80.96, units: 8000 },
+    'ultra-monthly': { price: 159.99, units: 26000 },
+    'standard-first-month': { price: 6.99, units: 660 },
+    'pro-first-month': { price: 25.99, units: 3000 },
+    'premier-first-month': { price: 64.99, units: 8000 },
+    'ultra-first-month': { price: 127.99, units: 26000 },
+    'standard-yearly': { price: 79.20, units: 7920 },
+    'pro-yearly': { price: 293.04, units: 36000 },
+    'premier-yearly': { price: 728.64, units: 96000 },
+    'ultra-yearly': { price: 1429.99, units: 312000 }
+  };
+  const SYNTEX_PACKAGE_PRESETS = {
+    'basic-monthly': { price: 890, units: 260 },
+    'pro-monthly': { price: 1690, units: 680 },
+    'vip-monthly': { price: 3990, units: 1700 },
+    'elite-monthly': { price: 5990, units: 2600 },
+    'ultra-elite-monthly': { price: 11990, units: 3000 },
+    'basic-yearly': { price: 9072, units: 3120 },
+    'pro-yearly': { price: 17232, units: 8160 },
+    'vip-yearly': { price: 40692, units: 20400 },
+    'elite-yearly': { price: 61092, units: 31200 },
+    'ultra-elite-yearly': { price: 122292, units: 36000 }
+  };
   const DREAMINA_PACKAGE_PRESETS = {
     'basic-monthly': { usd: 15, tokens: 1575 },
     'standard-monthly': { usd: 36, tokens: 3885 },
     'advanced-monthly': { usd: 79, tokens: 8645 }
   };
-  const DREAMINA_PACKAGE_CATALOG_VERSION = '2026-09-19-official-usd';
+  const PACKAGE_CATALOG_VERSION = '2026-09-19-official';
   let pricing = null;
   let pricingSource = '—';
   let currentProvider = 'kling';
@@ -30,14 +56,17 @@
 
   let settings = {
     usdRub: 75.05,
-    klingPackageUsd: 10,
+    klingPackageUsd: 8.8,
     klingPackageCredits: 660,
+    klingPackagePreset: 'standard-monthly',
     syntexPackageRub: 1690,
     syntexPackageTokens: 680,
+    syntexPackagePreset: 'pro-monthly',
     dreaminaPackageUsd: 15,
     dreaminaPackageTokens: 1575,
     dreaminaPackagePreset: 'basic-monthly',
-    dreaminaPackageCatalogVersion: DREAMINA_PACKAGE_CATALOG_VERSION,
+    dreaminaPackageCatalogVersion: PACKAGE_CATALOG_VERSION,
+    packageCatalogVersion: PACKAGE_CATALOG_VERSION,
     syntexManualUnits: {},
     manualTokenTariffs: {},
     sharedTariffsUpdatedAt: '',
@@ -91,7 +120,7 @@
         }
       }
       settings = { ...settings, ...oldSettings };
-      normalizeDreaminaPackageSettings();
+      normalizePackageSettings();
       if (!settings.syntexManualUnits || typeof settings.syntexManualUnits !== 'object') settings.syntexManualUnits = {};
       if (!settings.manualTokenTariffs || typeof settings.manualTokenTariffs !== 'object') settings.manualTokenTariffs = {};
       // Сохраняем значения, введённые в предыдущем формате (₽/сек), в эквиваленте токенов.
@@ -167,12 +196,15 @@
       usdRub: settings.usdRub,
       klingPackageUsd: settings.klingPackageUsd,
       klingPackageCredits: settings.klingPackageCredits,
+      klingPackagePreset: settings.klingPackagePreset,
       syntexPackageRub: settings.syntexPackageRub,
       syntexPackageTokens: settings.syntexPackageTokens,
+      syntexPackagePreset: settings.syntexPackagePreset,
       dreaminaPackageUsd: settings.dreaminaPackageUsd,
       dreaminaPackageTokens: settings.dreaminaPackageTokens,
       dreaminaPackagePreset: settings.dreaminaPackagePreset,
       dreaminaPackageCatalogVersion: settings.dreaminaPackageCatalogVersion,
+      packageCatalogVersion: settings.packageCatalogVersion,
       manualTokenTariffs: settings.manualTokenTariffs,
       syntexManualUnits: settings.syntexManualUnits
     };
@@ -191,23 +223,28 @@
     Object.keys(allowed).forEach(key => {
       if (value && Object.prototype.hasOwnProperty.call(value, key)) settings[key] = value[key];
     });
-    normalizeDreaminaPackageSettings();
+    normalizePackageSettings();
     settings.sharedTariffsUpdatedAt = updatedAt || settings.sharedTariffsUpdatedAt || '';
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   }
 
-  function normalizeDreaminaPackageSettings() {
-    if (settings.dreaminaPackagePreset === 'custom') {
-      settings.dreaminaPackageCatalogVersion = DREAMINA_PACKAGE_CATALOG_VERSION;
-      return;
-    }
-    if (settings.dreaminaPackageCatalogVersion !== DREAMINA_PACKAGE_CATALOG_VERSION || !DREAMINA_PACKAGE_PRESETS[settings.dreaminaPackagePreset]) {
+  function presetForValues(presets, price, units) {
+    return Object.entries(presets).find(([, preset]) => Math.abs(Number(price) - preset.price) < 0.001 && Number(units) === preset.units)?.[0] || 'custom';
+  }
+
+  function normalizePackageSettings() {
+    if (!KLING_PACKAGE_PRESETS[settings.klingPackagePreset]) settings.klingPackagePreset = presetForValues(KLING_PACKAGE_PRESETS, settings.klingPackageUsd, settings.klingPackageCredits);
+    if (!SYNTEX_PACKAGE_PRESETS[settings.syntexPackagePreset]) settings.syntexPackagePreset = presetForValues(SYNTEX_PACKAGE_PRESETS, settings.syntexPackageRub, settings.syntexPackageTokens);
+    if (settings.dreaminaPackagePreset !== 'custom' && (settings.dreaminaPackageCatalogVersion !== PACKAGE_CATALOG_VERSION || !DREAMINA_PACKAGE_PRESETS[settings.dreaminaPackagePreset])) {
       const basic = DREAMINA_PACKAGE_PRESETS['basic-monthly'];
       settings.dreaminaPackagePreset = 'basic-monthly';
       settings.dreaminaPackageUsd = basic.usd;
       settings.dreaminaPackageTokens = basic.tokens;
-      settings.dreaminaPackageCatalogVersion = DREAMINA_PACKAGE_CATALOG_VERSION;
+    } else if (!DREAMINA_PACKAGE_PRESETS[settings.dreaminaPackagePreset]) {
+      settings.dreaminaPackagePreset = 'custom';
     }
+    settings.dreaminaPackageCatalogVersion = PACKAGE_CATALOG_VERSION;
+    settings.packageCatalogVersion = PACKAGE_CATALOG_VERSION;
   }
 
   async function synchronizeCloudTariffs() {
@@ -461,38 +498,16 @@
       });
     });
 
-    ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens', 'dreaminaPackageUsd', 'dreaminaPackageTokens'].forEach(id => {
-      $(id).addEventListener('input', () => {
-        settings[id] = Number($(id).value) || 0;
-        if (id === 'dreaminaPackageUsd' || id === 'dreaminaPackageTokens') {
-          settings.dreaminaPackagePreset = 'custom';
-          settings.dreaminaPackageCatalogVersion = DREAMINA_PACKAGE_CATALOG_VERSION;
-          $('dreaminaPackagePreset').value = 'custom';
-        }
-        saveTariffSettings();
-        saveLocal();
-        renderHeadlineRate();
-        renderResult();
-        renderProject();
-        renderUnitPrices();
-      });
-    });
-    $('dreaminaPackagePreset').addEventListener('change', () => {
-      const id = $('dreaminaPackagePreset').value;
-      settings.dreaminaPackagePreset = id;
-      settings.dreaminaPackageCatalogVersion = DREAMINA_PACKAGE_CATALOG_VERSION;
-      const preset = DREAMINA_PACKAGE_PRESETS[id];
-      if (preset) {
-        settings.dreaminaPackageUsd = preset.usd;
-        settings.dreaminaPackageTokens = preset.tokens;
-        $('dreaminaPackageUsd').value = preset.usd;
-        $('dreaminaPackageTokens').value = preset.tokens;
-      }
-      saveTariffSettings();
-      saveLocal();
-      renderResult();
-      renderProject();
-      renderUnitPrices();
+    $('usdRub').addEventListener('input', () => setPackageSaveStatus('currency', 'Изменение ещё не сохранено.', 'dirty'));
+    $('saveCurrencySettings').addEventListener('click', () => savePackageSettings('currency'));
+    ['kling', 'syntex', 'dreamina'].forEach(provider => {
+      const ui = packageUi(provider);
+      $(ui.presetId).addEventListener('change', () => selectPackagePreset(provider));
+      [ui.priceId, ui.unitsId].forEach(id => $(id).addEventListener('input', () => {
+        $(ui.presetId).value = 'custom';
+        setPackageSaveStatus(provider, 'Изменение ещё не сохранено.', 'dirty');
+      }));
+      $(ui.saveId).addEventListener('click', () => savePackageSettings(provider));
     });
 
     $('refreshPricing').addEventListener('click', refreshPricing);
@@ -517,10 +532,66 @@
     $('resetData').addEventListener('click', resetData);
   }
 
+  function packageUi(provider) {
+    if (provider === 'kling') return { presetId: 'klingPackagePreset', priceId: 'klingPackageUsd', unitsId: 'klingPackageCredits', saveId: 'saveKlingSettings', statusId: 'klingSaveStatus', presets: KLING_PACKAGE_PRESETS, priceKey: 'klingPackageUsd', unitsKey: 'klingPackageCredits', presetKey: 'klingPackagePreset' };
+    if (provider === 'syntex') return { presetId: 'syntexPackagePreset', priceId: 'syntexPackageRub', unitsId: 'syntexPackageTokens', saveId: 'saveSyntexSettings', statusId: 'syntexSaveStatus', presets: SYNTEX_PACKAGE_PRESETS, priceKey: 'syntexPackageRub', unitsKey: 'syntexPackageTokens', presetKey: 'syntexPackagePreset' };
+    return { presetId: 'dreaminaPackagePreset', priceId: 'dreaminaPackageUsd', unitsId: 'dreaminaPackageTokens', saveId: 'saveDreaminaSettings', statusId: 'dreaminaSaveStatus', presets: DREAMINA_PACKAGE_PRESETS, priceKey: 'dreaminaPackageUsd', unitsKey: 'dreaminaPackageTokens', presetKey: 'dreaminaPackagePreset' };
+  }
+
+  function packagePresetValues(provider, preset) {
+    if (!preset) return null;
+    return provider === 'dreamina' ? { price: preset.usd, units: preset.tokens } : preset;
+  }
+
+  function setPackageSaveStatus(provider, message, state = '') {
+    const id = provider === 'currency' ? 'currencySaveStatus' : packageUi(provider).statusId;
+    const node = $(id);
+    if (!node) return;
+    node.textContent = message;
+    node.className = `tiny package-save-status${state ? ` is-${state}` : ''}`;
+  }
+
+  function selectPackagePreset(provider) {
+    const ui = packageUi(provider);
+    const id = $(ui.presetId).value;
+    const values = packagePresetValues(provider, ui.presets[id]);
+    if (values) {
+      $(ui.priceId).value = values.price;
+      $(ui.unitsId).value = values.units;
+    }
+    setPackageSaveStatus(provider, id === 'custom' ? 'Введите цену и количество, затем сохраните.' : 'Пакет подставлен. Нажмите дискету, чтобы применить.', 'dirty');
+  }
+
+  function savePackageSettings(provider) {
+    if (provider === 'currency') {
+      const rate = Number($('usdRub').value);
+      if (!(rate > 0)) return setPackageSaveStatus('currency', 'Укажите курс больше нуля.', 'error');
+      settings.usdRub = rate;
+    } else {
+      const ui = packageUi(provider);
+      const price = Number($(ui.priceId).value);
+      const units = Number($(ui.unitsId).value);
+      if (!(price > 0) || !(units > 0)) return setPackageSaveStatus(provider, 'Цена и количество должны быть больше нуля.', 'error');
+      settings[ui.priceKey] = price;
+      settings[ui.unitsKey] = units;
+      settings[ui.presetKey] = $(ui.presetId).value;
+      settings.packageCatalogVersion = PACKAGE_CATALOG_VERSION;
+      if (provider === 'dreamina') settings.dreaminaPackageCatalogVersion = PACKAGE_CATALOG_VERSION;
+    }
+    saveTariffSettings();
+    renderHeadlineRate();
+    renderResult();
+    renderProject();
+    renderUnitPrices();
+    setPackageSaveStatus(provider, cloudSession ? 'Сохранено. Синхронизируется с облаком.' : 'Сохранено на этом устройстве.', 'saved');
+  }
+
   function hydrateSettings() {
     ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens', 'dreaminaPackageUsd', 'dreaminaPackageTokens'].forEach(k => {
       if ($(k)) $(k).value = settings[k];
     });
+    if ($('klingPackagePreset')) $('klingPackagePreset').value = KLING_PACKAGE_PRESETS[settings.klingPackagePreset] ? settings.klingPackagePreset : 'custom';
+    if ($('syntexPackagePreset')) $('syntexPackagePreset').value = SYNTEX_PACKAGE_PRESETS[settings.syntexPackagePreset] ? settings.syntexPackagePreset : 'custom';
     if ($('dreaminaPackagePreset')) $('dreaminaPackagePreset').value = DREAMINA_PACKAGE_PRESETS[settings.dreaminaPackagePreset] ? settings.dreaminaPackagePreset : 'custom';
   }
 
@@ -1199,13 +1270,17 @@
   }
 
   function syntexCompareMarkup(className = '') {
-    return `<div class="syntex-compare-wrap ${className}"><button class="syntex-compare" type="button" aria-expanded="false"><span class="syntex-mark" aria-hidden="true">SX</span>В SYNTX</button><span class="syntex-comparison hidden"></span></div>`;
+    return `<div class="syntex-compare-wrap ${className}"><button class="syntex-compare" type="button" aria-label="Сравнить стоимость в SYNTX" title="Сравнить в SYNTX" aria-expanded="false"><img class="syntex-mark" src="https://syntx.ai/favicons/favicon.svg" alt=""></button><span class="syntex-comparison hidden" role="status"></span></div>`;
   }
 
   function bindInlineSyntexComparison(container, calculateComparison) {
     const button = container?.querySelector('.syntex-compare');
     const output = container?.querySelector('.syntex-comparison');
-    if (button && output) button.addEventListener('click', () => toggleSyntexComparison(button, output, calculateComparison));
+    if (button && output) button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleSyntexComparison(button, output, calculateComparison);
+    });
   }
 
   function renderResult() {
