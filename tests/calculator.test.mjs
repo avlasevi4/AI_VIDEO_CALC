@@ -12,6 +12,19 @@ assert.equal(calc.billableUnits({ type: 'fixed_generation', units: 24 }, 99), 24
 assert.equal(calc.billableUnits({ type: 'manual_required' }, 5, 13.5), 13.5);
 assert.throws(() => calc.billableUnits({ type: 'manual_required' }, 5, 0), /Укажите расход/);
 
+const aggregateEstimate = calc.aggregateComparisons([
+  { id: 'a', qty: 2, generationsPerVideo: 3 },
+  { id: 'b', qty: 1, generationsPerVideo: 2 },
+  { id: 'missing', qty: 4, generationsPerVideo: 1 }
+], true, (item, count) => item.id === 'missing' ? { error: 'Нет аналога' } : { rub: count * 10, units: count * 2 });
+assert.deepEqual(aggregateEstimate, { rub: 80, units: 16, compared: 2, missing: 1, total: 3 });
+
+const aggregateActual = calc.aggregateComparisons([
+  { id: 'a', qty: 20, generationsPerVideo: 30 },
+  { id: 'b', qty: 10, generationsPerVideo: 10 }
+], false, (_item, count) => ({ rub: count * 15, units: count * 3 }));
+assert.deepEqual(aggregateActual, { rub: 30, units: 6, compared: 2, missing: 0, total: 2 });
+
 const pricing = JSON.parse(await readFile(new URL('../data/pricing.json', import.meta.url), 'utf8'));
 const settings = {
   usdRub: 75,

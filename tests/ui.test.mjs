@@ -96,6 +96,9 @@ assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /
 assert.doesNotMatch(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /variants\.filter\(variant => variant\.billing\?\.type === 'manual_required'\)/, 'built-in SYNTX tariffs can be overridden in the manual editor');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /unitsByDuration:/, 'manual tariff overrides are stored for an exact duration');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /function syntexEquivalent\(/, 'provider models are mapped to exact SYNTX equivalents');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /comparisonProjectItems\(true\)/, 'estimate comparison reads the current or persisted project lines');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /comparisonProjectItems\(false\)/, 'actual comparison reads the current or persisted actual generations');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /syntex-comparison-rub/, 'SYNTX popup renders the ruble total as a dedicated emphasized value');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /syntexCompareMarkup\('project-syntex-compare'\)/, 'each project estimate line has a SYNTX comparison');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /syntexCompareMarkup\('actual-syntex-compare'\)/, 'each recorded generation has a SYNTX comparison');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /switchProjectLibrary\(session \? 'owner' : 'guest'\)/, 'authorization switches between isolated owner and guest libraries');

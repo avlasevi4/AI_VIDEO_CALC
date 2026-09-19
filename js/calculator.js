@@ -200,5 +200,29 @@
     };
   }
 
-  window.AIVideoCalculator = { safeNumber, unitPriceRub, billableUnits, calculateSelection, calculateProject };
+  function aggregateComparisons(items, estimate, compareItem) {
+    const source = Array.isArray(items) ? items : [];
+    let rub = 0;
+    let units = 0;
+    let compared = 0;
+    let missing = 0;
+
+    source.forEach(item => {
+      const quantity = estimate
+        ? Math.max(1, safeNumber(item.qty, 1)) * Math.max(1, safeNumber(item.generationsPerVideo, 1))
+        : 1;
+      const result = compareItem(item, quantity);
+      if (!result || result.error) {
+        missing += 1;
+        return;
+      }
+      rub += Math.max(0, safeNumber(result.rub, 0));
+      units += Math.max(0, safeNumber(result.units, 0));
+      compared += 1;
+    });
+
+    return { rub, units, compared, missing, total: source.length };
+  }
+
+  window.AIVideoCalculator = { safeNumber, unitPriceRub, billableUnits, calculateSelection, calculateProject, aggregateComparisons };
 })();

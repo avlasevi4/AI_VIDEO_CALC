@@ -421,10 +421,10 @@
       renderTotals();
     });
     $('compareEstimateSyntex').addEventListener('click', () => toggleSyntexComparison(
-      $('compareEstimateSyntex'), $('estimateSyntexComparison'), () => syntexItemsComparison(projectItems, true)
+      $('compareEstimateSyntex'), $('estimateSyntexComparison'), () => syntexItemsComparison(comparisonProjectItems(true), true)
     ));
     $('compareActualSyntex').addEventListener('click', () => toggleSyntexComparison(
-      $('compareActualSyntex'), $('actualSyntexComparison'), () => syntexItemsComparison(actualItems, false)
+      $('compareActualSyntex'), $('actualSyntexComparison'), () => syntexItemsComparison(comparisonProjectItems(false), false)
     ));
 
     ['laborPerVideoRub', 'plannedImages', 'actualImages', 'imageUnitRub', 'customQuotedPrice'].forEach(id => {
@@ -1232,24 +1232,34 @@
   }
 
   function syntexItemsComparison(items, estimate) {
-    let rub = 0;
-    let units = 0;
-    let compared = 0;
-    let missing = 0;
-    (items || []).forEach(item => {
-      const count = estimate ? Math.max(1, Number(item.qty) || 1) * Math.max(1, Number(item.generationsPerVideo) || 1) : 1;
+    const aggregate = window.AIVideoCalculator.aggregateComparisons(items, estimate, (item, count) => {
       const sourceModel = pricing?.models?.find(model => model.id === item.modelId);
       const manualUnits = Number(item.manualUnits) > 0 ? Number(item.manualUnits) : sourceModel?.provider === 'syntex' ? Number(item.units) || 0 : 0;
-      const result = syntexComparison(item.modelId, item.variantId, item.duration, count, manualUnits);
-      if (result.error) missing += 1;
-      else {
-        rub += result.rub;
-        units += result.units;
-        compared += 1;
-      }
+      return syntexComparison(item.modelId, item.variantId, item.duration, count, manualUnits);
     });
-    if (!compared) return { error: items?.length ? 'Для позиций нет заполненных точных аналогов SYNTX.' : 'Сначала добавьте генерации.' };
-    return { rub, units, count: compared, missing, label: `${compared} ${compared === 1 ? 'позиция' : 'позиций'}` };
+    if (!aggregate.compared) return { error: aggregate.total ? 'Для позиций нет заполненных точных аналогов SYNTX.' : 'Сначала добавьте генерации.' };
+    const positionEnding = aggregate.compared % 100 >= 11 && aggregate.compared % 100 <= 14
+      ? 'позиций'
+      : aggregate.compared % 10 === 1
+        ? 'позиция'
+        : aggregate.compared % 10 >= 2 && aggregate.compared % 10 <= 4
+          ? 'позиции'
+          : 'позиций';
+    return {
+      rub: aggregate.rub,
+      units: aggregate.units,
+      count: aggregate.compared,
+      missing: aggregate.missing,
+      label: `${aggregate.compared} ${positionEnding}`
+    };
+  }
+
+  function comparisonProjectItems(estimate) {
+    const working = estimate ? projectItems : actualItems;
+    if (Array.isArray(working) && working.length) return working;
+    const saved = activeProject();
+    const persisted = estimate ? saved?.items : saved?.actualItems;
+    return Array.isArray(persisted) ? persisted : [];
   }
 
   function toggleSyntexComparison(button, output, calculateComparison) {
@@ -1264,9 +1274,14 @@
     output.classList.remove('hidden');
     button.setAttribute('aria-expanded', 'true');
     output.classList.toggle('has-error', Boolean(result.error));
-    output.textContent = result.error
-      ? result.error
-      : `${result.label}: ${fmtRub(result.rub)} · ${fmtNum(result.units, 2)} токенов${result.missing ? ` · без аналога: ${result.missing}` : ''}`;
+    if (result.error) {
+      output.textContent = result.error;
+      return;
+    }
+    output.innerHTML = `
+      <span class="syntex-comparison-label">${esc(result.label)}</span>
+      <strong class="syntex-comparison-rub">${fmtRub(result.rub)}</strong>
+      <span class="syntex-comparison-meta">${fmtNum(result.units, 2)} токенов${result.missing ? ` · без точного аналога: ${result.missing}` : ''}</span>`;
   }
 
   function syntexCompareMarkup(className = '') {
