@@ -149,11 +149,12 @@ details:not([open])>.card-summary::after,.details:not([open])>summary::after,.pr
 .details-body,.checker-body{padding:16px 18px 18px;border-top:1px solid rgba(137,170,199,.10)}
 
 /* Providers / fields */
-.provider-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:4px;margin-bottom:16px;border:1px solid var(--line-soft);border-radius:15px;background:#07131f}
+.provider-selector-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:stretch;margin-bottom:16px}.provider-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:4px;border:1px solid var(--line-soft);border-radius:15px;background:#07131f}
 .provider-tab{min-width:0;min-height:46px;border:0;border-radius:11px;background:transparent;color:var(--muted);font-size:13px;font-weight:750;transition:background-color .18s var(--ease),color .18s var(--ease),box-shadow .18s var(--ease)}
 .provider-tab:hover{color:var(--text);background:rgba(255,255,255,.025)}
 .provider-tab.active{background:var(--surface-3);color:var(--text);box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 5px 14px rgba(0,0,0,.16)}
 .provider-tab-plus{color:#d9bdff}.provider-tab-plus:hover{color:#f0e4ff;background:rgba(181,108,255,.08)}.provider-tab-plus.active{color:#fff;background:linear-gradient(135deg,rgba(181,108,255,.32),rgba(86,130,255,.22));box-shadow:inset 0 0 0 1px rgba(210,173,255,.28),0 5px 18px rgba(81,47,145,.28)}
+.provider-plus-standalone{min-width:150px;padding:0 14px;border:1px solid rgba(210,173,255,.26);background:linear-gradient(135deg,rgba(181,108,255,.15),rgba(86,130,255,.11));box-shadow:0 5px 16px rgba(56,35,105,.18)}
 
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
 .field{display:grid;gap:6px;min-width:0}
@@ -684,4 +685,4 @@ html.android-app .app-tabs{display:none}
 
 @media(max-width:900px){.manual-tariff-editor{grid-template-columns:repeat(3,minmax(0,1fr))}.manual-tariff-editor .btn{justify-self:start}}
 @media(max-width:680px){.manual-tariff-head{display:block}.manual-tariff-head .summary-tag{display:inline-flex;margin-top:8px}.manual-tariff-editor{grid-template-columns:1fr}.manual-tariff-editor .btn{width:100%;justify-self:stretch}.manual-tariff-row{grid-template-columns:minmax(0,1fr) auto}.manual-tariff-remove{grid-column:2;grid-row:1/3}}
-@media(max-width:680px){.provider-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.provider-tab{font-size:10.5px}}
+@media(max-width:680px){.provider-selector-row{grid-template-columns:1fr}.provider-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.provider-plus-standalone{width:100%;min-height:44px}.provider-tab{font-size:10.5px}}

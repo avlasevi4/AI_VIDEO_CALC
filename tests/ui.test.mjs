@@ -32,7 +32,8 @@ assert.match(html, /class="app-tab active"[^>]*data-app-view="calculator"/, 'cal
 assert.match(html, /data-app-view="projects"/, 'projects have a primary navigation tab');
 assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation tab');
 assert.match(html, /data-provider="dreamina"/, 'Dreamina has a calculator provider tab');
-assert.match(html, /class="provider-tab provider-tab-plus hidden"[^>]*data-provider="dreamina-plus"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus calculator tab is hidden before owner authorization');
+assert.match(html, /class="provider-tab provider-tab-plus provider-plus-standalone hidden"[^>]*data-provider="dreamina-plus"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus is a standalone button hidden before owner authorization');
+assert.match(html, /class="provider-tabs"[^>]*aria-label="Публичные провайдеры генерации"[\s\S]*data-provider="kling"[\s\S]*data-provider="syntex"[\s\S]*data-provider="dreamina"[\s\S]*<\/div>\s*<button class="provider-tab provider-tab-plus provider-plus-standalone hidden"/, 'public provider plate contains exactly the three public services before the standalone Plus button');
 assert.match(html, /id="dreaminaPackagePreset"/, 'Dreamina offers selectable official package presets');
 assert.match(html, /class="subcard dreamina-plus-card hidden"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus tariff card is hidden before owner authorization');
 assert.match(html, /100 ₽ <span>за<\/span> 10 500 токенов/, 'Dreamina Plus fixed exchange remains in the public application source');
@@ -60,6 +61,7 @@ assert.match(css, /\.project-completion-panel\s*\{/, 'completion has a dedicated
 assert.match(css, /\.app-tabs\s*\{/, 'primary navigation is styled');
 assert.match(css, /\.stepper\s*\{/, 'quantity stepper is styled');
 assert.match(css, /\.manual-tariff-editor\s*\{/, 'manual tariff editor is styled');
+assert.match(css, /\.provider-tabs\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/, 'public provider plate always has three columns');
 assert.doesNotMatch(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /стоимость зафиксирована при записи/, 'actual generation rows do not repeat verbose fixed-cost text');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /orientation\?\.unlock/, 'PWA releases an orientation lock left by an older installation');
 assert.match(await readFile(new URL('../css/v3.css', import.meta.url), 'utf8'), /\.project-workspace\{margin:14px 0 0;padding:0;overflow:visible;border:0/, 'mobile project workspace does not waste width on nested frames');
