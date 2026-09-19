@@ -67,6 +67,7 @@ input[type=range]{height:32px;box-shadow:none!important;border:0!important}input
 .work-price-result{padding:22px;background:#183632;border-color:#467b6a;border-radius:14px}.work-price-result span{font-size:14px}.work-price-result strong{font-size:36px}.work-price-result small{font-size:13px}
 .actual-entry{display:flex;flex-direction:column;gap:18px}.actual-entry .project-editor-grid{width:100%}.actual-draft-result{font-size:14px}.actual-add{width:auto;align-self:flex-start;margin:0;min-height:52px}
 .actual-item{padding:10px 10px 10px 11px}.actual-copy strong{font-size:13px}.actual-copy span{font-size:11px;color:var(--muted)}.actual-cost{font-size:15px}
+.syntex-compare{font-size:10px}.syntex-comparison{font-size:11px!important}.calculator-card .result>.syntex-compare-wrap{margin-top:16px}.metric .syntex-compare{min-height:32px}
 .comparison-box{padding:20px;margin-top:24px}.comparison-head strong{font-size:16px}.comparison-head span{font-size:12px}.comparison-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.comparison-grid .metric strong{font-size:22px}
 .project-completion-panel{padding:24px;margin-top:24px;border-radius:16px}.project-completion-panel strong{font-size:23px}.project-completion-panel p{font-size:14px;line-height:1.6}.complete-project-btn{min-width:200px;font-size:15px!important}
 .tariff-heading{padding:4px 0 10px}.tariff-heading h2{margin-top:8px}.tariff-heading p{margin-bottom:0}

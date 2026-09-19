@@ -7,6 +7,7 @@ const statuses = new Set(['verified', 'manual', 'unverified']);
 
 assert.equal(pricing.schemaVersion, 2, 'Ожидалась schemaVersion 2');
 assert.match(pricing.updated, /^\d{4}-\d{2}-\d{2}$/, 'updated должен быть датой YYYY-MM-DD');
+assert.match(pricing.baseTariffDate, /^\d{4}-\d{2}-\d{2}$/, 'baseTariffDate должен быть датой YYYY-MM-DD');
 assert.ok(pricing.providers && typeof pricing.providers === 'object', 'providers обязателен');
 assert.ok(Array.isArray(pricing.models) && pricing.models.length > 0, 'models не должен быть пустым');
 
@@ -57,6 +58,8 @@ assert.equal(pricing.providers.syntex.package.price, 1690, 'Изменился �
 assert.equal(pricing.providers.syntex.package.units, 680, 'Изменилось число tokens SYNTX из v1.2');
 assert.equal(pricing.providers['dreamina-plus'].package.price, 100, 'Dreamina Plus должен стоить 100 ₽');
 assert.equal(pricing.providers['dreamina-plus'].package.units, 10500, 'В пакете Dreamina Plus должно быть 10 500 токенов');
+assert.equal(pricing.providers.dreamina.package.price, 15, 'Dreamina Basic должен стоить 15 USD');
+assert.equal(pricing.providers.dreamina.package.units, 1575, 'Dreamina Basic должен содержать 1 575 кредитов');
 
 const expectedDreaminaRates = {
   'dreamina-seedance-20-mini': { '720p': 12 },

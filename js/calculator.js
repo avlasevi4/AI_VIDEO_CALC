@@ -86,6 +86,21 @@
     const storedTariff = settings.manualTokenTariffs?.[tariffKey];
     const manualTokensPerSecond = Math.max(0, safeNumber(typeof storedTariff === 'object' ? storedTariff?.unitsPerSecond : storedTariff, 0));
     const normalizedDuration = safeNumber(duration, 5);
+    const manualDurationUnits = Math.max(0, safeNumber(storedTariff?.unitsByDuration?.[String(normalizedDuration)], 0));
+    if (model.provider === 'syntex' && manualDurationUnits > 0) {
+      const unitRub = unitPriceRub(model.provider, settings, pricing);
+      return {
+        model,
+        variant,
+        duration: normalizedDuration,
+        units: manualDurationUnits,
+        unitRub,
+        rub: manualDurationUnits * unitRub,
+        usd: null,
+        manualUnits: safeNumber(manualUnits, 0),
+        pricingMode: 'manual_duration_override'
+      };
+    }
     if (model.provider === 'syntex' && variant.billing.type === 'manual_required' && manualTokensPerSecond > 0) {
       const units = manualTokensPerSecond * normalizedDuration;
       const unitRub = unitPriceRub(model.provider, settings, pricing);

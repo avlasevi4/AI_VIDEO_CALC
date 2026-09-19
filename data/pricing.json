@@ -1,7 +1,8 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "3.17.0-2026-09-19",
+  "dataVersion": "3.18.0-2026-09-19",
   "updated": "2026-09-19",
+  "baseTariffDate": "2026-09-15",
   "currency": "RUB",
   "providers": {
     "kling": {
@@ -30,12 +31,12 @@
       "name": "Dreamina",
       "unit": "tokens",
       "package": {
-        "price": 11,
+        "price": 15,
         "currency": "USD",
-        "units": 3885
+        "units": 1575
       },
       "status": "manual",
-      "sourceNote": "По умолчанию выбран пакет Dreamina Pro 11 USD / 3885 токенов; значения редактируются пользователем."
+      "sourceNote": "По умолчанию выбран официальный месячный пакет Dreamina Basic: 15 USD / 1575 кредитов. Региональные и промо-предложения можно задать вручную."
     },
     "dreamina-plus": {
       "name": "Dreamina Plus",
@@ -789,7 +790,9 @@
       "name": "Google Veo",
       "status": "unverified",
       "catalogVerifiedAt": "2026-08-19",
+      "verifiedAt": "2026-09-19",
       "sourceId": "syntx-status",
+      "sourceNote": "Тарифы Veo Omni Flash 1.1 Reference to Video и Keyframes подтверждены пользователем 19.09.2026. Расчёт пропорционален длительности в диапазоне 4–10 секунд.",
       "variants": [
         {
           "id": "31",
@@ -839,20 +842,18 @@
           },
           "status": "unverified"
         },
-        {
-          "id": "omni-flash",
-          "label": "Veo Omni Flash · 8 сек",
-          "resolution": "—",
-          "audio": "—",
-          "billing": {
-            "type": "manual_required",
-            "allowedDurations": [
-              8
-            ]
-          },
-          "status": "unverified",
-          "note": "Официальная инструкция SYNTX указывает 8-секундный результат."
-        }
+        { "id": "omni-flash-11-video-360", "label": "Omni Flash 1.1 · Reference to Video · видео · 360p", "resolution": "360p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 2.25, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "18 токенов за 8 секунд с видеореференсом." },
+        { "id": "omni-flash-11-video-720", "label": "Omni Flash 1.1 · Reference to Video · видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 4.5, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "36 токенов за 8 секунд с видеореференсом." },
+        { "id": "omni-flash-11-video-1080", "label": "Omni Flash 1.1 · Reference to Video · видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 5.625, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "45 токенов за 8 секунд с видеореференсом." },
+        { "id": "omni-flash-11-video-4k", "label": "Omni Flash 1.1 · Reference to Video · видео · 4K", "resolution": "4K", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 13.125, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "105 токенов за 8 секунд с видеореференсом." },
+        { "id": "omni-flash-11-photo-360", "label": "Omni Flash 1.1 · Reference to Video · фото · 360p", "resolution": "360p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.625, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "13 токенов за 8 секунд с фотореференсом." },
+        { "id": "omni-flash-11-photo-720", "label": "Omni Flash 1.1 · Reference to Video · фото · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 2.625, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "21 токен за 8 секунд с фотореференсом." },
+        { "id": "omni-flash-11-photo-1080", "label": "Omni Flash 1.1 · Reference to Video · фото · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 3.25, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "26 токенов за 8 секунд с фотореференсом." },
+        { "id": "omni-flash-11-photo-4k", "label": "Omni Flash 1.1 · Reference to Video · фото · 4K", "resolution": "4K", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 10.75, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "86 токенов за 8 секунд с фотореференсом." },
+        { "id": "omni-flash-11-keyframes-360", "label": "Omni Flash 1.1 · Keyframes · фото · 360p", "resolution": "360p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.5, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "15 токенов за 10 секунд; только изображения первого и последнего кадра." },
+        { "id": "omni-flash-11-keyframes-720", "label": "Omni Flash 1.1 · Keyframes · фото · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 2.4, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "24 токена за 10 секунд; только изображения первого и последнего кадра." },
+        { "id": "omni-flash-11-keyframes-1080", "label": "Omni Flash 1.1 · Keyframes · фото · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 2.9, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "29 токенов за 10 секунд; только изображения первого и последнего кадра." },
+        { "id": "omni-flash-11-keyframes-4k", "label": "Omni Flash 1.1 · Keyframes · фото · 4K", "resolution": "4K", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 8.9, "roundDigits": 1, "durationRange": { "min": 4, "max": 10, "step": 1 } }, "status": "manual", "note": "89 токенов за 10 секунд; только изображения первого и последнего кадра." }
       ]
     },
     {

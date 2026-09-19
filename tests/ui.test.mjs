@@ -35,6 +35,11 @@ assert.match(html, /data-provider="dreamina"/, 'Dreamina has a calculator provid
 assert.match(html, /class="provider-tab provider-tab-plus provider-plus-standalone hidden"[^>]*data-provider="dreamina-plus"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus is a standalone button hidden before owner authorization');
 assert.match(html, /class="provider-tabs"[^>]*aria-label="Публичные провайдеры генерации"[\s\S]*data-provider="kling"[\s\S]*data-provider="syntex"[\s\S]*data-provider="dreamina"[\s\S]*<\/div>\s*<button class="provider-tab provider-tab-plus provider-plus-standalone hidden"/, 'public provider plate contains exactly the three public services before the standalone Plus button');
 assert.match(html, /id="dreaminaPackagePreset"/, 'Dreamina offers selectable official package presets');
+assert.match(html, /value="basic-monthly">Basic · 15 \$ · 1 575 кредитов/, 'Dreamina Basic monthly package is the first official preset');
+assert.match(html, /value="standard-monthly">Standard · 36 \$ · 3 885 кредитов/, 'Dreamina Standard uses the published USD package price');
+assert.match(html, /value="advanced-monthly">Advanced · 79 \$ · 8 645 кредитов/, 'Dreamina Advanced uses the published USD package price');
+assert.doesNotMatch(html, /169 SEK|basic-quarterly|basic-yearly|basic-one-month/, 'Dreamina presets contain no inferred SEK conversions');
+assert.doesNotMatch(html, /Pro · месяц|Max · месяц/, 'obsolete promotional Dreamina package names are removed');
 assert.match(html, /class="subcard dreamina-plus-card hidden"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus tariff card is hidden before owner authorization');
 assert.match(html, /100 ₽ <span>за<\/span> 10 500 токенов/, 'Dreamina Plus fixed exchange remains in the public application source');
 assert.match(manifest, /pwa-logo-v5-192\.png/, 'PWA uses the original full-size 192px logo');
@@ -55,7 +60,12 @@ assert.match(html, /id="manualTariffVariant"/, 'manual tariff editor has a mode 
 assert.match(html, /id="manualTariffDuration"/, 'manual tariff editor has a duration selector');
 assert.match(html, /id="manualTariffTokens"/, 'manual tariff editor records token spending');
 assert.match(html, /тарифы синхронизируются с личным облаком/, 'manual tariffs describe cross-device cloud sync');
-assert.match(html, /id="saveManualTariff"/, 'manual tariff editor can save a per-second token rate');
+assert.match(html, /id="saveManualTariff"/, 'manual tariff editor can save an exact-duration token tariff');
+assert.match(html, /id="baseTariffDate"/, 'manual tariff editor shows the base tariff date');
+assert.match(html, /id="resetManualTariffs"/, 'manual tariff overrides can be reset to the base tariff table');
+assert.match(html, /id="compareCalculatorSyntex"/, 'single-generation result can be compared with SYNTX');
+assert.match(html, /id="compareEstimateSyntex"/, 'project estimate can be compared with SYNTX');
+assert.match(html, /id="compareActualSyntex"/, 'actual project cost can be compared with SYNTX');
 assert.match(css, /\.project-workspace\s*\{/, 'active project has a distinct visual workspace');
 assert.match(css, /\.project-completion-panel\s*\{/, 'completion has a dedicated visual panel');
 assert.match(css, /\.app-tabs\s*\{/, 'primary navigation is styled');
@@ -74,7 +84,11 @@ assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /provider !== PRIVATE_PROVIDER_ID \|\| Boolean\(cloudSession\)/, 'Dreamina Plus requires an authenticated owner session');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /if \(!canUseProvider\(provider\)\) return \[\]/, 'private provider models cannot be used by anonymous calculator calls');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /refreshProviderAccess\(\)/, 'provider visibility refreshes with authorization state');
-assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /variants\.filter\(variant => variant\.billing\?\.type === 'manual_required'\)/, 'built-in tariff curves are excluded from the manual tariff editor');
+assert.doesNotMatch(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /variants\.filter\(variant => variant\.billing\?\.type === 'manual_required'\)/, 'built-in SYNTX tariffs can be overridden in the manual editor');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /unitsByDuration:/, 'manual tariff overrides are stored for an exact duration');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /function syntexEquivalent\(/, 'provider models are mapped to exact SYNTX equivalents');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /syntexCompareMarkup\('project-syntex-compare'\)/, 'each project estimate line has a SYNTX comparison');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /syntexCompareMarkup\('actual-syntex-compare'\)/, 'each recorded generation has a SYNTX comparison');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /switchProjectLibrary\(session \? 'owner' : 'guest'\)/, 'authorization switches between isolated owner and guest libraries');
 
 console.log('UI structure tests OK');

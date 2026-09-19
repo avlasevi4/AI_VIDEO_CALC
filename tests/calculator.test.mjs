@@ -64,6 +64,22 @@ assert.equal(manualRate.pricingMode, 'provider_units', 'built-in curve takes pre
 assert.equal(manualRate.units, 462.6);
 assert.equal(manualRate.rub, 462.6 * (1690 / 680));
 
+const exactOverrideSettings = {
+  ...settings,
+  manualTokenTariffs: {
+    'syntx-seedance-20::mini-480': {
+      unitsByDuration: { 10: 99 }
+    }
+  }
+};
+const exactOverride = calc.calculateSelection(pricing, exactOverrideSettings, 'syntx-seedance-20', 'mini-480', 10);
+assert.equal(exactOverride.pricingMode, 'manual_duration_override');
+assert.equal(exactOverride.units, 99);
+assert.equal(exactOverride.rub, 99 * (1690 / 680));
+const baseAfterOverride = calc.calculateSelection(pricing, exactOverrideSettings, 'syntx-seedance-20', 'mini-480', 5);
+assert.equal(baseAfterOverride.pricingMode, 'provider_units');
+assert.equal(baseAfterOverride.units, 8.6);
+
 const syntxOmniExpected = {
   'omni-reference-480': { 4: 155, 10: 182.7, 20: 228.8, 30: 274.9 },
   'omni-reference-720': { 4: 348.5, 10: 410.7, 20: 514.4, 30: 618 },
@@ -110,6 +126,27 @@ for (const [variantId, durations] of Object.entries(syntxSeedance20Expected)) {
   for (const [duration, expectedUnits] of Object.entries(durations)) {
     const result = calc.calculateSelection(pricing, settings, 'syntx-seedance-20', variantId, Number(duration));
     assert.equal(result.units, expectedUnits, `SYNTX Seedance 2.0 ${variantId} / ${duration} сек`);
+  }
+}
+
+const syntxVeoOmniFlashExpected = {
+  'omni-flash-11-video-360': { 8: 18 },
+  'omni-flash-11-video-720': { 8: 36 },
+  'omni-flash-11-video-1080': { 8: 45 },
+  'omni-flash-11-video-4k': { 8: 105 },
+  'omni-flash-11-photo-360': { 8: 13 },
+  'omni-flash-11-photo-720': { 8: 21 },
+  'omni-flash-11-photo-1080': { 8: 26 },
+  'omni-flash-11-photo-4k': { 8: 86 },
+  'omni-flash-11-keyframes-360': { 10: 15 },
+  'omni-flash-11-keyframes-720': { 10: 24 },
+  'omni-flash-11-keyframes-1080': { 10: 29 },
+  'omni-flash-11-keyframes-4k': { 10: 89 }
+};
+for (const [variantId, durations] of Object.entries(syntxVeoOmniFlashExpected)) {
+  for (const [duration, expectedUnits] of Object.entries(durations)) {
+    const result = calc.calculateSelection(pricing, settings, 'syntx-veo', variantId, Number(duration));
+    assert.equal(result.units, expectedUnits, `SYNTX Veo Omni Flash 1.1 ${variantId} / ${duration} сек`);
   }
 }
 

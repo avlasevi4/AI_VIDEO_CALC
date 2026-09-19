@@ -5,13 +5,11 @@
   const PROVIDER_IDS = ['kling', 'syntex', 'dreamina', 'dreamina-plus'];
   const PRIVATE_PROVIDER_ID = 'dreamina-plus';
   const DREAMINA_PACKAGE_PRESETS = {
-    'standard-monthly': { usd: 5, tokens: 1575 },
-    'pro-monthly': { usd: 11, tokens: 3885 },
-    'max-monthly': { usd: 42, tokens: 8645 },
-    'standard-annual': { usd: 73, tokens: 18900 },
-    'pro-annual': { usd: 168, tokens: 46620 },
-    'max-annual': { usd: 335, tokens: 103740 }
+    'basic-monthly': { usd: 15, tokens: 1575 },
+    'standard-monthly': { usd: 36, tokens: 3885 },
+    'advanced-monthly': { usd: 79, tokens: 8645 }
   };
+  const DREAMINA_PACKAGE_CATALOG_VERSION = '2026-09-19-official-usd';
   let pricing = null;
   let pricingSource = '—';
   let currentProvider = 'kling';
@@ -36,9 +34,10 @@
     klingPackageCredits: 660,
     syntexPackageRub: 1690,
     syntexPackageTokens: 680,
-    dreaminaPackageUsd: 11,
-    dreaminaPackageTokens: 3885,
-    dreaminaPackagePreset: 'pro-monthly',
+    dreaminaPackageUsd: 15,
+    dreaminaPackageTokens: 1575,
+    dreaminaPackagePreset: 'basic-monthly',
+    dreaminaPackageCatalogVersion: DREAMINA_PACKAGE_CATALOG_VERSION,
     syntexManualUnits: {},
     manualTokenTariffs: {},
     sharedTariffsUpdatedAt: '',
@@ -92,6 +91,7 @@
         }
       }
       settings = { ...settings, ...oldSettings };
+      normalizeDreaminaPackageSettings();
       if (!settings.syntexManualUnits || typeof settings.syntexManualUnits !== 'object') settings.syntexManualUnits = {};
       if (!settings.manualTokenTariffs || typeof settings.manualTokenTariffs !== 'object') settings.manualTokenTariffs = {};
       // Сохраняем значения, введённые в предыдущем формате (₽/сек), в эквиваленте токенов.
@@ -172,6 +172,7 @@
       dreaminaPackageUsd: settings.dreaminaPackageUsd,
       dreaminaPackageTokens: settings.dreaminaPackageTokens,
       dreaminaPackagePreset: settings.dreaminaPackagePreset,
+      dreaminaPackageCatalogVersion: settings.dreaminaPackageCatalogVersion,
       manualTokenTariffs: settings.manualTokenTariffs,
       syntexManualUnits: settings.syntexManualUnits
     };
@@ -190,8 +191,23 @@
     Object.keys(allowed).forEach(key => {
       if (value && Object.prototype.hasOwnProperty.call(value, key)) settings[key] = value[key];
     });
+    normalizeDreaminaPackageSettings();
     settings.sharedTariffsUpdatedAt = updatedAt || settings.sharedTariffsUpdatedAt || '';
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }
+
+  function normalizeDreaminaPackageSettings() {
+    if (settings.dreaminaPackagePreset === 'custom') {
+      settings.dreaminaPackageCatalogVersion = DREAMINA_PACKAGE_CATALOG_VERSION;
+      return;
+    }
+    if (settings.dreaminaPackageCatalogVersion !== DREAMINA_PACKAGE_CATALOG_VERSION || !DREAMINA_PACKAGE_PRESETS[settings.dreaminaPackagePreset]) {
+      const basic = DREAMINA_PACKAGE_PRESETS['basic-monthly'];
+      settings.dreaminaPackagePreset = 'basic-monthly';
+      settings.dreaminaPackageUsd = basic.usd;
+      settings.dreaminaPackageTokens = basic.tokens;
+      settings.dreaminaPackageCatalogVersion = DREAMINA_PACKAGE_CATALOG_VERSION;
+    }
   }
 
   async function synchronizeCloudTariffs() {
@@ -344,6 +360,11 @@
     $('durationRange').addEventListener('input', () => { $('durationNumber').value = $('durationRange').value; renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal(); });
     $('durationNumber').addEventListener('input', () => { $('durationRange').value = $('durationNumber').value; renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal(); });
     $('manualUnits').addEventListener('input', () => { setStoredManualUnits($('manualUnits').value); renderResult(); });
+    $('compareCalculatorSyntex').addEventListener('click', () => toggleSyntexComparison(
+      $('compareCalculatorSyntex'),
+      $('calculatorSyntexComparison'),
+      () => syntexComparison(currentModel()?.id, currentVariant()?.id, currentDuration(), 1, getStoredManualUnits())
+    ));
 
     $('createProject').addEventListener('click', createNewProject);
     $('newProjectFromWorkspace').addEventListener('click', createNewProject);
@@ -362,6 +383,12 @@
       saveLocal();
       renderTotals();
     });
+    $('compareEstimateSyntex').addEventListener('click', () => toggleSyntexComparison(
+      $('compareEstimateSyntex'), $('estimateSyntexComparison'), () => syntexItemsComparison(projectItems, true)
+    ));
+    $('compareActualSyntex').addEventListener('click', () => toggleSyntexComparison(
+      $('compareActualSyntex'), $('actualSyntexComparison'), () => syntexItemsComparison(actualItems, false)
+    ));
 
     ['laborPerVideoRub', 'plannedImages', 'actualImages', 'imageUnitRub', 'customQuotedPrice'].forEach(id => {
       $(id).addEventListener('input', () => {
@@ -439,6 +466,7 @@
         settings[id] = Number($(id).value) || 0;
         if (id === 'dreaminaPackageUsd' || id === 'dreaminaPackageTokens') {
           settings.dreaminaPackagePreset = 'custom';
+          settings.dreaminaPackageCatalogVersion = DREAMINA_PACKAGE_CATALOG_VERSION;
           $('dreaminaPackagePreset').value = 'custom';
         }
         saveTariffSettings();
@@ -452,6 +480,7 @@
     $('dreaminaPackagePreset').addEventListener('change', () => {
       const id = $('dreaminaPackagePreset').value;
       settings.dreaminaPackagePreset = id;
+      settings.dreaminaPackageCatalogVersion = DREAMINA_PACKAGE_CATALOG_VERSION;
       const preset = DREAMINA_PACKAGE_PRESETS[id];
       if (preset) {
         settings.dreaminaPackageUsd = preset.usd;
@@ -474,10 +503,11 @@
       const model = manualTariffModel();
       const variant = manualTariffVariant();
       const duration = Number($('manualTariffDuration').value);
-      const rate = model && variant ? manualTokenTariffFor(model.id, variant.id) : 0;
-      $('manualTariffTokens').value = rate > 0 && duration > 0 ? Number((rate * duration).toFixed(2)) : '';
+      const units = model && variant ? manualTokenTariffFor(model.id, variant.id, duration) : 0;
+      $('manualTariffTokens').value = units > 0 ? units : '';
     });
     $('saveManualTariff').addEventListener('click', saveManualTokenTariff);
+    $('resetManualTariffs').addEventListener('click', resetManualTokenTariffs);
     $('checkPricing').addEventListener('click', () => runPricingCheck(true));
     $('refreshRate').addEventListener('click', () => refreshRate(false));
     $('quickRefreshRate').addEventListener('click', () => refreshRate(false));
@@ -869,14 +899,20 @@
     return `${modelId}::${variantId}`;
   }
 
-  function manualTokenTariffFor(modelId, variantId) {
+  function manualTokenTariffFor(modelId, variantId, duration) {
     const stored = settings.manualTokenTariffs?.[manualTariffKeyFor(modelId, variantId)];
-    const value = Number(typeof stored === 'object' ? stored.unitsPerSecond : stored);
-    return value > 0 ? value : 0;
+    const exact = Number(stored?.unitsByDuration?.[String(duration)]);
+    if (exact > 0) return exact;
+    const model = pricing?.models?.find(item => item.id === modelId);
+    const variant = model?.variants?.find(item => item.id === variantId);
+    const legacyRate = Number(typeof stored === 'object' ? stored.unitsPerSecond : stored);
+    return variant?.billing?.type === 'manual_required' && legacyRate > 0 && Number(duration) > 0
+      ? legacyRate * Number(duration)
+      : 0;
   }
 
-  function hasManualTokenTariff(modelId, variantId) {
-    return manualTokenTariffFor(modelId, variantId) > 0;
+  function hasManualTokenTariff(modelId, variantId, duration) {
+    return manualTokenTariffFor(modelId, variantId, duration) > 0;
   }
 
   function tariffDurationsForVariant(variant) {
@@ -898,12 +934,16 @@
 
   function manualTariffVariant() {
     const model = manualTariffModel();
-    const variants = model?.variants.filter(variant => variant.billing?.type === 'manual_required') || [];
+    const variants = model?.variants || [];
     return variants.find(variant => variant.id === $('manualTariffVariant')?.value) || variants[0];
   }
 
   function renderManualTariffEditor() {
     if (!pricing || !$('manualTariffProvider')) return;
+    if ($('baseTariffDate')) {
+      const date = pricing.baseTariffDate || pricing.updated;
+      $('baseTariffDate').textContent = `Базовые тарифы: ${new Date(date + 'T00:00:00').toLocaleDateString('ru-RU')}`;
+    }
     const availableProviders = ['syntex'].filter(provider => pricing.providers?.[provider] && modelsForProvider(provider).length);
     const previous = $('manualTariffProvider').value;
     const provider = availableProviders.includes(previous) ? previous : (availableProviders.includes('syntex') ? 'syntex' : availableProviders[0]);
@@ -926,7 +966,7 @@
   function renderManualTariffVariants() {
     const model = manualTariffModel();
     if (!model) return;
-    const variants = model.variants.filter(variant => variant.billing?.type === 'manual_required');
+    const variants = model.variants;
     const previous = $('manualTariffVariant').value;
     const selected = variants.some(variant => variant.id === previous) ? previous : variants[0]?.id;
     $('manualTariffVariant').innerHTML = variants.map(variant => `<option value="${esc(variant.id)}" ${variant.id === selected ? 'selected' : ''}>${esc(variant.label)}</option>`).join('');
@@ -941,8 +981,8 @@
     const selected = values.includes(previous) ? previous : values[0];
     $('manualTariffDuration').innerHTML = values.map(value => `<option value="${value}" ${value === selected ? 'selected' : ''}>${value} сек</option>`).join('');
     const model = manualTariffModel();
-    const savedRate = manualTokenTariffFor(model.id, variant.id);
-    $('manualTariffTokens').value = savedRate > 0 ? Number((savedRate * selected).toFixed(2)) : '';
+    const savedUnits = manualTokenTariffFor(model.id, variant.id, selected);
+    $('manualTariffTokens').value = savedUnits > 0 ? Number(savedUnits.toFixed(2)) : '';
   }
 
   function saveManualTokenTariff() {
@@ -955,16 +995,17 @@
       return;
     }
     const key = manualTariffKeyFor(model.id, variant.id);
-    const unitsPerSecond = units / duration;
+    const previous = settings.manualTokenTariffs[key];
     settings.manualTokenTariffs[key] = {
-      unitsPerSecond,
-      sourceDuration: duration,
-      sourceUnits: units,
+      unitsByDuration: {
+        ...(previous?.unitsByDuration || {}),
+        [String(duration)]: units
+      },
       updatedAt: new Date().toISOString()
     };
     saveTariffSettings();
     saveLocal();
-    $('manualTariffMessage').textContent = `Тариф сохранён: ${model.name} · ${variant.label}: ${fmtNum(units, 2)} токенов за ${duration} сек = ${fmtNum(unitsPerSecond, 2)} токенов / сек.`;
+    $('manualTariffMessage').textContent = `Пользовательский тариф сохранён: ${model.name} · ${variant.label}: ${fmtNum(units, 2)} токенов за ${duration} сек.`;
     renderManualTariffList();
     renderManualUnits();
     renderResult();
@@ -975,32 +1016,44 @@
     const list = $('manualTariffList');
     if (!list || !pricing) return;
     const entries = Object.entries(settings.manualTokenTariffs || {})
-      .map(([key, saved]) => {
+      .flatMap(([key, saved]) => {
         const [modelId, variantId] = key.split('::');
         const model = pricing.models.find(item => item.id === modelId);
         const variant = model?.variants.find(item => item.id === variantId);
+        const durationEntries = Object.entries(saved?.unitsByDuration || {});
+        if (durationEntries.length) {
+          return durationEntries.map(([duration, units]) => ({ key, duration: Number(duration), units: Number(units), model, variant, legacy: false }));
+        }
         const unitsPerSecond = Number(typeof saved === 'object' ? saved.unitsPerSecond : saved);
         const sourceDuration = Number(typeof saved === 'object' ? saved.sourceDuration : 1);
         const sourceUnits = Number(typeof saved === 'object' ? saved.sourceUnits : saved);
-        return { key, unitsPerSecond, sourceDuration, sourceUnits, model, variant };
+        return unitsPerSecond > 0 ? [{ key, duration: sourceDuration, units: sourceUnits, unitsPerSecond, model, variant, legacy: true }] : [];
       })
-      .filter(item => item.unitsPerSecond > 0 && (!item.variant || item.variant.billing?.type === 'manual_required'))
-      .sort((a, b) => `${a.model?.name || a.key}`.localeCompare(`${b.model?.name || b.key}`, 'ru'));
+      .filter(item => item.units > 0)
+      .sort((a, b) => `${a.model?.name || a.key} ${a.duration}`.localeCompare(`${b.model?.name || b.key} ${b.duration}`, 'ru'));
 
     if (!entries.length) {
       list.innerHTML = '<div class="manual-tariff-empty">Сохранённых ручных тарифов пока нет.</div>';
       return;
     }
     list.innerHTML = entries.map(item => `
-      <article class="manual-tariff-row" data-key="${esc(item.key)}">
-        <div><strong>${esc(item.model?.name || item.key)}</strong><span>${esc(item.variant?.label || 'Режим из прежней базы')} · основа: ${fmtNum(item.sourceUnits, 2)} токенов за ${item.sourceDuration} сек</span></div>
-        <strong>${fmtNum(item.unitsPerSecond, 2)} токенов / сек</strong>
+      <article class="manual-tariff-row" data-key="${esc(item.key)}" data-duration="${item.duration}" data-legacy="${item.legacy ? 'true' : 'false'}">
+        <div><strong>${esc(item.model?.name || item.key)}</strong><span>${esc(item.variant?.label || 'Режим из прежней базы')} · ${item.duration} сек</span></div>
+        <strong>${fmtNum(item.units, 2)} токенов</strong>
         <button class="manual-tariff-remove" type="button" aria-label="Удалить ручной тариф ${esc(item.model?.name || item.key)}">×</button>
       </article>`).join('');
     list.querySelectorAll('.manual-tariff-remove').forEach(button => button.addEventListener('click', () => {
       const key = button.closest('.manual-tariff-row')?.dataset.key;
+      const duration = button.closest('.manual-tariff-row')?.dataset.duration;
+      const legacy = button.closest('.manual-tariff-row')?.dataset.legacy === 'true';
       if (!key) return;
-      delete settings.manualTokenTariffs[key];
+      if (legacy) {
+        delete settings.manualTokenTariffs[key];
+      } else {
+        const saved = settings.manualTokenTariffs[key];
+        if (saved?.unitsByDuration) delete saved.unitsByDuration[String(duration)];
+        if (!Object.keys(saved?.unitsByDuration || {}).length) delete settings.manualTokenTariffs[key];
+      }
       saveTariffSettings();
       saveLocal();
       $('manualTariffMessage').textContent = 'Ручной тариф удалён. Для этой комбинации снова будет использоваться расчёт по токенам.';
@@ -1010,6 +1063,19 @@
       renderResult();
       renderProject();
     }));
+  }
+
+  function resetManualTokenTariffs() {
+    if (!confirm('Удалить все пользовательские тарифы и вернуться к базовым значениям? Проекты и настройки пакетов не изменятся.')) return;
+    settings.manualTokenTariffs = {};
+    settings.syntexManualUnits = {};
+    saveTariffSettings();
+    saveLocal();
+    $('manualTariffMessage').textContent = 'Пользовательские поправки удалены. Используются базовые тарифы.';
+    renderManualTariffEditor();
+    renderManualUnits();
+    renderResult();
+    renderProject();
   }
 
   function manualKey() {
@@ -1035,7 +1101,7 @@
     const model = currentModel();
     const variant = currentVariant();
     if (!variant) return;
-    const needed = variant.billing.type === 'manual_required' && !hasManualTokenTariff(model?.id, variant.id);
+    const needed = variant.billing.type === 'manual_required' && !hasManualTokenTariff(model?.id, variant.id, currentDuration());
     $('manualUnitsField').classList.toggle('hidden', !needed);
     $('manualUnits').value = needed ? getStoredManualUnits() : '';
   }
@@ -1048,8 +1114,104 @@
     return result.variant.status || result.model.status || 'manual';
   }
 
+  function syntexEquivalent(modelId, variantId) {
+    const sourceModel = pricing?.models?.find(model => model.id === modelId);
+    if (!sourceModel) return null;
+    if (sourceModel.provider === 'syntex') return { modelId, variantId };
+
+    if (/^dreamina(?:-plus)?-seedance-25$/.test(modelId)) {
+      const resolution = String(variantId).match(/(480|720|1080)p?$/)?.[1];
+      if (!resolution) return null;
+      return {
+        modelId: 'syntx-seedance-25',
+        variantId: String(variantId).startsWith('omni-reference-')
+          ? `omni-reference-${resolution}`
+          : `k-frames-${resolution}`
+      };
+    }
+
+    const seedance20 = String(modelId).match(/^dreamina(?:-plus)?-seedance-20(?:-(mini|fast))?$/);
+    if (seedance20) {
+      const resolution = String(variantId).match(/(480|720|1080|4k)p?$/i)?.[1]?.toLowerCase();
+      if (!resolution) return null;
+      return { modelId: 'syntx-seedance-20', variantId: `${seedance20[1] || 'pro'}-${resolution}` };
+    }
+
+    if (modelId === 'kling-30' && ['1080-na', '1080-a'].includes(variantId)) {
+      return { modelId: 'syntx-kling', variantId: `30-${variantId}` };
+    }
+    return null;
+  }
+
+  function syntexComparison(modelId, variantId, duration, count = 1, manualUnits = 0) {
+    const equivalent = syntexEquivalent(modelId, variantId);
+    if (!equivalent) return { error: 'Для этой модели точный аналог SYNTX пока не сопоставлен.' };
+    try {
+      const result = window.AIVideoCalculator.calculateSelection(pricing, settings, equivalent.modelId, equivalent.variantId, duration, manualUnits);
+      const quantity = Math.max(1, Number(count) || 1);
+      return {
+        rub: result.rub * quantity,
+        units: result.units * quantity,
+        count: quantity,
+        label: `${result.model.name} · ${result.variant.label}`
+      };
+    } catch (error) {
+      return { error: error.message };
+    }
+  }
+
+  function syntexItemsComparison(items, estimate) {
+    let rub = 0;
+    let units = 0;
+    let compared = 0;
+    let missing = 0;
+    (items || []).forEach(item => {
+      const count = estimate ? Math.max(1, Number(item.qty) || 1) * Math.max(1, Number(item.generationsPerVideo) || 1) : 1;
+      const sourceModel = pricing?.models?.find(model => model.id === item.modelId);
+      const manualUnits = Number(item.manualUnits) > 0 ? Number(item.manualUnits) : sourceModel?.provider === 'syntex' ? Number(item.units) || 0 : 0;
+      const result = syntexComparison(item.modelId, item.variantId, item.duration, count, manualUnits);
+      if (result.error) missing += 1;
+      else {
+        rub += result.rub;
+        units += result.units;
+        compared += 1;
+      }
+    });
+    if (!compared) return { error: items?.length ? 'Для позиций нет заполненных точных аналогов SYNTX.' : 'Сначала добавьте генерации.' };
+    return { rub, units, count: compared, missing, label: `${compared} ${compared === 1 ? 'позиция' : 'позиций'}` };
+  }
+
+  function toggleSyntexComparison(button, output, calculateComparison) {
+    if (!button || !output) return;
+    const opening = output.classList.contains('hidden');
+    if (!opening) {
+      output.classList.add('hidden');
+      button.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    const result = calculateComparison();
+    output.classList.remove('hidden');
+    button.setAttribute('aria-expanded', 'true');
+    output.classList.toggle('has-error', Boolean(result.error));
+    output.textContent = result.error
+      ? result.error
+      : `${result.label}: ${fmtRub(result.rub)} · ${fmtNum(result.units, 2)} токенов${result.missing ? ` · без аналога: ${result.missing}` : ''}`;
+  }
+
+  function syntexCompareMarkup(className = '') {
+    return `<div class="syntex-compare-wrap ${className}"><button class="syntex-compare" type="button" aria-expanded="false"><span class="syntex-mark" aria-hidden="true">SX</span>В SYNTX</button><span class="syntex-comparison hidden"></span></div>`;
+  }
+
+  function bindInlineSyntexComparison(container, calculateComparison) {
+    const button = container?.querySelector('.syntex-compare');
+    const output = container?.querySelector('.syntex-comparison');
+    if (button && output) button.addEventListener('click', () => toggleSyntexComparison(button, output, calculateComparison));
+  }
+
   function renderResult() {
     if (!pricing || !currentModel() || !currentVariant()) return;
+    $('calculatorSyntexComparison')?.classList.add('hidden');
+    $('compareCalculatorSyntex')?.setAttribute('aria-expanded', 'false');
     let result;
     try {
       result = calculate();
@@ -1065,12 +1227,14 @@
     $('resultPrice').textContent = fmtRub(result.rub);
     $('calculatorSummaryPrice').textContent = fmtRub(result.rub);
     const unitName = pricing.providers[result.model.provider].unit === 'credits' ? 'credits' : 'токенов';
-    $('resultMeta').innerHTML = result.pricingMode === 'manual_tokens_per_second'
+    $('resultMeta').innerHTML = result.pricingMode === 'manual_duration_override'
+      ? `<span>Пользовательский тариф: ${fmtNum(result.units, 2)} токенов за ${fmtNum(result.duration, 2)} сек</span><span>1 токен = ${fmtRub(result.unitRub)}</span><span>${cloudSession ? 'Поправка синхронизирована с личным облаком.' : 'Поправка хранится только в этом браузере.'}</span>`
+      : result.pricingMode === 'manual_tokens_per_second'
       ? `<span>Ручной тариф: ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>${fmtNum(result.duration, 2)} сек × ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>1 токен = ${fmtRub(result.unitRub)} · ${cloudSession ? 'тариф синхронизирован с личным облаком.' : 'тариф будет синхронизирован после входа.'}</span>`
       : `<span>${fmtNum(result.units, 2)} ${unitName}</span>${result.usd !== null ? `<span>≈ ${fmtUsd(result.usd)}</span>` : ''}<span>1 ${result.model.provider === 'kling' ? 'credit' : 'токен'} = ${fmtRub(result.unitRub)}</span>${result.model.provider === 'dreamina-plus' ? '<span>Спецкурс: 100 ₽ / 10 500 токенов</span>' : result.model.provider === 'syntex' ? '<span>Расчёт по пакету SYNTX</span>' : `<span>Курс: ${fmtNum(settings.usdRub, 2)} ₽/$</span>`}<span>Тарифная база: ${esc(pricing.updated)}</span>`;
     const status = effectiveStatus(result);
     $('resultStatus').className = 'status ' + status;
-    $('resultStatus').textContent = result.pricingMode === 'manual_tokens_per_second' ? '● ручной тариф' : status === 'verified' ? '✓ verified' : status === 'unverified' ? '⚠ unverified' : '● manual';
+    $('resultStatus').textContent = ['manual_duration_override', 'manual_tokens_per_second'].includes(result.pricingMode) ? '● свой тариф' : status === 'verified' ? '✓ verified' : status === 'unverified' ? '⚠ unverified' : '● manual';
   }
 
   function createNewProject() {
@@ -1274,7 +1438,7 @@
     item.qty = Math.max(1, Math.round(Number(item.qty) || 1));
     item.generationsPerVideo = Math.max(1, Math.min(30, Math.round(Number(item.generationsPerVideo ?? item.extraQty) || 1)));
     delete item.extraQty;
-    if (variant.billing.type === 'manual_required' && !hasManualTokenTariff(model.id, variant.id) && !(Number(item.manualUnits) > 0)) {
+    if (variant.billing.type === 'manual_required' && !hasManualTokenTariff(model.id, variant.id, item.duration) && !(Number(item.manualUnits) > 0)) {
       const saved = settings.syntexManualUnits?.[manualKeyFor(model.id, variant.id, item.duration)];
       if (Number(saved) > 0) item.manualUnits = Number(saved);
     }
@@ -1316,7 +1480,7 @@
     const model = getProjectModel(item);
     const variant = getProjectVariant(item, model);
     const providerModels = modelsForProvider(item.provider);
-    const manualNeeded = variant?.billing?.type === 'manual_required' && !hasManualTokenTariff(model.id, variant.id);
+    const manualNeeded = variant?.billing?.type === 'manual_required' && !hasManualTokenTariff(model.id, variant.id, item.duration);
     const rowBase = item.rub * item.qty;
     const rowExtraCount = item.qty * (item.generationsPerVideo - 1);
     const rowExtra = item.rub * rowExtraCount;
@@ -1373,8 +1537,10 @@
       <div class="project-line-result ${item.calcError ? 'has-error' : ''}">
         ${item.calcError
           ? `<span>⚠ ${esc(item.calcError)}</span>`
-          : `<span>${fmtRub(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtRub(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtRub(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtRub(rowBase + rowExtra)}</strong>`}
+          : `<span>${fmtRub(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtRub(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtRub(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtRub(rowBase + rowExtra)}</strong>${syntexCompareMarkup('project-syntex-compare')}`}
       </div>`;
+
+    bindInlineSyntexComparison(row, () => syntexComparison(item.modelId, item.variantId, item.duration, rowGenerationCount, item.manualUnits));
 
     row.querySelector('.remove').addEventListener('click', () => {
       projectItems = projectItems.filter(x => x.id !== item.id);
@@ -1493,7 +1659,8 @@
     const rowExtraCount = item.qty * (item.generationsPerVideo - 1);
     const rowExtra = item.rub * rowExtraCount;
     const rowGenerationCount = item.qty * item.generationsPerVideo;
-    box.innerHTML = `<span>${fmtRub(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtRub(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtRub(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtRub(rowBase + rowExtra)}</strong>`;
+    box.innerHTML = `<span>${fmtRub(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtRub(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtRub(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtRub(rowBase + rowExtra)}</strong>${syntexCompareMarkup('project-syntex-compare')}`;
+    bindInlineSyntexComparison(box, () => syntexComparison(item.modelId, item.variantId, item.duration, rowGenerationCount, item.manualUnits));
   }
 
   function renderProjectMeta() {
@@ -1526,7 +1693,7 @@
     const model = actualModelForDraft();
     const variant = actualVariantForDraft(model);
     if (!model || !variant) return;
-    const needed = variant.billing?.type === 'manual_required' && !hasManualTokenTariff(model.id, variant.id);
+    const needed = variant.billing?.type === 'manual_required' && !hasManualTokenTariff(model.id, variant.id, actualDraft.duration);
     $('actualManualField').classList.toggle('hidden', !needed);
     if (!needed) {
       actualDraft.manualUnits = '';
@@ -1574,7 +1741,8 @@
       const detail = result.pricingMode === 'manual_tokens_per_second'
         ? `Ручной тариф ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек · ${actualDraft.duration} сек`
         : `${fmtNum(result.units, 2)} ${pricing.providers[model.provider].unit === 'credits' ? 'credits' : 'токенов'} · ${actualDraft.duration} сек`;
-      $('actualDraftResult').innerHTML = `<span>${detail}</span><strong>${fmtRub(result.rub)}</strong>`;
+      $('actualDraftResult').innerHTML = `<span>${detail}</span><strong>${fmtRub(result.rub)}</strong>${syntexCompareMarkup('actual-draft-syntex')}`;
+      bindInlineSyntexComparison($('actualDraftResult'), () => syntexComparison(model.id, variant.id, actualDraft.duration, 1, actualDraft.manualUnits));
       $('addActualGeneration').disabled = false;
     } catch (error) {
       $('actualDraftResult').className = 'actual-draft-result has-error';
@@ -1628,7 +1796,7 @@
           <strong>${esc(item.modelName || item.modelId)}</strong>
           <span>${esc(item.variantLabel || item.variantId)} · ${fmtNum(item.duration, 2)} сек · ${fmtNum(item.units, 2)} ${unitFor(item.provider)}</span>
         </div>
-        <div class="actual-cost">${fmtRub(item.rub)}</div>
+        <div class="actual-cost">${fmtRub(item.rub)}${syntexCompareMarkup('actual-syntex-compare')}</div>
         <button class="actual-action actual-repeat" type="button" title="Повторить" aria-label="Повторить фактическую генерацию">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
@@ -1636,6 +1804,11 @@
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m8 8 8 8M16 8l-8 8"/></svg>
         </button>
       </article>`).join('');
+
+    $('actualList').querySelectorAll('.actual-item').forEach(row => {
+      const item = actualItems.find(value => value.id === row.dataset.id);
+      if (item) bindInlineSyntexComparison(row, () => syntexComparison(item.modelId, item.variantId, item.duration, 1, item.provider === 'syntex' ? item.units : 0));
+    });
 
     $('actualList').querySelectorAll('.actual-repeat').forEach(button => {
       button.addEventListener('click', () => {
@@ -1732,7 +1905,7 @@
       $('estimateDetails').open = false;
       $('actualExpenses').open = false;
       builder.querySelectorAll('input, select, button').forEach(control => {
-        if (control.id === 'completeProject' || control.id === 'closeProject' || control.id === 'newProjectFromWorkspace' || control.disabled) return;
+        if (control.id === 'completeProject' || control.id === 'closeProject' || control.id === 'newProjectFromWorkspace' || control.classList.contains('syntex-compare') || control.disabled) return;
         control.disabled = true;
         control.dataset.completionDisabled = 'true';
       });
@@ -1802,6 +1975,10 @@
 
   function renderTotals() {
     if (!pricing) return;
+    $('estimateSyntexComparison')?.classList.add('hidden');
+    $('actualSyntexComparison')?.classList.add('hidden');
+    $('compareEstimateSyntex')?.setAttribute('aria-expanded', 'false');
+    $('compareActualSyntex')?.setAttribute('aria-expanded', 'false');
     const totals = window.AIVideoCalculator.calculateProject(projectItems, projectMeta, actualItems);
     $('baseTotal').textContent = fmtRub(totals.base);
     $('retryTotal').textContent = fmtRub(totals.reserve);

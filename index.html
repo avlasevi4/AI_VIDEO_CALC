@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101a">
-  <meta name="description" content="AI VIDEO CALC 3.17 — проекты, сметы, расходы и общие тарифы AI-видео">
+  <meta name="description" content="AI VIDEO CALC 3.18 — проекты, сметы, расходы и общие тарифы AI-видео">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./icons/pwa-logo-v5-192.png">
   <link rel="apple-touch-icon" href="./icons/pwa-logo-v5-192.png">
   <link rel="stylesheet" href="./css/app.css">
   <link rel="stylesheet" href="./css/v3.css">
-  <title>AI VIDEO CALC 3.17</title>
+  <title>AI VIDEO CALC 3.18</title>
 </head>
 <body>
 <main class="app" data-active-view="calculator">
@@ -23,7 +23,7 @@
     </div>
     <div class="hero-tools">
       <div class="version-stack">
-        <div class="version">v3.17</div>
+        <div class="version">v3.18</div>
         <button id="ownerAccessToggle" class="cloud-access-toggle" type="button" aria-label="Открыть облачную синхронизацию" aria-controls="ownerAccessPanel" aria-expanded="false" title="Облачная синхронизация">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 8.3 4.8 4.8 0 0 0 7 18Z"/><path d="m9.5 13 2.5-2.5 2.5 2.5M12 10.5V16"/></svg>
         </button>
@@ -104,6 +104,7 @@
 
       <div class="result">
         <div id="resultPrice" class="result-price">—</div>
+        <div class="syntex-compare-wrap"><button id="compareCalculatorSyntex" class="syntex-compare" type="button" aria-expanded="false"><span class="syntex-mark" aria-hidden="true">SX</span>Сравнить в SYNTX</button><span id="calculatorSyntexComparison" class="syntex-comparison hidden"></span></div>
         <div id="resultMeta" class="result-meta"></div>
         <div id="resultStatus" class="status manual">● manual</div>
       </div>
@@ -197,7 +198,7 @@
             <div class="metric"><span>Готовые видео</span><strong id="baseTotal">0 ₽</strong><small id="baseCount">0 шт.</small></div>
             <div class="metric"><span>Повторные генерации</span><strong id="retryTotal">0 ₽</strong><small id="retryCount">0 шт.</small></div>
             <div class="metric"><span>Изображения</span><strong id="estimateImageTotal">0 ₽</strong><small id="estimateImageCount">выключено</small></div>
-            <div class="metric total-main"><span>Сметная себестоимость</span><strong id="grandTotal">0 ₽</strong><small id="grandCount">0 генераций</small></div>
+            <div class="metric total-main"><span>Сметная себестоимость</span><strong id="grandTotal">0 ₽</strong><small id="grandCount">0 генераций</small><div class="syntex-compare-wrap"><button id="compareEstimateSyntex" class="syntex-compare" type="button" aria-expanded="false"><span class="syntex-mark" aria-hidden="true">SX</span>В SYNTX</button><span id="estimateSyntexComparison" class="syntex-comparison hidden"></span></div></div>
           </div>
 
           <div class="work-price-box" aria-labelledby="workPriceHeading">
@@ -286,7 +287,7 @@
           <div class="totals actual-totals">
             <div class="metric"><span>Фактические видеогенерации</span><strong id="actualVideoTotal">0 ₽</strong><small id="actualVideoCount">0 шт.</small></div>
             <div class="metric"><span>Фактические изображения</span><strong id="actualImagesTotal">0 ₽</strong><small id="actualImagesCount">выключено</small></div>
-            <div class="metric total-main"><span>Фактическая себестоимость</span><strong id="actualTotal">0 ₽</strong><small>зафиксированный расход</small></div>
+            <div class="metric total-main"><span>Фактическая себестоимость</span><strong id="actualTotal">0 ₽</strong><small>зафиксированный расход</small><div class="syntex-compare-wrap"><button id="compareActualSyntex" class="syntex-compare" type="button" aria-expanded="false"><span class="syntex-mark" aria-hidden="true">SX</span>В SYNTX</button><span id="actualSyntexComparison" class="syntex-comparison hidden"></span></div></div>
           </div>
 
           <div class="comparison-box">
@@ -363,17 +364,16 @@
       <div class="subcard">
         <h3>Dreamina</h3>
         <div class="field"><label for="dreaminaPackagePreset">Тарифный пакет</label><select id="dreaminaPackagePreset">
-          <option value="standard-monthly">Standard · месяц</option>
-          <option value="pro-monthly">Pro · месяц</option>
-          <option value="max-monthly">Max · месяц</option>
-          <option value="standard-annual">Standard · год</option>
-          <option value="pro-annual">Pro · год</option>
-          <option value="max-annual">Max · год</option>
+          <optgroup label="Официальные цены в USD · ежемесячная подписка">
+            <option value="basic-monthly">Basic · 15 $ · 1 575 кредитов</option>
+            <option value="standard-monthly">Standard · 36 $ · 3 885 кредитов</option>
+            <option value="advanced-monthly">Advanced · 79 $ · 8 645 кредитов</option>
+          </optgroup>
           <option value="custom">Свой пакет</option>
         </select></div>
         <div class="field"><label for="dreaminaPackageUsd">Цена пакета, $</label><input id="dreaminaPackageUsd" type="number" min="0" step="0.01"></div>
         <div class="field"><label for="dreaminaPackageTokens">Токенов в пакете</label><input id="dreaminaPackageTokens" type="number" min="1" step="1"></div>
-        <div class="tiny">Цена 1 токена по курсу USD: <strong id="dreaminaUnitPrice">—</strong></div>
+        <div class="tiny">Цена 1 токена рассчитывается по курсу USD: <strong id="dreaminaUnitPrice">—</strong>. По умолчанию: Basic — 15 $ / 1 575 кредитов. Basic, Standard и Advanced взяты из публичной официальной сетки Dreamina от 19.09.2026. Региональные и промо-предложения можно внести как «Свой пакет».</div>
       </div>
       <div class="subcard dreamina-plus-card hidden" data-private-provider="dreamina-plus">
         <h3>Dreamina Plus</h3>
@@ -384,9 +384,9 @@
         <div class="manual-tariff-head">
           <div>
             <h3 id="manualTariffTitle">Ручные тарифы моделей</h3>
-            <p>Введите расход токенов для выбранной длительности — калькулятор сохранит расход в токенах за секунду и применит его к любой другой длительности этой модели и режима.</p>
+            <p>Введите расход токенов для конкретной длительности. Пользовательское значение заменит базовый тариф только для этой комбинации модели, режима и времени.</p>
           </div>
-          <span class="summary-tag">Ваши тарифы</span>
+          <span id="baseTariffDate" class="summary-tag">База: —</span>
         </div>
         <div class="manual-tariff-editor">
           <div class="field"><label for="manualTariffProvider">Сервис</label><select id="manualTariffProvider"></select></div>
@@ -397,6 +397,7 @@
           <button id="saveManualTariff" class="btn primary" type="button">Сохранить тариф</button>
         </div>
         <div id="manualTariffMessage" class="tiny manual-tariff-message">После входа тарифы синхронизируются с личным облаком и будут одинаковыми на всех ваших устройствах.</div>
+        <div class="manual-tariff-actions"><button id="resetManualTariffs" class="btn secondary" type="button">Сбросить на базовые тарифы</button></div>
         <div id="manualTariffList" class="manual-tariff-list"></div>
       </section>
       <div class="subcard">
@@ -411,7 +412,7 @@
   </details>
   </section>
 
-  <footer class="footer">AI VIDEO CALC <span>3.17</span> · 19.09.2026</footer>
+  <footer class="footer">AI VIDEO CALC <span>3.18</span> · 19.09.2026</footer>
 </main>
 
 <dialog id="projectNameDialog" class="project-dialog" aria-labelledby="projectNameTitle">
