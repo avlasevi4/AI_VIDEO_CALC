@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "3.16.0-2026-09-19",
+  "dataVersion": "3.17.0-2026-09-19",
   "updated": "2026-09-19",
   "currency": "RUB",
   "providers": {
@@ -737,15 +737,26 @@
       "name": "Seedance 2.0",
       "status": "manual",
       "catalogVerifiedAt": "2026-09-02",
+      "verifiedAt": "2026-09-19",
       "sourceId": "syntx-video-catalog",
+      "sourceNote": "Тарифы Mini, Fast и Pro с видеореференсом и без него подтверждены пользователем 19.09.2026. Mini и Fast рассчитываются пропорционально от цены за 10 секунд; Pro использует контрольные точки тарифной кривой.",
       "variants": [
-        { "id": "mini-480", "label": "Mini · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "mini-720", "label": "Mini · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "fast-480", "label": "Fast · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "fast-720", "label": "Fast · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "pro-720", "label": "Pro · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "pro-1080", "label": "Pro · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" },
-        { "id": "pro-4k", "label": "Pro · 4K", "resolution": "4K", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "manual" }
+        { "id": "mini-480", "label": "Mini · без видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.71, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "17,1 токена за 10 секунд." },
+        { "id": "mini-720", "label": "Mini · без видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 3.86, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "38,6 токена за 10 секунд." },
+        { "id": "mini-video-480", "label": "Mini · с видеореференсом · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.71, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "17,1 токена за 10 секунд." },
+        { "id": "mini-video-720", "label": "Mini · с видеореференсом · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 3.93, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "39,3 токена за 10 секунд." },
+        { "id": "fast-480", "label": "Fast · без видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 2.42, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "24,2 токена за 10 секунд." },
+        { "id": "fast-720", "label": "Fast · без видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 5.44, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "54,4 токена за 10 секунд." },
+        { "id": "fast-video-480", "label": "Fast · с видеореференсом · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 2.43, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "24,3 токена за 10 секунд." },
+        { "id": "fast-video-720", "label": "Fast · с видеореференсом · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 5.45, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "54,5 токена за 10 секунд." },
+        { "id": "pro-480", "label": "Pro · без видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 20.2, "10": 50.4, "15": 75.7 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual" },
+        { "id": "pro-720", "label": "Pro · без видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 45.4, "10": 113.4, "15": 170.1 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual" },
+        { "id": "pro-1080", "label": "Pro · без видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 112.3, "10": 280.7, "15": 421 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual" },
+        { "id": "pro-4k", "label": "Pro · без видео · 4K", "resolution": "4K", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 233.3, "10": 583.2, "15": 874.8 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual" },
+        { "id": "pro-video-480", "label": "Pro · с видеореференсом · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 21.1, "10": 52.7, "15": 77.5 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "Значение 4 секунды рассчитано пропорционально от контрольной точки 10 секунд." },
+        { "id": "pro-video-720", "label": "Pro · с видеореференсом · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 47.4, "10": 118.4, "15": 174.2 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "Значение 4 секунды рассчитано пропорционально от контрольной точки 10 секунд." },
+        { "id": "pro-video-1080", "label": "Pro · с видеореференсом · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 116.5, "10": 291.2, "15": 428.3 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "Значение 4 секунды рассчитано пропорционально от контрольной точки 10 секунд." },
+        { "id": "pro-video-4k", "label": "Pro · с видеореференсом · 4K", "resolution": "4K", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 238, "10": 594.9, "15": 874.8 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 15, "step": 1 } }, "status": "manual", "note": "Значение 4 секунды рассчитано пропорционально от контрольной точки 10 секунд." }
       ]
     },
     {

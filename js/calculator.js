@@ -39,7 +39,13 @@
     const d = safeNumber(duration, 5);
     switch (billing.type) {
       case 'rate_per_second':
-        return safeNumber(billing.unitsPerSecond) * d;
+        {
+          const units = safeNumber(billing.unitsPerSecond) * d;
+          if (billing.roundDigits == null) return units;
+          const precision = Math.max(0, Math.min(4, Math.round(safeNumber(billing.roundDigits, 1))));
+          const factor = 10 ** precision;
+          return Math.round((units + Number.EPSILON) * factor) / factor;
+        }
       case 'duration_table': {
         const key = String(d);
         if (!(key in billing.unitsByDuration)) throw new Error('Для этой длительности нет тарифа');

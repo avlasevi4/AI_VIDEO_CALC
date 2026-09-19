@@ -88,6 +88,31 @@ for (const [variantId, durations] of Object.entries(syntxKeyframesExpected)) {
   }
 }
 
+const syntxSeedance20Expected = {
+  'mini-480': { 10: 17.1 },
+  'mini-720': { 10: 38.6 },
+  'mini-video-480': { 10: 17.1 },
+  'mini-video-720': { 10: 39.3 },
+  'fast-480': { 10: 24.2 },
+  'fast-720': { 10: 54.4 },
+  'fast-video-480': { 10: 24.3 },
+  'fast-video-720': { 10: 54.5 },
+  'pro-480': { 4: 20.2, 10: 50.4, 15: 75.7 },
+  'pro-720': { 4: 45.4, 10: 113.4, 15: 170.1 },
+  'pro-1080': { 4: 112.3, 10: 280.7, 15: 421 },
+  'pro-4k': { 4: 233.3, 10: 583.2, 15: 874.8 },
+  'pro-video-480': { 10: 52.7, 15: 77.5 },
+  'pro-video-720': { 10: 118.4, 15: 174.2 },
+  'pro-video-1080': { 10: 291.2, 15: 428.3 },
+  'pro-video-4k': { 10: 594.9, 15: 874.8 }
+};
+for (const [variantId, durations] of Object.entries(syntxSeedance20Expected)) {
+  for (const [duration, expectedUnits] of Object.entries(durations)) {
+    const result = calc.calculateSelection(pricing, settings, 'syntx-seedance-20', variantId, Number(duration));
+    assert.equal(result.units, expectedUnits, `SYNTX Seedance 2.0 ${variantId} / ${duration} сек`);
+  }
+}
+
 const project = calc.calculateProject([
   { rub: 100, qty: 6, generationsPerVideo: 3 }
 ], { laborPerVideoRub: 250 });

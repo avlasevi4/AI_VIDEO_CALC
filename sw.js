@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.16-syntx-seedance-omni-20260919';
+const CACHE_NAME = 'ai-video-calc-v3.17-syntx-seedance-20-20260919';
 const ASSETS = [
   './',
   './index.html',
