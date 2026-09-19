@@ -460,12 +460,16 @@
     });
     document.querySelectorAll('.provider-tab').forEach(btn => btn.addEventListener('click', () => setProvider(btn.dataset.provider)));
     $('modelSelect').addEventListener('change', () => {
+      const retainedDuration = currentDuration();
       settings.lastCalculatorModelByProvider[currentProvider] = $('modelSelect').value;
-      renderVariants(); renderDuration(); renderManualUnits(); renderResult();
+      renderVariants(); renderDuration(retainedDuration); renderManualUnits(); renderResult();
       rememberCalculatorSelection();
       saveLocal();
     });
-    $('variantSelect').addEventListener('change', () => { renderDuration(); renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal(); });
+    $('variantSelect').addEventListener('change', () => {
+      const retainedDuration = currentDuration();
+      renderDuration(retainedDuration); renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal();
+    });
     $('durationRange').addEventListener('input', () => { $('durationNumber').value = $('durationRange').value; renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal(); });
     $('durationNumber').addEventListener('input', () => { $('durationRange').value = $('durationNumber').value; renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal(); });
     $('manualUnits').addEventListener('input', () => { setStoredManualUnits($('manualUnits').value); renderResult(); });
@@ -961,7 +965,11 @@
   function initialDurationForVariant(variant, preferred = 5) {
     const billing = variant?.billing || {};
     if (Array.isArray(billing.allowedDurations) && billing.allowedDurations.length) {
-      return billing.allowedDurations.includes(Number(preferred)) ? Number(preferred) : Number(billing.allowedDurations[0]);
+      const values = billing.allowedDurations.map(Number).filter(Number.isFinite);
+      const target = Number(preferred);
+      if (!values.length) return 5;
+      if (!Number.isFinite(target)) return values[0];
+      return values.reduce((closest, value) => Math.abs(value - target) < Math.abs(closest - target) ? value : closest, values[0]);
     }
     const range = billing.durationRange || { min: 1, max: 60, step: 1 };
     return Math.min(Number(range.max), Math.max(Number(range.min), Number(preferred) || 5));
@@ -1842,11 +1850,12 @@
     });
 
     row.querySelector('.project-model').addEventListener('change', event => {
+      const retainedDuration = item.duration;
       item.modelId = event.target.value;
       settings.lastProjectModelByProvider[item.provider] = item.modelId;
       const nextModel = getProjectModel(item);
       item.variantId = nextModel.variants[0].id;
-      item.duration = initialDurationForVariant(nextModel.variants[0], 5);
+      item.duration = initialDurationForVariant(nextModel.variants[0], retainedDuration);
       item.manualUnits = '';
       rememberProjectSelection(item);
       saveLocal();
@@ -1854,9 +1863,10 @@
     });
 
     row.querySelector('.project-variant').addEventListener('change', event => {
+      const retainedDuration = item.duration;
       item.variantId = event.target.value;
       const nextVariant = getProjectVariant(item);
-      item.duration = initialDurationForVariant(nextVariant, 5);
+      item.duration = initialDurationForVariant(nextVariant, retainedDuration);
       item.manualUnits = '';
       rememberProjectSelection(item);
       saveLocal();
@@ -2477,7 +2487,7 @@
     downloadJson({
       type: 'ai-video-calc-tariffs',
       schemaVersion: 1,
-      appVersion: '3.5',
+      appVersion: '3.6',
       exportedAt: new Date().toISOString(),
       providers
     }, 'ai-video-calc-tariffs.json');
@@ -2578,14 +2588,14 @@
   function exportData() {
     syncActiveProjectState(false);
     const payload = {
-      app: 'AI VIDEO CALC 3.5',
+      app: 'AI VIDEO CALC 3.6',
       schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       settings,
       activeProjectId,
       projects
     };
-    downloadJson(payload, 'ai-video-calc-v3.5-data.json');
+    downloadJson(payload, 'ai-video-calc-v3.6-data.json');
   }
 
   async function importData(event) {
