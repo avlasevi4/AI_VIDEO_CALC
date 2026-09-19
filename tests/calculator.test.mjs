@@ -74,8 +74,8 @@ const manualRateSettings = {
 };
 const manualRate = calc.calculateSelection(pricing, manualRateSettings, 'syntx-seedance-25', 'omni-reference-720', 15);
 assert.equal(manualRate.pricingMode, 'provider_units', 'built-in curve takes precedence over an old manual override');
-assert.equal(manualRate.units, 264.4);
-assert.equal(manualRate.rub, 264.4 * (1690 / 680));
+assert.equal(manualRate.units, 462.6);
+assert.equal(manualRate.rub, 462.6 * (1690 / 680));
 
 const exactOverrideSettings = {
   ...settings,
@@ -121,9 +121,9 @@ assert.equal(customOverride.units, 72);
 assert.equal(customOverride.rub, 18);
 
 const syntxOmniExpected = {
-  'omni-reference-480': { 4: 41.7, 5: 46.3, 10: 78.4, 20: 156.8, 30: 230.6 },
-  'omni-reference-720': { 4: 93.7, 5: 104.1, 10: 176.3, 20: 352.5, 30: 518.4 },
-  'omni-reference-1080': { 4: 232, 5: 257.6, 10: 436.2, 20: 872.5, 30: 1283 }
+  'omni-reference-480': { 4: 155, 5: 159.6, 10: 182.7, 20: 228.8, 30: 274.9 },
+  'omni-reference-720': { 4: 348.5, 5: 358.9, 10: 410.7, 20: 514.4, 30: 618 },
+  'omni-reference-1080': { 4: 862.5, 5: 888.2, 10: 1016.4, 20: 1273, 30: 1529.6 }
 };
 for (const [variantId, durations] of Object.entries(syntxOmniExpected)) {
   for (const [duration, expectedUnits] of Object.entries(durations)) {
@@ -132,7 +132,7 @@ for (const [variantId, durations] of Object.entries(syntxOmniExpected)) {
   }
 }
 
-// Контроль исправленного сравнения по значениям из живого интерфейса SYNTX.
+// Контроль согласованной линейной серии Omni Reference с видео.
 const comparisonSettings = {
   ...settings,
   usdRub: 75.05,
@@ -143,12 +143,12 @@ const dreaminaOmni5 = calc.calculateSelection(pricing, comparisonSettings, 'drea
 const dreaminaOmni30 = calc.calculateSelection(pricing, comparisonSettings, 'dreamina-seedance-25', 'omni-reference-720p', 30);
 const syntxOmni5 = calc.calculateSelection(pricing, comparisonSettings, 'syntx-seedance-25', 'omni-reference-720', 5);
 const syntxOmni30 = calc.calculateSelection(pricing, comparisonSettings, 'syntx-seedance-25', 'omni-reference-720', 30);
+const syntxKeyframes30 = calc.calculateSelection(pricing, comparisonSettings, 'syntx-seedance-25', 'k-frames-720', 30);
 assert.equal(dreaminaOmni5.units, 370);
 assert.equal(dreaminaOmni30.units, 2220);
-assert.equal(syntxOmni5.units, 104.1);
-assert.equal(syntxOmni30.units, 518.4);
-assert.ok(syntxOmni5.rub < dreaminaOmni5.rub, 'на 5 сек используется обновлённый тариф SYNTX');
-assert.ok(syntxOmni30.rub < dreaminaOmni30.rub, 'на 30 сек используется обновлённый тариф SYNTX');
+assert.equal(syntxOmni5.units, 358.9);
+assert.equal(syntxOmni30.units, 618);
+assert.ok(syntxOmni30.units > syntxKeyframes30.units, 'видеореференс дороже режима без исходного видео');
 
 const syntxKeyframesExpected = {
   'k-frames-480': { 4: 30.8, 30: 231.3 },

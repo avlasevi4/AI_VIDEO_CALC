@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "3.7.0-2026-09-19",
+  "dataVersion": "3.8.0-2026-09-19",
   "updated": "2026-09-19",
   "baseTariffDate": "2026-09-19",
   "currency": "RUB",
@@ -751,11 +751,11 @@
       "catalogVerifiedAt": "2026-09-02",
       "verifiedAt": "2026-09-19",
       "sourceId": "syntx-video-catalog",
-      "sourceNote": "Omni Reference с исходным видео использует отдельный тариф. Значения проверены 19.09.2026 непосредственно в интерфейсе SYNTX при загруженном видео и включённом аудиореференсе. Без исходного видео Omni Reference рассчитывается по тарифу K-Frames.",
+      "sourceNote": "Omni Reference с исходным видео использует отдельный тариф. Контрольные точки 4, 10, 20 и 30 секунд зафиксированы пользователем 19.09.2026 и образуют согласованную линейную зависимость. Без исходного видео Omni Reference рассчитывается по тарифу K-Frames.",
       "variants": [
-        { "id": "omni-reference-480", "label": "Omni с исходным видео · 480p", "resolution": "480p", "audio": "reference", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 41.7, "5": 46.3, "10": 78.4, "20": 156.8, "30": 230.6 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Проверено в SYNTX с загруженным видео и включённым аудиореференсом." },
-        { "id": "omni-reference-720", "label": "Omni с исходным видео · 720p", "resolution": "720p", "audio": "reference", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 93.7, "5": 104.1, "10": 176.3, "20": 352.5, "30": 518.4 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Проверено в SYNTX с загруженным видео и включённым аудиореференсом." },
-        { "id": "omni-reference-1080", "label": "Omni с исходным видео · 1080p", "resolution": "1080p", "audio": "reference", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 232, "5": 257.6, "10": 436.2, "20": 872.5, "30": 1283 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Проверено в SYNTX с загруженным видео и включённым аудиореференсом." },
+        { "id": "omni-reference-480", "label": "Omni с исходным видео · 480p", "resolution": "480p", "audio": "reference", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 155, "10": 182.7, "20": 228.8, "30": 274.9 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Контрольные значения пользователя; между точками применяется линейная интерполяция." },
+        { "id": "omni-reference-720", "label": "Omni с исходным видео · 720p", "resolution": "720p", "audio": "reference", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 348.5, "10": 410.7, "20": 514.4, "30": 618 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Контрольные значения пользователя; между точками применяется линейная интерполяция." },
+        { "id": "omni-reference-1080", "label": "Omni с исходным видео · 1080p", "resolution": "1080p", "audio": "reference", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 862.5, "10": 1016.4, "20": 1273, "30": 1529.6 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Контрольные значения пользователя; между точками применяется линейная интерполяция." },
         { "id": "k-frames-480", "label": "K-Frames / Omni без видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 30.8, "30": 231.3 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Применяется также для Omni Reference без исходного видео." },
         { "id": "k-frames-720", "label": "K-Frames / Omni без видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 69.3, "30": 520 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Применяется также для Omni Reference без исходного видео." },
         { "id": "k-frames-1080", "label": "K-Frames / Omni без видео · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 171.6, "10": 429, "30": 1287 }, "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } }, "status": "manual", "note": "Применяется также для Omni Reference без исходного видео; 42,9 токена/сек." },
