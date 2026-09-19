@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "3.19.0-2026-09-19",
+  "dataVersion": "3.2.0-2026-09-19",
   "updated": "2026-09-19",
   "baseTariffDate": "2026-09-15",
   "currency": "RUB",
@@ -88,6 +88,13 @@
         "url": "https://docs.syntx.ai/%F0%9F%8E%AC-%D0%92%D0%B8%D0%B4%D0%B5%D0%BE/",
         "kind": "catalog",
         "checkedAt": "2026-09-02"
+      },
+      {
+        "id": "syntx-video-live",
+        "title": "SYNTX · актуальный интерфейс видеогенерации",
+        "url": "https://syntx.ai/ru/video/kling",
+        "kind": "live-rate",
+        "checkedAt": "2026-09-19"
       },
       {
         "id": "syntx-heygen-doc",
@@ -506,12 +513,14 @@
       "provider": "syntex",
       "name": "Kling (SYNTX)",
       "status": "manual",
-      "catalogVerifiedAt": "2026-08-19",
-      "sourceId": "syntx-status",
+      "catalogVerifiedAt": "2026-09-19",
+      "verifiedAt": "2026-09-19",
+      "sourceId": "syntx-video-live",
+      "sourceNote": "Ставки Text to Video и предварительная стоимость Image to Video сверены в авторизованном интерфейсе SYNTX 19.09.2026 без загруженных референсов. Режимы, цену которых интерфейс не показывает без изображения или видео, сохранены как ручные.",
       "variants": [
         {
           "id": "30-1080-na",
-          "label": "Kling 3.0 · 1080p · без аудио",
+          "label": "Text to Video · Kling 3.0 · 1080p",
           "resolution": "1080p",
           "audio": "Без аудио",
           "billing": {
@@ -524,11 +533,11 @@
             }
           },
           "status": "manual",
-          "note": "25 токенов / 5 сек из v1.2."
+          "note": "5 токенов/сек; сверено в SYNTX 19.09.2026. Идентификатор сохранён для совместимости сравнения."
         },
         {
           "id": "30-1080-a",
-          "label": "Kling 3.0 · 1080p · Native Audio",
+          "label": "Kling 3.0 · 1080p · Native Audio (архив)",
           "resolution": "1080p",
           "audio": "Native Audio",
           "billing": {
@@ -541,24 +550,38 @@
             }
           },
           "status": "manual",
-          "note": "40 токенов / 5 сек из v1.2."
+          "note": "Архивное значение из v1.2; отдельный переключатель Native Audio в текущем Text to Video не отображается."
         },
-        {
-          "id": "t2v",
-          "label": "Text to Video",
-          "resolution": "—",
-          "audio": "—",
-          "billing": {
-            "type": "manual_required",
-            "durationRange": {
-              "min": 1,
-              "max": 60,
-              "step": 1,
-              "generic": true
-            }
-          },
-          "status": "unverified"
-        },
+        { "id": "t2v-15-720", "label": "Text to Video · Kling 1.5 · 720p", "resolution": "720p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "6 токенов / 5 сек; 12 / 10 сек." },
+        { "id": "t2v-15-1080", "label": "Text to Video · Kling 1.5 · 1080p", "resolution": "1080p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 4.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "21 токен / 5 сек; 42 / 10 сек." },
+        { "id": "t2v-16-720", "label": "Text to Video · Kling 1.6 · 720p", "resolution": "720p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "6 токенов / 5 сек; 12 / 10 сек." },
+        { "id": "t2v-16-1080", "label": "Text to Video · Kling 1.6 · 1080p", "resolution": "1080p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 4.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "21 токен / 5 сек; 42 / 10 сек." },
+        { "id": "t2v-21-master-1080", "label": "Text to Video · Kling 2.1 Master · 1080p", "resolution": "1080p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 11.8, "allowedDurations": [5, 10] }, "status": "manual", "note": "59 токенов / 5 сек; 118 / 10 сек." },
+        { "id": "t2v-25-turbo-720", "label": "Text to Video · Kling 2.5 Turbo · 720p", "resolution": "720p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "6 токенов / 5 сек; 12 / 10 сек." },
+        { "id": "t2v-25-turbo-1080", "label": "Text to Video · Kling 2.5 Turbo · 1080p", "resolution": "1080p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 3.4, "allowedDurations": [5, 10] }, "status": "manual", "note": "17 токенов / 5 сек; 34 / 10 сек." },
+        { "id": "t2v-26-720", "label": "Text to Video · Kling 2.6 · 720p", "resolution": "720p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 2.8, "allowedDurations": [5, 10] }, "status": "manual", "note": "14 токенов / 5 сек; 28 / 10 сек." },
+        { "id": "t2v-26-1080", "label": "Text to Video · Kling 2.6 · 1080p", "resolution": "1080p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 4.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "21 токен / 5 сек; 42 / 10 сек." },
+        { "id": "t2v-30-720", "label": "Text to Video · Kling 3.0 · 720p", "resolution": "720p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 3, "durationRange": { "min": 3, "max": 15, "step": 1 } }, "status": "manual", "note": "30 токенов / 10 сек." },
+        { "id": "t2v-30-4k", "label": "Text to Video · Kling 3.0 · 4K", "resolution": "4K", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 15, "durationRange": { "min": 3, "max": 15, "step": 1 } }, "status": "manual", "note": "150 токенов / 10 сек." },
+        { "id": "t2v-30-turbo-720", "label": "Text to Video · Kling 3.0 Turbo · 720p", "resolution": "720p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 5, "durationRange": { "min": 3, "max": 15, "step": 1 } }, "status": "manual", "note": "50 токенов / 10 сек." },
+        { "id": "t2v-30-turbo-1080", "label": "Text to Video · Kling 3.0 Turbo · 1080p", "resolution": "1080p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 7, "durationRange": { "min": 3, "max": 15, "step": 1 } }, "status": "manual", "note": "70 токенов / 10 сек." },
+        { "id": "t2v", "label": "Text to Video · ручной тариф (архив)", "resolution": "—", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "unverified", "note": "Сохранено для совместимости со старыми проектами и ручными тарифами." },
+        { "id": "i2v-15-720", "label": "Image to Video · Kling 1.5 · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 6 токенов / 5 сек; 12 / 10 сек." },
+        { "id": "i2v-15-1080", "label": "Image to Video · Kling 1.5 · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 4.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 21 токен / 5 сек; 42 / 10 сек." },
+        { "id": "i2v-16-720", "label": "Image to Video · Kling 1.6 · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 6 токенов / 5 сек; 12 / 10 сек." },
+        { "id": "i2v-16-1080", "label": "Image to Video · Kling 1.6 · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 4.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 21 токен / 5 сек; 42 / 10 сек." },
+        { "id": "i2v-21-720", "label": "Image to Video · Kling 2.1 · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 6 токенов / 5 сек; 12 / 10 сек." },
+        { "id": "i2v-21-1080", "label": "Image to Video · Kling 2.1 · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 4.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 21 токен / 5 сек; 42 / 10 сек." },
+        { "id": "i2v-21-master-1080", "label": "Image to Video · Kling 2.1 Master · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 11.8, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 59 токенов / 5 сек; 118 / 10 сек." },
+        { "id": "i2v-25-turbo-720", "label": "Image to Video · Kling 2.5 Turbo · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 6 токенов / 5 сек; 12 / 10 сек." },
+        { "id": "i2v-25-turbo-1080", "label": "Image to Video · Kling 2.5 Turbo · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 3.4, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 17 токенов / 5 сек; 34 / 10 сек." },
+        { "id": "i2v-26-720", "label": "Image to Video · Kling 2.6 · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 2.8, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 14 токенов / 5 сек; 28 / 10 сек." },
+        { "id": "i2v-26-1080", "label": "Image to Video · Kling 2.6 · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 4.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 21 токен / 5 сек; 42 / 10 сек." },
+        { "id": "i2v-30-720", "label": "Image to Video · Kling 3.0 · 720p", "resolution": "720p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 3, "durationRange": { "min": 3, "max": 15, "step": 1 } }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 30 токенов / 10 сек." },
+        { "id": "i2v-30-1080", "label": "Image to Video · Kling 3.0 · 1080p", "resolution": "1080p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 5, "durationRange": { "min": 3, "max": 15, "step": 1 } }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 50 токенов / 10 сек." },
+        { "id": "i2v-30-4k", "label": "Image to Video · Kling 3.0 · 4K", "resolution": "4K", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 15, "durationRange": { "min": 3, "max": 15, "step": 1 } }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 150 токенов / 10 сек." },
+        { "id": "i2v-30-turbo-720", "label": "Image to Video · Kling 3.0 Turbo · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 5, "durationRange": { "min": 3, "max": 15, "step": 1 } }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 50 токенов / 10 сек." },
+        { "id": "i2v-30-turbo-1080", "label": "Image to Video · Kling 3.0 Turbo · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 7, "durationRange": { "min": 3, "max": 15, "step": 1 } }, "status": "manual", "note": "Предварительная цена без загруженного изображения: 70 токенов / 10 сек." },
         {
           "id": "i2v",
           "label": "Image to Video",
@@ -642,18 +665,15 @@
         {
           "id": "o1-t2v",
           "label": "Kling O1 · Text to Video",
-          "resolution": "—",
-          "audio": "—",
+          "resolution": "1080p",
+          "audio": "Без аудио",
           "billing": {
-            "type": "manual_required",
-            "durationRange": {
-              "min": 1,
-              "max": 60,
-              "step": 1,
-              "generic": true
-            }
+            "type": "rate_per_second",
+            "unitsPerSecond": 6.4,
+            "allowedDurations": [5, 10]
           },
-          "status": "unverified"
+          "status": "manual",
+          "note": "32 токена / 5 сек; 64 / 10 сек. Сверено без референса 19.09.2026."
         },
         {
           "id": "motion",
@@ -678,58 +698,21 @@
       "provider": "syntex",
       "name": "Seedance",
       "status": "manual",
-      "catalogVerifiedAt": "2026-08-19",
-      "sourceId": "syntx-seedance-doc",
+      "catalogVerifiedAt": "2026-09-19",
+      "verifiedAt": "2026-09-19",
+      "sourceId": "syntx-video-live",
+      "sourceNote": "Seedance 1.0 Pro, 1.0 Pro-Fast и 1.5 Pro сверены в интерфейсе SYNTX 19.09.2026 без загруженных референсов.",
       "variants": [
-        {
-          "id": "10-fast-old",
-          "label": "Seedance 1.0 Fast · старое значение",
-          "resolution": "1080p",
-          "audio": "—",
-          "billing": {
-            "type": "rate_per_second",
-            "unitsPerSecond": 7.26,
-            "durationRange": {
-              "min": 3,
-              "max": 15,
-              "step": 1
-            }
-          },
-          "status": "manual",
-          "note": "72,6 токена / 10 сек из v1.2; перепроверить."
-        },
-        {
-          "id": "10-pro-old",
-          "label": "Seedance 1.0 Pro · старое значение",
-          "resolution": "1080p",
-          "audio": "—",
-          "billing": {
-            "type": "rate_per_second",
-            "unitsPerSecond": 9,
-            "allowedDurations": [
-              5,
-              10
-            ]
-          },
-          "status": "manual",
-          "note": "45 токенов / 5 сек из v1.2; перепроверить."
-        },
-        {
-          "id": "15-pro",
-          "label": "Seedance 1.5 Pro",
-          "resolution": "—",
-          "audio": "—",
-          "billing": {
-            "type": "manual_required",
-            "durationRange": {
-              "min": 1,
-              "max": 60,
-              "step": 1,
-              "generic": true
-            }
-          },
-          "status": "unverified"
-        }
+        { "id": "10-pro-480", "label": "Seedance 1.0 Pro · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.5, "allowedDurations": [5, 10] }, "status": "manual", "note": "7,5 токена / 5 сек; 15 / 10 сек." },
+        { "id": "10-pro-720", "label": "Seedance 1.0 Pro · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 2.2, "allowedDurations": [5, 10] }, "status": "manual", "note": "11 токенов / 5 сек; 22 / 10 сек." },
+        { "id": "10-pro-1080", "label": "Seedance 1.0 Pro · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 7, "allowedDurations": [5, 10] }, "status": "manual", "note": "35 токенов / 5 сек; 70 / 10 сек." },
+        { "id": "10-pro-fast-480", "label": "Seedance 1.0 Pro-Fast · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.2, "durationRange": { "min": 5, "max": 12, "step": 1 } }, "status": "manual", "note": "12 токенов / 10 сек." },
+        { "id": "10-pro-fast-720", "label": "Seedance 1.0 Pro-Fast · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 2, "durationRange": { "min": 5, "max": 12, "step": 1 } }, "status": "manual", "note": "20 токенов / 10 сек." },
+        { "id": "10-pro-fast-1080", "label": "Seedance 1.0 Pro-Fast · 1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 4.8, "durationRange": { "min": 5, "max": 12, "step": 1 } }, "status": "manual", "note": "48 токенов / 10 сек." },
+        { "id": "15-pro-720", "label": "Seedance 1.5 Pro · 720p · без аудио", "resolution": "720p", "audio": "Без аудио", "billing": { "type": "rate_per_second", "unitsPerSecond": 1.5, "durationRange": { "min": 5, "max": 12, "step": 1 } }, "status": "manual", "note": "15 токенов / 10 сек; переключатель аудио оставлен выключенным." },
+        { "id": "10-fast-old", "label": "Seedance 1.0 Fast · старый тариф (архив)", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 7.26, "durationRange": { "min": 3, "max": 15, "step": 1 } }, "status": "manual", "note": "Сохранено без изменения для совместимости со старыми проектами: 72,6 токена / 10 сек." },
+        { "id": "10-pro-old", "label": "Seedance 1.0 Pro · старый тариф (архив)", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 9, "allowedDurations": [5, 10] }, "status": "manual", "note": "Сохранено без изменения для совместимости со старыми проектами: 45 токенов / 5 сек." },
+        { "id": "15-pro", "label": "Seedance 1.5 Pro · ручной тариф (архив)", "resolution": "—", "audio": "—", "billing": { "type": "manual_required", "durationRange": { "min": 1, "max": 60, "step": 1, "generic": true } }, "status": "unverified", "note": "Сохранено для совместимости со старыми проектами и ручными тарифами." }
       ]
     },
     {

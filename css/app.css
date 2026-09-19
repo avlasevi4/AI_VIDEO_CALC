@@ -213,9 +213,9 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:3px solid #0b1
 .syntex-comparison{position:absolute;z-index:80;right:0;top:calc(100% + 7px);width:max-content;max-width:min(330px,80vw);padding:10px 11px;border:1px solid rgba(229,71,23,.38);border-radius:11px;background:#151d2a;color:#f7ddd5!important;font-size:10px!important;font-weight:700!important;line-height:1.45!important;white-space:normal;box-shadow:0 14px 34px rgba(0,0,0,.46)}
 .syntex-comparison.has-error{border-color:rgba(245,189,102,.35);color:var(--warn)!important}
 .result{position:relative;padding-right:64px}.result>.syntex-compare-wrap{position:absolute;right:18px;top:18px;margin:0}.result .syntex-comparison{right:0}
-.project-line-result{position:relative;padding-right:52px}.project-line-result .project-syntex-compare{position:absolute;right:9px;top:8px;margin:0}.project-line-result .syntex-comparison{right:0}
+.project-line-result{position:relative}.project-line-result .project-syntex-compare{margin:0 0 0 2px}.project-line-result .syntex-comparison{right:0}
 .metric.total-main{position:relative;padding-right:52px}.metric.total-main>.syntex-compare-wrap{position:absolute;right:10px;top:10px;margin:0}.metric .syntex-comparison{display:block}
-.actual-draft-result{position:relative;padding-right:52px}.actual-draft-result>.syntex-compare-wrap{position:absolute;right:9px;top:7px;margin:0}.actual-cost{position:relative;padding-right:38px}.actual-cost .syntex-compare-wrap{position:absolute;right:0;top:50%;margin:0;transform:translateY(-50%)}.actual-cost .syntex-compare{width:30px;height:30px;min-width:30px;padding:5px}.actual-cost .syntex-comparison{right:0;top:calc(100% + 6px)}
+.actual-draft-result{position:relative}.actual-draft-result>.syntex-compare-wrap{margin:0}.actual-cost{display:flex;align-items:center;justify-content:flex-end;gap:8px}.actual-cost>strong{font:inherit}.actual-cost .syntex-compare-wrap{margin:0}.actual-cost .syntex-compare{width:30px;height:30px;min-width:30px;padding:5px}.actual-cost .syntex-comparison{right:0;top:calc(100% + 6px)}
 
 /* Buttons */
 .btn{
@@ -363,7 +363,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:3px solid #0b1
 .actual-entry{padding:13px;border:1px solid var(--line);border-radius:15px;background:rgba(13,29,45,.58)}
 .actual-entry-title{margin-bottom:10px;font-size:13px;font-weight:760}
 .actual-duration-field{grid-column:1/-1}
-.actual-draft-result{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:42px;margin-top:9px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:var(--control);color:var(--muted);font-size:10px}
+.actual-draft-result{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;min-height:42px;margin-top:9px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:var(--control);color:var(--muted);font-size:10px}
 .actual-draft-result strong{color:var(--text);font-size:14px;font-weight:760;white-space:nowrap}
 .actual-draft-result.ready{border-color:rgba(100,230,170,.18)}.actual-draft-result.has-error{border-color:rgba(245,189,102,.25);color:var(--warn)}
 .actual-add{width:100%;margin-top:8px}
@@ -552,7 +552,7 @@ html.android-app .project-card>.section-head{padding-top:4px}
   .project-stage-title>span>strong{font-size:16px}.project-stage-title>span>small{font-size:11px}.project-stage-title>b{width:30px;height:30px;flex-basis:30px}
   .project-editor{padding:11px}.project-editor-head{margin-bottom:9px}
   .remove{width:44px;height:44px;background-size:17px 17px}
-  .project-line-result{display:grid;grid-template-columns:1fr;gap:3px}.project-line-result strong{margin-left:0;margin-top:3px}.project-line-result .project-syntex-compare{margin-left:0;justify-self:start}
+  .project-line-result{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px}.project-line-result>span,.project-line-result>strong{grid-column:1}.project-line-result strong{margin-left:0;margin-top:3px}.project-line-result .project-syntex-compare{grid-column:2;grid-row:1/5;align-self:center;justify-self:end;margin:0}
   .project-totals{grid-template-columns:repeat(2,minmax(0,1fr))}
   .project-totals .total-main{grid-column:1/-1}
   .actual-totals{grid-template-columns:repeat(2,minmax(0,1fr))}.actual-totals .total-main{grid-column:1/-1}

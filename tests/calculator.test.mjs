@@ -129,6 +129,69 @@ for (const [variantId, durations] of Object.entries(syntxSeedance20Expected)) {
   }
 }
 
+const syntxKlingExpected = {
+  't2v-15-720': { 5: 6, 10: 12 },
+  't2v-15-1080': { 5: 21, 10: 42 },
+  't2v-21-master-1080': { 5: 59, 10: 118 },
+  't2v-25-turbo-1080': { 5: 17, 10: 34 },
+  't2v-26-720': { 5: 14, 10: 28 },
+  't2v-30-720': { 3: 9, 10: 30, 15: 45 },
+  '30-1080-na': { 3: 15, 10: 50, 15: 75 },
+  't2v-30-4k': { 3: 45, 10: 150, 15: 225 },
+  't2v-30-turbo-720': { 3: 15, 10: 50, 15: 75 },
+  't2v-30-turbo-1080': { 3: 21, 10: 70, 15: 105 },
+  'o1-t2v': { 5: 32, 10: 64 }
+};
+for (const [variantId, durations] of Object.entries(syntxKlingExpected)) {
+  for (const [duration, expectedUnits] of Object.entries(durations)) {
+    const result = calc.calculateSelection(pricing, settings, 'syntx-kling', variantId, Number(duration));
+    assert.ok(Math.abs(result.units - expectedUnits) < 1e-9, `SYNTX Kling ${variantId} / ${duration} сек`);
+  }
+}
+
+const syntxKlingImageExpected = {
+  'i2v-15-720': { 5: 6, 10: 12 },
+  'i2v-21-1080': { 5: 21, 10: 42 },
+  'i2v-21-master-1080': { 5: 59, 10: 118 },
+  'i2v-25-turbo-1080': { 5: 17, 10: 34 },
+  'i2v-26-720': { 5: 14, 10: 28 },
+  'i2v-30-1080': { 3: 15, 10: 50, 15: 75 },
+  'i2v-30-4k': { 3: 45, 10: 150, 15: 225 },
+  'i2v-30-turbo-720': { 3: 15, 10: 50, 15: 75 }
+};
+for (const [variantId, durations] of Object.entries(syntxKlingImageExpected)) {
+  for (const [duration, expectedUnits] of Object.entries(durations)) {
+    const result = calc.calculateSelection(pricing, settings, 'syntx-kling', variantId, Number(duration));
+    assert.ok(Math.abs(result.units - expectedUnits) < 1e-9, `SYNTX Kling Image to Video ${variantId} / ${duration} сек`);
+  }
+}
+
+const syntxSeedanceLegacyExpected = {
+  '10-pro-480': { 5: 7.5, 10: 15 },
+  '10-pro-720': { 5: 11, 10: 22 },
+  '10-pro-1080': { 5: 35, 10: 70 },
+  '10-pro-fast-480': { 5: 6, 10: 12, 12: 14.4 },
+  '10-pro-fast-720': { 5: 10, 10: 20, 12: 24 },
+  '10-pro-fast-1080': { 5: 24, 10: 48, 12: 57.6 },
+  '15-pro-720': { 5: 7.5, 10: 15, 12: 18 }
+};
+for (const [variantId, durations] of Object.entries(syntxSeedanceLegacyExpected)) {
+  for (const [duration, expectedUnits] of Object.entries(durations)) {
+    const result = calc.calculateSelection(pricing, settings, 'syntx-seedance', variantId, Number(duration));
+    assert.ok(Math.abs(result.units - expectedUnits) < 1e-9, `SYNTX Seedance ${variantId} / ${duration} сек`);
+  }
+}
+
+for (const [modelId, variantIds] of Object.entries({
+  'syntx-kling': ['t2v'],
+  'syntx-seedance': ['10-fast-old', '10-pro-old', '15-pro']
+})) {
+  const model = pricing.models.find(item => item.id === modelId);
+  for (const variantId of variantIds) {
+    assert.ok(model?.variants.some(item => item.id === variantId), `${modelId} сохраняет архивный вариант ${variantId}`);
+  }
+}
+
 const syntxVeoOmniFlashExpected = {
   'omni-flash-11-video-360': { 8: 18 },
   'omni-flash-11-video-720': { 8: 36 },
