@@ -51,6 +51,10 @@
   let cloudSession = null;
   let projectAccess = true;
   const projectSyncTimers = new Map();
+  const projectMutationVersions = new Map();
+  const projectSaveChains = new Map();
+  let projectLibraryEpoch = 0;
+  let cloudProjectSyncSequence = 0;
   let tariffSyncTimer = null;
   let lastCloudProjectSyncAt = 0;
   let foregroundSyncPromise = null;
@@ -188,7 +192,11 @@
   function saveLocal({ touchProject = true, syncProject = true } = {}) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      const project = activeProject();
       syncActiveProjectState(touchProject);
+      if (touchProject && project) {
+        projectMutationVersions.set(project.id, (projectMutationVersions.get(project.id) || 0) + 1);
+      }
       window.AIVideoProjectStore.save(projects, activeProjectId);
       if (syncProject) scheduleActiveProjectSync();
     } catch (_) {}
@@ -772,6 +780,11 @@
 
   function switchProjectLibrary(scope) {
     if (window.AIVideoProjectStore.getScope() === scope) return;
+    projectLibraryEpoch += 1;
+    projectSyncTimers.forEach(timerId => clearTimeout(timerId));
+    projectSyncTimers.clear();
+    projectMutationVersions.clear();
+    projectSaveChains.clear();
     window.AIVideoProjectStore.setScope(scope);
     const library = window.AIVideoProjectStore.load(defaultProjectMeta());
     projects = library.projects;
@@ -782,11 +795,18 @@
 
   async function synchronizeCloudProjects() {
     if (!cloudSession) return;
+    const syncSequence = ++cloudProjectSyncSequence;
+    const syncEpoch = projectLibraryEpoch;
     $('syncStatus').textContent = 'Синхронизация…';
     try {
       syncActiveProjectState(false);
-      const merged = await window.AIVideoCloud.synchronize(projects);
-      projects = merged.map(project => window.AIVideoProjectStore.normalizeProject(project, defaultProjectMeta()));
+      const localSnapshot = JSON.parse(JSON.stringify(projects));
+      const startRevisions = Object.fromEntries(localSnapshot.map(project => [project.id, projectMutationVersions.get(project.id) || 0]));
+      const merged = await window.AIVideoCloud.synchronize(localSnapshot);
+      if (syncSequence !== cloudProjectSyncSequence || syncEpoch !== projectLibraryEpoch) return;
+      const normalizedMerged = merged.map(project => window.AIVideoProjectStore.normalizeProject(project, defaultProjectMeta()));
+      const currentRevisions = Object.fromEntries(projects.map(project => [project.id, projectMutationVersions.get(project.id) || 0]));
+      projects = window.AIVideoProjectStore.reconcileCloudProjects(projects, normalizedMerged, startRevisions, currentRevisions);
       if (activeProjectId && !projects.some(project => project.id === activeProjectId && !project.deletedAt)) {
         activeProjectId = '';
       }
@@ -811,26 +831,37 @@
     clearTimeout(projectSyncTimers.get(activeProjectId));
     $('syncStatus').textContent = 'Есть несинхронизированные изменения…';
     const pendingProject = JSON.parse(JSON.stringify(activeProject()));
-    projectSyncTimers.set(pendingProject.id, setTimeout(async () => {
-      projectSyncTimers.delete(pendingProject.id);
-      try {
-        const saved = await window.AIVideoCloud.saveProject(pendingProject);
-        const remoteWon = saved && (
-          saved.updatedAt !== pendingProject.updatedAt
-          || saved.status !== pendingProject.status
-          || saved.completedAt !== pendingProject.completedAt
-        );
-        if (saved?.deletedAt || remoteWon) {
-          projects = projects.map(project => project.id === saved.id ? saved : project);
-          loadActiveProjectState();
-          window.AIVideoProjectStore.save(projects, activeProjectId);
-          renderProject();
+    const pendingRevision = projectMutationVersions.get(pendingProject.id) || 0;
+    const pendingEpoch = projectLibraryEpoch;
+    const timerId = setTimeout(() => {
+      if (projectSyncTimers.get(pendingProject.id) === timerId) projectSyncTimers.delete(pendingProject.id);
+      const previousSave = projectSaveChains.get(pendingProject.id) || Promise.resolve();
+      const saveTask = previousSave.catch(() => {}).then(async () => {
+        if (!cloudSession || pendingEpoch !== projectLibraryEpoch) return;
+        try {
+          const saved = await window.AIVideoCloud.saveProject(pendingProject);
+          if (pendingEpoch !== projectLibraryEpoch) return;
+          const localAdvanced = (projectMutationVersions.get(pendingProject.id) || 0) !== pendingRevision;
+          const remoteWon = window.AIVideoProjectStore.cloudProjectResponseWins(pendingProject, saved);
+          if (!localAdvanced && (saved?.deletedAt || remoteWon)) {
+            projects = projects.map(project => project.id === saved.id ? saved : project);
+            loadActiveProjectState();
+            window.AIVideoProjectStore.save(projects, activeProjectId);
+            renderProject();
+          }
+          if (!localAdvanced && !projectSyncTimers.has(pendingProject.id)) {
+            $('syncStatus').textContent = `Синхронизировано ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+          }
+        } catch (_) {
+          if (pendingEpoch === projectLibraryEpoch) $('syncStatus').textContent = 'Offline: изменения сохранены локально';
         }
-        $('syncStatus').textContent = `Синхронизировано ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
-      } catch (_) {
-        $('syncStatus').textContent = 'Offline: изменения сохранены локально';
-      }
-    }, 700));
+      });
+      projectSaveChains.set(pendingProject.id, saveTask);
+      saveTask.finally(() => {
+        if (projectSaveChains.get(pendingProject.id) === saveTask) projectSaveChains.delete(pendingProject.id);
+      });
+    }, 700);
+    projectSyncTimers.set(pendingProject.id, timerId);
   }
 
   function renderHeadlineRate() {
@@ -2486,7 +2517,7 @@
     downloadJson({
       type: 'ai-video-calc-tariffs',
       schemaVersion: 1,
-      appVersion: '3.8',
+      appVersion: '3.9',
       exportedAt: new Date().toISOString(),
       providers
     }, 'ai-video-calc-tariffs.json');
@@ -2587,14 +2618,14 @@
   function exportData() {
     syncActiveProjectState(false);
     const payload = {
-      app: 'AI VIDEO CALC 3.8',
+      app: 'AI VIDEO CALC 3.9',
       schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       settings,
       activeProjectId,
       projects
     };
-    downloadJson(payload, 'ai-video-calc-v3.8-data.json');
+    downloadJson(payload, 'ai-video-calc-v3.9-data.json');
   }
 
   async function importData(event) {

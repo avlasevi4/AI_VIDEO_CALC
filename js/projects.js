@@ -127,6 +127,31 @@
     return payload;
   }
 
+  function reconcileCloudProjects(currentProjects, mergedProjects, startRevisions = {}, currentRevisions = {}) {
+    const currentById = new Map((currentProjects || []).map(project => [project.id, project]));
+    const mergedById = new Map((mergedProjects || []).map(project => [project.id, project]));
+    const ids = new Set([...mergedById.keys(), ...currentById.keys()]);
+    return [...ids].map(id => {
+      const current = currentById.get(id);
+      const merged = mergedById.get(id);
+      const existedAtStart = Object.prototype.hasOwnProperty.call(startRevisions, id);
+      const changedDuringSync = Boolean(current) && (
+        !existedAtStart
+        || Number(currentRevisions[id] || 0) !== Number(startRevisions[id] || 0)
+      );
+      return clone(changedDuringSync ? current : (merged || current));
+    }).filter(Boolean).sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+  }
+
+  function cloudProjectResponseWins(pendingProject, savedProject) {
+    if (!savedProject) return false;
+    const pendingTime = new Date(pendingProject?.updatedAt || 0).getTime() || 0;
+    const savedTime = new Date(savedProject.updatedAt || 0).getTime() || 0;
+    return savedTime > pendingTime
+      || savedProject.status !== pendingProject?.status
+      || savedProject.completedAt !== pendingProject?.completedAt;
+  }
+
   function clear() {
     localStorage.removeItem(activeStorageKey());
     if (storageScope === 'owner') {
@@ -143,6 +168,8 @@
     normalizeName,
     normalizeProject,
     createProject,
+    reconcileCloudProjects,
+    cloudProjectResponseWins,
     load,
     save,
     clear

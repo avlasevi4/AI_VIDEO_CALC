@@ -90,4 +90,52 @@ const deletedLibrary = store.load(defaults);
 assert.equal(deletedLibrary.activeProjectId, '');
 assert.equal(deletedLibrary.projects[0].deletedAt, deleted.deletedAt);
 assert.equal(deletedLibrary.projects[0].actualItems[0].rub, 500);
+
+const syncStart = [{
+  id: 'race-project',
+  name: 'Гонка синхронизации',
+  updatedAt: '2026-09-26T10:00:00.000Z',
+  actualItems: [{ id: 'original' }]
+}, {
+  id: 'unchanged-project',
+  name: 'До синхронизации',
+  updatedAt: '2026-09-26T10:00:00.000Z',
+  actualItems: []
+}];
+const currentDuringSync = [{
+  ...syncStart[0],
+  updatedAt: '2026-09-26T10:00:01.000Z',
+  actualItems: [{ id: 'original' }, { id: 'repeat-1' }, { id: 'repeat-2' }]
+}, syncStart[1], {
+  id: 'created-during-sync',
+  name: 'Новый локальный проект',
+  updatedAt: '2026-09-26T10:00:01.000Z',
+  actualItems: []
+}];
+const staleCloudResult = [{
+  ...syncStart[0],
+  actualItems: [{ id: 'original' }]
+}, {
+  ...syncStart[1],
+  name: 'Обновлено в облаке',
+  updatedAt: '2026-09-26T10:00:02.000+00:00'
+}];
+const reconciled = store.reconcileCloudProjects(
+  currentDuringSync,
+  staleCloudResult,
+  { 'race-project': 0, 'unchanged-project': 0 },
+  { 'race-project': 2, 'unchanged-project': 0, 'created-during-sync': 1 }
+);
+assert.equal(reconciled.find(project => project.id === 'race-project').actualItems.length, 3, 'late cloud response cannot remove two repeated generations');
+assert.equal(reconciled.find(project => project.id === 'unchanged-project').name, 'Обновлено в облаке', 'unchanged project accepts a newer cloud copy');
+assert.ok(reconciled.some(project => project.id === 'created-during-sync'), 'project created during synchronization is preserved');
+
+assert.equal(store.cloudProjectResponseWins(
+  { updatedAt: '2026-09-26T10:00:00.000Z', status: 'active', completedAt: null },
+  { updatedAt: '2026-09-26T10:00:00.000+00:00', status: 'active', completedAt: null }
+), false, 'equivalent timestamp formats do not make the cloud response newer');
+assert.equal(store.cloudProjectResponseWins(
+  { updatedAt: '2026-09-26T10:00:00.000Z', status: 'active', completedAt: null },
+  { updatedAt: '2026-09-26T10:00:01.000Z', status: 'active', completedAt: null }
+), true, 'a genuinely newer cloud response wins');
 console.log('project store tests OK');

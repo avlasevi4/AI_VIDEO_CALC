@@ -33,8 +33,8 @@ assert.match(html, /data-app-view="projects"/, 'projects have a primary navigati
 assert.match(html, /data-app-view="tariffs"/, 'tariffs have a primary navigation tab');
 assert.match(html, /data-provider="dreamina"/, 'Dreamina has a calculator provider tab');
 assert.match(html, /id="customProviderTabs"/, 'custom services have a dedicated calculator provider area');
-assert.match(html, /js\/app\.js\?v=3\.8\.0/, 'release scripts bypass a stale PWA asset cache');
-assert.match(html, /css\/app\.css\?v=3\.8\.0/, 'release styles bypass a stale PWA asset cache');
+assert.match(html, /js\/app\.js\?v=3\.9\.0/, 'release scripts bypass a stale PWA asset cache');
+assert.match(html, /css\/app\.css\?v=3\.9\.0/, 'release styles bypass a stale PWA asset cache');
 assert.match(html, /class="provider-tab provider-tab-plus provider-plus-standalone hidden"[^>]*data-provider="dreamina-plus"[^>]*data-private-provider="dreamina-plus"/, 'Dreamina Plus is a standalone button hidden before owner authorization');
 assert.match(html, /class="provider-tabs"[^>]*aria-label="Публичные провайдеры генерации"[\s\S]*data-provider="kling"[\s\S]*data-provider="syntex"[\s\S]*data-provider="dreamina"[\s\S]*<\/div>\s*<div id="customProviderTabs"/, 'public provider plate contains exactly the three built-in public services before the custom service area');
 assert.match(html, /id="dreaminaPackagePreset"/, 'Dreamina offers selectable official package presets');
@@ -104,6 +104,9 @@ assert.match(await readFile(new URL('../css/v3.css', import.meta.url), 'utf8'), 
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /class="actual-action actual-repeat"[^>]*title="Повторить"/, 'each actual generation has a compact repeat action');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /class="actual-action actual-remove"[^>]*title="Удалить"/, 'repeat and delete use the same action-button component');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /actualItems\.push\(\{[\s\S]*JSON\.parse\(JSON\.stringify\(source\)\)/, 'repeat action copies the recorded generation snapshot');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /projectMutationVersions/, 'project synchronization tracks local mutations');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /reconcileCloudProjects/, 'late cloud results are reconciled with newer local edits');
+assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /projectSaveChains/, 'project saves are serialized to prevent out-of-order responses');
 assert.doesNotMatch(css, /\.actual-repeat:hover[^}]*rotate/, 'repeat button does not use a spinning hover animation');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /visibilitychange[\s\S]*refreshProjectsOnForeground/, 'projects refresh when the PWA returns to the foreground');
 assert.match(await readFile(new URL('../js/app.js', import.meta.url), 'utf8'), /clearTimeout\(projectSyncTimers\.get\(project\.id\)\)/, 'completion cancels a pending stale autosave');
