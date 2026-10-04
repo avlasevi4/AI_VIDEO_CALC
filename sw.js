@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v3.9-sync-race-fix-20260926';
+const CACHE_NAME = 'ai-video-calc-v4.0-dreamina-four-seconds-20261004';
 const ASSETS = [
   './',
   './index.html',

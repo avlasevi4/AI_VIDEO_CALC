@@ -92,6 +92,9 @@ for (const provider of ['dreamina', 'dreamina-plus']) {
   const modelId = `${provider}-seedance-25`;
   const model = pricing.models.find(item => item.id === modelId && item.provider === provider);
   assert.ok(model, `Отсутствует модель ${modelId}`);
+  for (const variant of model.variants) {
+    assert.equal(variant.billing.durationRange?.min, 4, `${modelId}/${variant.id} должен начинаться с 4 секунд`);
+  }
   for (const [variantId, curve] of Object.entries(expectedDreaminaOmniCurves)) {
     const variant = model.variants.find(item => item.id === variantId);
     assert.equal(variant?.billing?.type, 'duration_curve', `Неверный тип тарифа ${modelId}/${variantId}`);

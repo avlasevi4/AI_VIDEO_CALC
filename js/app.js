@@ -2517,7 +2517,7 @@
     downloadJson({
       type: 'ai-video-calc-tariffs',
       schemaVersion: 1,
-      appVersion: '3.9',
+      appVersion: '4.0',
       exportedAt: new Date().toISOString(),
       providers
     }, 'ai-video-calc-tariffs.json');
@@ -2618,14 +2618,14 @@
   function exportData() {
     syncActiveProjectState(false);
     const payload = {
-      app: 'AI VIDEO CALC 3.9',
+      app: 'AI VIDEO CALC 4.0',
       schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       settings,
       activeProjectId,
       projects
     };
-    downloadJson(payload, 'ai-video-calc-v3.9-data.json');
+    downloadJson(payload, 'ai-video-calc-v4.0-data.json');
   }
 
   async function importData(event) {

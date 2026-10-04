@@ -46,6 +46,15 @@ assert.equal(dreamina.units, 185);
 assert.ok(Math.abs(dreamina.usd - (185 * 11 / 3885)) < 1e-12);
 assert.ok(Math.abs(dreamina.rub - (185 * 11 / 3885 * 75)) < 1e-12);
 
+for (const modelId of ['dreamina-seedance-25', 'dreamina-plus-seedance-25']) {
+  const model = pricing.models.find(item => item.id === modelId);
+  for (const variantId of ['480p', '720p', '1080p', 'omni-reference-480p', 'omni-reference-720p', 'omni-reference-1080p']) {
+    const variant = model.variants.find(item => item.id === variantId);
+    assert.equal(variant.billing.durationRange.min, 4, `${modelId}/${variantId} поддерживает минимум 4 секунды`);
+    assert.doesNotThrow(() => calc.calculateSelection(pricing, settings, modelId, variantId, 4));
+  }
+}
+
 const dreaminaPlus = calc.calculateSelection(pricing, settings, 'dreamina-plus-seedance-25', '1080p', 30);
 assert.equal(dreaminaPlus.units, 2730);
 assert.equal(dreaminaPlus.usd, null);
