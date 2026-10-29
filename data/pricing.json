@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "4.1.0-2026-10-29",
-  "updated": "2026-09-19",
+  "dataVersion": "4.2.0-2026-10-29",
+  "updated": "2026-10-29",
   "baseTariffDate": "2026-09-19",
   "currency": "RUB",
   "providers": {
@@ -352,6 +352,22 @@
           "status": "unverified",
           "note": "Перенесено из v1.2; не подтверждено найденной официальной таблицей."
         }
+      ]
+    },
+    {
+      "id": "kling-40",
+      "provider": "kling",
+      "name": "Kling 4.0",
+      "status": "manual",
+      "verifiedAt": "2026-10-29",
+      "sourceNote": "Подтверждено пользователем 29.10.2026: Omni Reference без видеореференса и Keyframes стоят 100 credits за 10 секунд в 720p и 150 credits за 10 секунд в 1080p; расчёт пропорционален длительности 3–30 секунд. Для Omni Reference с видео записаны отдельные контрольные точки 5, 10, 15, 20, 25 и 30 секунд; между ними применяется линейная интерполяция. Значения с видео для 3–4 секунд предварительные: продолжение участка 5–10 секунд. По указанию пользователя отдельный параметр длины видеореференса не используется. 4K не добавлен.",
+      "variants": [
+        { "id": "omni-reference-720", "label": "Omni Reference · без видео · 720p", "resolution": "720p", "audio": "Native Audio", "note": "Без видеореференса: 100 credits / 10 сек.", "billing": { "type": "rate_per_second", "unitsPerSecond": 10, "durationRange": { "min": 3, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-1080", "label": "Omni Reference · без видео · 1080p", "resolution": "1080p", "audio": "Native Audio", "note": "Без видеореференса: 150 credits / 10 сек.", "billing": { "type": "rate_per_second", "unitsPerSecond": 15, "durationRange": { "min": 3, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-video-720", "label": "Omni Reference · с видео · 720p", "resolution": "720p", "audio": "Native Audio", "note": "Цены пользователя за 5–30 секунд. Между контрольными точками — интерполяция; 3–4 секунды — предварительная оценка.", "billing": { "type": "duration_curve", "unitsByDuration": { "3": 154, "5": 166, "10": 196, "15": 226, "20": 256, "25": 300, "30": 360 }, "confirmedDurations": [5, 10, 15, 20, 25, 30], "estimatedDurations": [3, 4], "roundDigits": 1, "durationRange": { "min": 3, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-video-1080", "label": "Omni Reference · с видео · 1080p", "resolution": "1080p", "audio": "Native Audio", "note": "Цены пользователя за 5–30 секунд. Между контрольными точками — интерполяция; 3–4 секунды — предварительная оценка.", "billing": { "type": "duration_curve", "unitsByDuration": { "3": 231, "5": 249, "10": 294, "15": 339, "20": 384, "25": 450, "30": 540 }, "confirmedDurations": [5, 10, 15, 20, 25, 30], "estimatedDurations": [3, 4], "roundDigits": 1, "durationRange": { "min": 3, "max": 30, "step": 1 } } },
+        { "id": "keyframes-720", "label": "Keyframes · 720p", "resolution": "720p", "audio": "Native Audio", "billing": { "type": "rate_per_second", "unitsPerSecond": 10, "durationRange": { "min": 3, "max": 30, "step": 1 } } },
+        { "id": "keyframes-1080", "label": "Keyframes · 1080p", "resolution": "1080p", "audio": "Native Audio", "billing": { "type": "rate_per_second", "unitsPerSecond": 15, "durationRange": { "min": 3, "max": 30, "step": 1 } } }
       ]
     },
     {

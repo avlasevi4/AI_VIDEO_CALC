@@ -128,7 +128,12 @@
     const unitRub = unitPriceRub(model.provider, settings, pricing);
     const rub = units * unitRub;
     const usd = ['kling', 'dreamina'].includes(model.provider) ? rub / safeNumber(settings.usdRub, 75.05) : null;
-    return { model, variant, duration: normalizedDuration, units, unitRub, rub, usd, manualUnits: safeNumber(manualUnits, 0), pricingMode: 'provider_units' };
+    const calculationNote = variant.billing.estimatedDurations?.includes(normalizedDuration)
+      ? 'Предварительная цена: точный тариф для 3–4 секунд пока не указан.'
+      : Array.isArray(variant.billing.confirmedDurations) && !variant.billing.confirmedDurations.includes(normalizedDuration)
+        ? 'Расчётная цена: интерполяция между контрольными длительностями.'
+        : '';
+    return { model, variant, duration: normalizedDuration, units, unitRub, rub, usd, manualUnits: safeNumber(manualUnits, 0), pricingMode: 'provider_units', ...(calculationNote ? {calculationNote} : {}) };
   }
 
   function calculateProject(items, meta = {}, actualItems = []) {

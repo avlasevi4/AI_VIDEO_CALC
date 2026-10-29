@@ -94,6 +94,7 @@
   const fmtUnitMoney = n => window.AIVideoPreferences.formatMoney(n, settings, 6);
   const fmtUsd = n => Number(n).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
   const fmtNum = (n, d = 2) => Number(n).toLocaleString('ru-RU', { maximumFractionDigits: d });
+  const calculationNoteMarkup = note => note ? `<span>${esc(note)}</span>` : '';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   function defaultProjectMeta() {
@@ -1520,9 +1521,13 @@
       return { modelId: 'syntx-seedance-20', variantId: `${seedance20[1] || 'pro'}-${resolution}` };
     }
 
-    if (modelId === 'kling-30' && ['1080-na', '1080-a'].includes(variantId)) {
-      return { modelId: 'syntx-kling', variantId: `30-${variantId}` };
-    }
+    const klingVariants = {
+      'kling-25': {'720-na':'t2v-25-turbo-720','1080-na':'t2v-25-turbo-1080'},
+      'kling-26': {'720-na':'t2v-26-720','1080-na':'t2v-26-1080'},
+      'kling-30': {'720-na':'t2v-30-720','1080-na':'30-1080-na','4k-na':'t2v-30-4k','1080-a':'30-1080-a'}
+    };
+    const klingVariant = klingVariants[modelId]?.[variantId];
+    if (klingVariant) return {modelId:'syntx-kling',variantId:klingVariant};
     return null;
   }
 
@@ -1635,6 +1640,7 @@
       ? `<span>Ручной тариф: ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>${fmtNum(result.duration, 2)} сек × ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>1 токен = ${fmtUnitMoney(result.unitRub)} · ${cloudSession ? 'тариф синхронизирован с личным облаком.' : 'тариф будет синхронизирован после входа.'}</span>`
       : `<span>${fmtNum(result.units, 2)} ${unitName}</span>${settings.displayCurrency !== 'USD' && result.usd !== null ? `<span>≈ ${fmtUsd(result.usd)}</span>` : ''}<span>1 ${result.model.provider === 'kling' ? 'credit' : 'токен'} = ${fmtUnitMoney(result.unitRub)}</span>${result.model.provider === 'dreamina-plus' ? '<span>Спецкурс: 100 ₽ / 10 500 токенов</span>' : result.model.provider === 'syntex' ? '<span>Расчёт по пакету SYNTX</span>' : `<span>Курс: ${fmtNum(settings.usdRub, 2)} ₽/$</span>`}<span>Тарифная база: ${esc(pricing.updated)}</span>`;
     const status = effectiveStatus(result);
+    $('resultMeta').innerHTML += calculationNoteMarkup(result.calculationNote);
     $('resultStatus').className = 'status ' + status;
     $('resultStatus').textContent = ['manual_duration_override', 'manual_tokens_per_second'].includes(result.pricingMode) ? '● свой тариф' : status === 'verified' ? '✓ verified' : status === 'unverified' ? '⚠ unverified' : '● manual';
   }
@@ -1856,6 +1862,8 @@
       item.units = result.units;
       item.name = result.model.name;
       item.variant = result.variant.label;
+      if (result.calculationNote) item.calculationNote = result.calculationNote;
+      else delete item.calculationNote;
     } catch (error) {
       item.rub = 0;
       item.units = 0;
@@ -1939,7 +1947,7 @@
       <div class="project-line-result ${item.calcError ? 'has-error' : ''}">
         ${item.calcError
           ? `<span>⚠ ${esc(item.calcError)}</span>`
-          : `<span>${fmtMoney(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtMoney(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtMoney(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtMoney(rowBase + rowExtra)}</strong>${syntexCompareMarkup('project-syntex-compare')}`}
+          : `<span>${fmtMoney(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtMoney(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtMoney(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtMoney(rowBase + rowExtra)}</strong>${calculationNoteMarkup(item.calculationNote)}${syntexCompareMarkup('project-syntex-compare')}`}
       </div>`;
 
     bindInlineSyntexComparison(row, () => syntexComparison(item.modelId, item.variantId, item.duration, rowGenerationCount, item.manualUnits));
@@ -2063,7 +2071,7 @@
     const rowExtraCount = item.qty * (item.generationsPerVideo - 1);
     const rowExtra = item.rub * rowExtraCount;
     const rowGenerationCount = item.qty * item.generationsPerVideo;
-    box.innerHTML = `<span>${fmtMoney(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtMoney(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtMoney(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtMoney(rowBase + rowExtra)}</strong>${syntexCompareMarkup('project-syntex-compare')}`;
+    box.innerHTML = `<span>${fmtMoney(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtMoney(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtMoney(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtMoney(rowBase + rowExtra)}</strong>${calculationNoteMarkup(item.calculationNote)}${syntexCompareMarkup('project-syntex-compare')}`;
     bindInlineSyntexComparison(box, () => syntexComparison(item.modelId, item.variantId, item.duration, rowGenerationCount, item.manualUnits));
   }
 
@@ -2145,7 +2153,7 @@
       const detail = result.pricingMode === 'manual_tokens_per_second'
         ? `Ручной тариф ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек · ${actualDraft.duration} сек`
         : `${fmtNum(result.units, 2)} ${pricing.providers[model.provider].unit === 'credits' ? 'credits' : 'токенов'} · ${actualDraft.duration} сек`;
-      $('actualDraftResult').innerHTML = `<span>${detail}</span><strong>${fmtMoney(result.rub)}</strong>${syntexCompareMarkup('actual-draft-syntex')}`;
+      $('actualDraftResult').innerHTML = `<span>${detail}${result.calculationNote ? `<br>${esc(result.calculationNote)}` : ''}</span><strong>${fmtMoney(result.rub)}</strong>${syntexCompareMarkup('actual-draft-syntex')}`;
       bindInlineSyntexComparison($('actualDraftResult'), () => syntexComparison(model.id, variant.id, actualDraft.duration, 1, actualDraft.manualUnits));
       $('addActualGeneration').disabled = false;
     } catch (error) {
@@ -2177,6 +2185,7 @@
         rub: result.rub,
         usdRub: settings.usdRub,
         pricingMode: result.pricingMode,
+        ...(result.calculationNote ? {calculationNote:result.calculationNote} : {}),
         manualTokensPerSecond: result.manualTokensPerSecond || 0,
         recordedAt: new Date().toISOString()
       });
@@ -2199,6 +2208,7 @@
         <div class="actual-copy">
           <strong>${esc(item.modelName || item.modelId)}</strong>
           <span>${esc(item.variantLabel || item.variantId)} · ${fmtNum(item.duration, 2)} сек · ${fmtNum(item.units, 2)} ${unitFor(item.provider)}</span>
+          ${calculationNoteMarkup(item.calculationNote)}
         </div>
         <div class="actual-cost"><strong>${fmtMoney(item.rub)}</strong>${syntexCompareMarkup('actual-syntex-compare')}</div>
         <button class="actual-action actual-repeat" type="button" title="Повторить" aria-label="Повторить фактическую генерацию">
@@ -2607,7 +2617,7 @@
     downloadJson({
       type: 'ai-video-calc-tariffs',
       schemaVersion: 1,
-      appVersion: '4.0',
+      appVersion: '4.2',
       exportedAt: new Date().toISOString(),
       providers
     }, 'ai-video-calc-tariffs.json');
@@ -2708,14 +2718,14 @@
   function exportData() {
     syncActiveProjectState(false);
     const payload = {
-      app: 'AI VIDEO CALC 4.0',
+      app: 'AI VIDEO CALC 4.2',
       schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       settings,
       activeProjectId,
       projects
     };
-    downloadJson(payload, 'ai-video-calc-v4.0-data.json');
+    downloadJson(payload, 'ai-video-calc-v4.2-data.json');
   }
 
   async function importData(event) {

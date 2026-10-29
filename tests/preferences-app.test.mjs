@@ -74,7 +74,7 @@ const bridge = `
     changeDisplayCurrency, changeDreaminaPlusVisibility, synchronizeCloudTariffs,
     sharedTariffs, applySharedTariffs, visibleProviderIds, providerOptions,
     normalizeProjectItem, renderManualTariffEditor, renderDisplayPreferences,
-    toggleSyntexComparison
+    toggleSyntexComparison, configureDurationSlider, syntexComparison
   };
 `;
 vm.runInContext(appSource.replace(/\}\)\(\);\s*$/,bridge+'})();'),context,{filename:'app.js'});
@@ -87,6 +87,29 @@ const project = {
   meta:{laborPerVideoRub:250,priceMode:'custom',customQuotedPrice:1600,priceRounding:'none',showWorkPrice:true,includeImages:false}
 };
 app.setup(pricing,project);
+for (const [modelId,variantId,units] of [
+  ['kling-25','720-na',12],['kling-25','1080-na',34],
+  ['kling-26','720-na',28],['kling-26','1080-na',42],
+  ['kling-30','720-na',30],['kling-30','4k-na',150]
+]) {
+  const result = app.syntexComparison(modelId,variantId,10);
+  assert.equal(result.units,units,`Existing SYNTX rate connected: ${modelId}/${variantId}`);
+  assert.ok(!result.error);
+}
+for (const [modelId,variantId] of [['kling-26','1080-a'],['kling-30','720-a'],['kling-30','4k-a'],['kling-o1-old','720-na'],['kling-o1-old','1080-na'],['kling-40','omni-reference-video-720']]) {
+  assert.ok(app.syntexComparison(modelId,variantId,10).error,'missing prices cannot fall back to a different model or audio mode');
+}
+const draftBefore=JSON.stringify(project);
+app.provider='kling'; get('modelSelect').value='kling-40';get('variantSelect').value='omni-reference-video-720';get('durationNumber').value=3;
+app.changeDisplayCurrency('RUB');
+assert.match(get('resultMeta').innerHTML,/Предварительная цена/,'unconfirmed short durations carry a visible warning');
+assert.equal(JSON.stringify(project),draftBefore);
+for (const variant of pricing.models.find(model=>model.id==='kling-40').variants) {
+  const slider = new Element(), output = new Element();
+  assert.equal(app.configureDurationSlider(slider,output,variant,2),3,'Kling 4.0 UI retains the minimum of 3 seconds');
+  assert.equal(app.configureDurationSlider(slider,output,variant,31),30,'Kling 4.0 UI retains the maximum of 30 seconds');
+  assert.equal(slider.min,3); assert.equal(slider.max,30); assert.equal(slider.step,1);
+}
 get('modelSelect').value='dreamina-plus-seedance-25'; get('variantSelect').value='720p'; get('durationNumber').value=10;
 app.provider='dreamina-plus';
 const before = JSON.stringify(project);

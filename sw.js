@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v4.1-display-preferences-20261029';
+const CACHE_NAME = 'ai-video-calc-v4.2-kling40-20261029';
 const ASSETS = [
   './',
   './index.html',

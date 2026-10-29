@@ -55,6 +55,46 @@ for (const modelId of ['dreamina-seedance-25', 'dreamina-plus-seedance-25']) {
   }
 }
 
+const kling40 = pricing.models.find(model => model.id === 'kling-40');
+assert.equal(kling40.provider, 'kling');
+assert.equal(kling40.variants.length, 6, 'Kling 4.0 separates Omni with and without video from Keyframes at both resolutions');
+for (const mode of ['omni-reference', 'keyframes']) {
+  for (const [resolution, expected] of Object.entries({720: {3:30,5:50,10:100,30:300},1080: {3:45,5:75,10:150,30:450}})) {
+    const variantId = `${mode}-${resolution}`;
+    for (const [duration, units] of Object.entries(expected)) {
+      const result = calc.calculateSelection(pricing, settings, 'kling-40', variantId, Number(duration));
+      assert.equal(result.units, units, `Kling 4.0 ${variantId}, ${duration}s`);
+      assert.ok(Math.abs(result.rub - units * 750 / 660) < 1e-9, 'Kling 4.0 uses the existing Kling credit package and exchange rate');
+    }
+    const variant = kling40.variants.find(variant => variant.id === variantId);
+    assert.deepEqual(variant.billing.durationRange, {min:3,max:30,step:1});
+  }
+}
+
+const kling40Video = {
+  720: {5:166,10:196,15:226,20:256,25:300,30:360},
+  1080: {5:249,10:294,15:339,20:384,25:450,30:540}
+};
+for (const [resolution, points] of Object.entries(kling40Video)) {
+  const variantId = `omni-reference-video-${resolution}`;
+  for (const [duration, units] of Object.entries(points)) {
+    const result = calc.calculateSelection(pricing, settings, 'kling-40', variantId, Number(duration));
+    assert.equal(result.units, units, `Confirmed Kling 4.0 video-reference point ${resolution}/${duration}`);
+    assert.equal(result.calculationNote, undefined, 'confirmed points have no approximation warning');
+    assert.ok(Math.abs(result.rub - units*750/660) < 1e-9);
+  }
+  for (let duration=3;duration<=30;duration++) {
+    const result = calc.calculateSelection(pricing, settings, 'kling-40', variantId, duration);
+    assert.ok(Number.isFinite(result.units) && result.units>0);
+    if (duration<5) assert.match(result.calculationNote,/Предварительная/);
+    else if (!(duration in points)) assert.match(result.calculationNote,/интерполяция/);
+    const other = calc.calculateSelection(pricing, settings, 'kling-40', 'omni-reference-720', duration);
+    if (resolution==='720') assert.ok(result.units>other.units,'video-reference price stays separate from no-video price');
+  }
+}
+assert.equal(calc.calculateSelection(pricing,settings,'kling-40','omni-reference-video-720',22).units,273.6);
+assert.equal(calc.calculateSelection(pricing,settings,'kling-40','omni-reference-video-1080',22).units,410.4);
+
 const dreaminaPlus = calc.calculateSelection(pricing, settings, 'dreamina-plus-seedance-25', '1080p', 30);
 assert.equal(dreaminaPlus.units, 2730);
 assert.equal(dreaminaPlus.usd, null);

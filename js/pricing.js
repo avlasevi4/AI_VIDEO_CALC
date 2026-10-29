@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   const CACHE_KEY = 'ai-video-calc-v2-pricing-cache';
-  const PRICING_URL = './data/pricing.json?v=4.1.0';
+  const PRICING_URL = './data/pricing.json?v=4.2.0';
   const DREAMINA_SEEDANCE_25_MODELS = new Set([
     'dreamina-seedance-25',
     'dreamina-plus-seedance-25'
