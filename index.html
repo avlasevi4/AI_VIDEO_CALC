@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101a">
-  <meta name="description" content="AI VIDEO CALC 4.0 — проекты, сметы, расходы и общие тарифы AI-видео">
+  <meta name="description" content="AI VIDEO CALC 4.1 — проекты, сметы, расходы и общие тарифы AI-видео">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./icons/pwa-logo-v5-192.png">
   <link rel="apple-touch-icon" href="./icons/pwa-logo-v5-192.png">
-  <link rel="stylesheet" href="./css/app.css?v=4.0.0">
-  <link rel="stylesheet" href="./css/v3.css?v=4.0.0">
-  <title>AI VIDEO CALC 4.0</title>
+  <link rel="stylesheet" href="./css/app.css?v=4.1.0">
+  <link rel="stylesheet" href="./css/v3.css?v=4.1.0">
+  <title>AI VIDEO CALC 4.1</title>
 </head>
 <body>
 <main class="app" data-active-view="calculator">
@@ -23,7 +23,7 @@
     </div>
     <div class="hero-tools">
       <div class="version-stack">
-        <div class="version">v4.0</div>
+        <div class="version">v4.1</div>
         <button id="ownerAccessToggle" class="cloud-access-toggle" type="button" aria-label="Открыть облачную синхронизацию" aria-controls="ownerAccessPanel" aria-expanded="false" title="Облачная синхронизация">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 8.3 4.8 4.8 0 0 0 7 18Z"/><path d="m9.5 13 2.5-2.5 2.5 2.5M12 10.5V16"/></svg>
         </button>
@@ -35,6 +35,15 @@
       </div>
     </div>
   </header>
+
+  <div class="display-preferences">
+    <div class="currency-choice" role="group" aria-label="Валюта отображения сумм">
+      <span>Валюта сумм</span>
+      <button type="button" data-display-currency="RUB" aria-pressed="true">₽ <span>Рубли</span></button>
+      <button type="button" data-display-currency="USD" aria-pressed="false">$ <span>Доллары</span></button>
+    </div>
+    <span id="displayCurrencyHint" class="display-currency-hint" aria-live="polite">Расчёты сохраняются в рублях. Валюта полей ввода указана рядом с ними.</span>
+  </div>
 
   <section id="ownerAccessPanel" class="cloud-auth-panel hidden" aria-label="Облачная синхронизация">
     <div id="authLoading" class="auth-state"><strong>Проверяем доступ…</strong><span>Локальные проекты уже доступны.</span></div>
@@ -49,6 +58,12 @@
       <div><span>Выполнен вход</span><strong id="authAccountEmail">—</strong><small id="syncStatus">Локальная копия синхронизирована</small></div>
       <button id="authSignOut" class="btn secondary" type="button">Выйти</button>
     </div>
+    <details id="ownerPreferences" class="owner-preferences hidden">
+      <summary><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg>Настройки владельца</summary>
+      <label class="owner-provider-toggle" for="showDreaminaPlus"><input id="showDreaminaPlus" type="checkbox" checked><span>Показывать Dreamina Plus</span></label>
+      <p>Управляет кнопкой и выбором тарифа для новых расчётов. Старые проекты и записанные расходы сохраняются. Настройка синхронизируется в вашем аккаунте.</p>
+      <span id="ownerPreferencesStatus" class="tiny" role="status"></span>
+    </details>
     <div id="authSetup" class="auth-state hidden"><strong>Облачное хранилище ещё не подключено</strong><span>Проекты сохраняются только в этом браузере.</span></div>
   </section>
 
@@ -483,7 +498,7 @@
   </details>
   </section>
 
-  <footer class="footer">AI VIDEO CALC <span>4.0</span> · 04.10.2026</footer>
+  <footer class="footer">AI VIDEO CALC <span>4.1</span> · 29.10.2026</footer>
 </main>
 
 <dialog id="projectNameDialog" class="project-dialog" aria-labelledby="projectNameTitle">
@@ -504,12 +519,13 @@
     </div>
   </form>
 </dialog>
-<script src="./vendor/supabase.min.js?v=4.0.0"></script>
-<script src="./js/cloud-config.js?v=4.0.0"></script>
-<script src="./js/cloud.js?v=4.0.0"></script>
-<script src="./js/calculator.js?v=4.0.0"></script>
-<script src="./js/pricing.js?v=4.0.0"></script>
-<script src="./js/projects.js?v=4.0.0"></script>
-<script src="./js/app.js?v=4.0.0"></script>
+<script src="./vendor/supabase.min.js?v=4.1.0"></script>
+<script src="./js/cloud-config.js?v=4.1.0"></script>
+<script src="./js/cloud.js?v=4.1.0"></script>
+<script src="./js/calculator.js?v=4.1.0"></script>
+<script src="./js/pricing.js?v=4.1.0"></script>
+<script src="./js/projects.js?v=4.1.0"></script>
+<script src="./js/preferences.js?v=4.1.0"></script>
+<script src="./js/app.js?v=4.1.0"></script>
 </body>
 </html>

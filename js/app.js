@@ -60,6 +60,8 @@
   let foregroundSyncPromise = null;
 
   let settings = {
+    displayCurrency: 'RUB',
+    showDreaminaPlus: true,
     usdRub: 75.05,
     klingPackageUsd: 8.8,
     klingPackageCredits: 660,
@@ -88,8 +90,8 @@
   };
 
   const $ = id => document.getElementById(id);
-  const fmtRub = n => Number(n).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽';
-  const fmtRub0 = n => Number(n).toLocaleString('ru-RU', { maximumFractionDigits: 0 }) + ' ₽';
+  const fmtMoney = n => window.AIVideoPreferences.formatMoney(n, settings);
+  const fmtUnitMoney = n => window.AIVideoPreferences.formatMoney(n, settings, 6);
   const fmtUsd = n => Number(n).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $';
   const fmtNum = (n, d = 2) => Number(n).toLocaleString('ru-RU', { maximumFractionDigits: d });
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -126,6 +128,7 @@
         }
       }
       settings = { ...settings, ...oldSettings };
+      Object.assign(settings, window.AIVideoPreferences.normalize(settings));
       normalizePackageSettings();
       if (!settings.syntexManualUnits || typeof settings.syntexManualUnits !== 'object') settings.syntexManualUnits = {};
       if (!settings.manualTokenTariffs || typeof settings.manualTokenTariffs !== 'object') settings.manualTokenTariffs = {};
@@ -218,7 +221,8 @@
       packageCatalogVersion: settings.packageCatalogVersion,
       manualTokenTariffs: settings.manualTokenTariffs,
       syntexManualUnits: settings.syntexManualUnits,
-      customTariffs: settings.customTariffs
+      customTariffs: settings.customTariffs,
+      showDreaminaPlus: settings.showDreaminaPlus
     };
   }
 
@@ -236,6 +240,7 @@
       if (value && Object.prototype.hasOwnProperty.call(value, key)) settings[key] = value[key];
     });
     normalizePackageSettings();
+    Object.assign(settings, window.AIVideoPreferences.normalize(settings));
     if (!Array.isArray(settings.customTariffs)) settings.customTariffs = [];
     settings.sharedTariffsUpdatedAt = updatedAt || settings.sharedTariffsUpdatedAt || '';
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
@@ -328,6 +333,7 @@
   async function synchronizeCloudTariffs() {
     if (!cloudSession) return;
     try {
+      const pricingBefore = JSON.stringify({ ...sharedTariffs(), showDreaminaPlus: undefined });
       const remote = await window.AIVideoCloud.loadSettings();
       const localTime = new Date(settings.sharedTariffsUpdatedAt || 0).getTime() || 0;
       const remoteTime = new Date(remote?.updatedAt || 0).getTime() || 0;
@@ -339,16 +345,74 @@
         applySharedTariffs(remote.settings, remote.updatedAt);
       }
       hydrateSettings();
+      refreshProviderAccess();
       renderHeadlineRate();
       renderManualTariffEditor();
       renderTariffReference();
       renderManualUnits();
       renderResult();
-      renderProject();
+      if (pricingBefore !== JSON.stringify({ ...sharedTariffs(), showDreaminaPlus: undefined })) renderProject();
+      else refreshDisplayAmounts();
+      $('ownerPreferencesStatus').textContent = 'Настройки синхронизированы.';
       if ($('manualTariffMessage')) $('manualTariffMessage').textContent = 'Тарифы синхронизированы с вашим облаком и доступны на других устройствах.';
     } catch (_) {
       // The local tariff set stays usable until the next successful sync.
+      $('ownerPreferencesStatus').textContent = 'Сохранено на этом устройстве. Синхронизация повторится при подключении.';
     }
+  }
+
+  function renderDisplayPreferences() {
+    const preferences = window.AIVideoPreferences.normalize(settings);
+    document.querySelectorAll('[data-display-currency]').forEach(button => {
+      button.setAttribute('aria-pressed', String(button.dataset.displayCurrency === preferences.displayCurrency));
+    });
+    const validRate = Number.isFinite(Number(settings.usdRub)) && Number(settings.usdRub) > 0;
+    $('displayCurrencyHint').textContent = preferences.displayCurrency === 'USD'
+      ? validRate ? 'Суммы в долларах по курсу сверху. Валюта полей ввода указана рядом с ними.' : 'Для долларов укажите положительный курс USD / RUB в тарифах.'
+      : 'Расчёты сохраняются в рублях. Валюта полей ввода указана рядом с ними.';
+    $('ownerPreferences').classList.toggle('hidden', !cloudSession);
+    $('showDreaminaPlus').checked = preferences.showDreaminaPlus;
+    $('showDreaminaPlus').disabled = !cloudSession;
+    if (!cloudSession) $('ownerPreferences').open = false;
+  }
+
+  function refreshDisplayAmounts() {
+    // Display changes never recalculate, normalize, save or synchronize a project.
+    renderDisplayPreferences();
+    if (!pricing) return;
+    renderResult();
+    renderUnitPrices();
+    renderProjectHistory();
+    if (!activeProject()) return;
+    document.querySelectorAll('#projectList .project-editor').forEach(row => {
+      const item = projectItems.find(item => item.id === row.dataset.id);
+      if (item) updateProjectLineResult(row, item);
+    });
+    renderActualDraftResult();
+    document.querySelectorAll('#actualList .actual-item').forEach(row => {
+      const item = actualItems.find(item => item.id === row.dataset.id);
+      const amount = row.querySelector('.actual-cost > strong');
+      if (item && amount) amount.textContent = fmtMoney(item.rub);
+      row.querySelector('.syntex-comparison')?.classList.add('hidden');
+      row.querySelector('.syntex-compare')?.setAttribute('aria-expanded', 'false');
+    });
+    renderTotals();
+    renderCompletedOverview();
+  }
+
+  function changeDisplayCurrency(currency) {
+    settings.displayCurrency = window.AIVideoPreferences.normalize({ displayCurrency: currency }).displayCurrency;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    refreshDisplayAmounts();
+  }
+
+  function changeDreaminaPlusVisibility(show) {
+    if (!cloudSession) return;
+    settings.showDreaminaPlus = Boolean(show);
+    saveTariffSettings();
+    refreshProviderAccess();
+    renderDisplayPreferences();
+    $('ownerPreferencesStatus').textContent = 'Сохранено на этом устройстве. Синхронизируем…';
   }
 
   function activeProject() {
@@ -458,6 +522,8 @@
   }
 
   function bind() {
+    document.querySelectorAll('[data-display-currency]').forEach(button => button.addEventListener('click', () => changeDisplayCurrency(button.dataset.displayCurrency)));
+    $('showDreaminaPlus').addEventListener('change', event => changeDreaminaPlusVisibility(event.target.checked));
     document.querySelectorAll('.app-tab').forEach(button => button.addEventListener('click', () => setView(button.dataset.appView)));
     window.addEventListener('hashchange', () => setView(viewFromLocation(), false));
     window.addEventListener('online', async () => {
@@ -673,6 +739,7 @@
   }
 
   function hydrateSettings() {
+    renderDisplayPreferences();
     ['usdRub', 'klingPackageUsd', 'klingPackageCredits', 'syntexPackageRub', 'syntexPackageTokens', 'dreaminaPackageUsd', 'dreaminaPackageTokens'].forEach(k => {
       if ($(k)) $(k).value = settings[k];
     });
@@ -713,6 +780,7 @@
   }
 
   function renderAuthState() {
+    renderDisplayPreferences();
     const localMode = !cloudConfigured && isLocalDevelopment();
     $('authLoading').classList.add('hidden');
     $('authForm').classList.toggle('hidden', !cloudConfigured || Boolean(cloudSession));
@@ -866,6 +934,7 @@
 
   function renderHeadlineRate() {
     if ($('headlineRate')) $('headlineRate').textContent = `1 $ = ${fmtNum(settings.usdRub, 2)} ₽`;
+    renderDisplayPreferences();
   }
 
   function canUseProvider(provider) {
@@ -881,8 +950,12 @@
     return [...builtIn, ...customProviderIds().filter(id => !builtIn.includes(id))];
   }
 
+  function visibleProviderIds() {
+    return availableProviderIds().filter(id => id !== PRIVATE_PROVIDER_ID || window.AIVideoPreferences.showPrivateProvider(cloudSession, settings));
+  }
+
   function safeProvider(provider) {
-    return availableProviderIds().includes(provider) ? provider : 'kling';
+    return visibleProviderIds().includes(provider) ? provider : 'kling';
   }
 
   function renderCustomProviderTabs() {
@@ -900,18 +973,29 @@
 
   function refreshProviderAccess() {
     if (!pricing) return;
-    const plusAvailable = canUseProvider(PRIVATE_PROVIDER_ID);
+    const plusAvailable = window.AIVideoPreferences.showPrivateProvider(cloudSession, settings);
     document.querySelectorAll(`[data-private-provider="${PRIVATE_PROVIDER_ID}"]`).forEach(element => {
       element.classList.toggle('hidden', !plusAvailable);
     });
 
     renderCustomProviderTabs();
-    if (!availableProviderIds().includes(currentProvider)) setProvider('kling', false);
+    if (!visibleProviderIds().includes(currentProvider)) setProvider('kling', false);
 
     if ($('actualProvider')) {
       actualDraft.provider = safeProvider(actualDraft.provider);
       $('actualProvider').innerHTML = providerOptions(actualDraft.provider);
       if (projectAccess && activeProject()) renderActualDraft();
+    }
+    document.querySelectorAll('#projectList .project-editor').forEach(row => {
+      const item = projectItems.find(item => item.id === row.dataset.id);
+      const select = row.querySelector('.project-provider');
+      if (item && select) select.innerHTML = providerOptions(item.provider);
+    });
+    if ($('manualTariffProvider')) {
+      const previous = $('manualTariffProvider').value;
+      const selected = safeProvider(previous || 'syntex');
+      $('manualTariffProvider').innerHTML = providerOptions(selected);
+      if (previous !== selected) renderManualTariffModels();
     }
   }
 
@@ -922,7 +1006,8 @@
 
   function providerOptions(selected) {
     return availableProviderIds()
-      .map(id => `<option value="${esc(id)}" ${id === selected ? 'selected' : ''}>${esc(pricing.providers[id].name)}</option>`)
+      .filter(id => visibleProviderIds().includes(id) || id === selected)
+      .map(id => `<option value="${esc(id)}" ${id === selected ? 'selected' : ''}>${esc(pricing.providers[id].name)}${id === PRIVATE_PROVIDER_ID && settings.showDreaminaPlus === false ? ' · скрыт для новых расчётов' : ''}</option>`)
       .join('');
   }
 
@@ -1148,7 +1233,7 @@
       const date = pricing.baseTariffDate || pricing.updated;
       $('baseTariffDate').textContent = `Базовые тарифы: ${new Date(date + 'T00:00:00').toLocaleDateString('ru-RU')}`;
     }
-    const availableProviders = availableProviderIds().filter(provider => pricing.providers?.[provider] && modelsForProvider(provider).length);
+    const availableProviders = visibleProviderIds().filter(provider => pricing.providers?.[provider] && modelsForProvider(provider).length);
     const previous = $('manualTariffProvider').value;
     const provider = availableProviders.includes(previous) ? previous : (availableProviders.includes('syntex') ? 'syntex' : availableProviders[0]);
     $('manualTariffProvider').innerHTML = availableProviders.map(id => `<option value="${esc(id)}" ${id === provider ? 'selected' : ''}>${esc(pricing.providers[id].name)}</option>`).join('');
@@ -1507,7 +1592,7 @@
     }
     output.innerHTML = `
       <span class="syntex-comparison-label">${esc(result.label)}</span>
-      <strong class="syntex-comparison-rub">${fmtRub(result.rub)}</strong>
+      <strong class="syntex-comparison-rub">${fmtMoney(result.rub)}</strong>
       <span class="syntex-comparison-meta">${fmtNum(result.units, 2)} токенов${result.missing ? ` · без точного аналога: ${result.missing}` : ''}</span>`;
   }
 
@@ -1541,14 +1626,14 @@
       return;
     }
 
-    $('resultPrice').textContent = fmtRub(result.rub);
-    $('calculatorSummaryPrice').textContent = fmtRub(result.rub);
+    $('resultPrice').textContent = fmtMoney(result.rub);
+    $('calculatorSummaryPrice').textContent = fmtMoney(result.rub);
     const unitName = pricing.providers[result.model.provider].unit === 'credits' ? 'credits' : 'токенов';
     $('resultMeta').innerHTML = result.pricingMode === 'manual_duration_override'
-      ? `<span>Пользовательский тариф: ${fmtNum(result.units, 2)} токенов за ${fmtNum(result.duration, 2)} сек</span><span>1 токен = ${fmtRub(result.unitRub)}</span><span>${cloudSession ? 'Поправка синхронизирована с личным облаком.' : 'Поправка хранится только в этом браузере.'}</span>`
+      ? `<span>Пользовательский тариф: ${fmtNum(result.units, 2)} токенов за ${fmtNum(result.duration, 2)} сек</span><span>1 токен = ${fmtUnitMoney(result.unitRub)}</span><span>${cloudSession ? 'Поправка синхронизирована с личным облаком.' : 'Поправка хранится только в этом браузере.'}</span>`
       : result.pricingMode === 'manual_tokens_per_second'
-      ? `<span>Ручной тариф: ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>${fmtNum(result.duration, 2)} сек × ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>1 токен = ${fmtRub(result.unitRub)} · ${cloudSession ? 'тариф синхронизирован с личным облаком.' : 'тариф будет синхронизирован после входа.'}</span>`
-      : `<span>${fmtNum(result.units, 2)} ${unitName}</span>${result.usd !== null ? `<span>≈ ${fmtUsd(result.usd)}</span>` : ''}<span>1 ${result.model.provider === 'kling' ? 'credit' : 'токен'} = ${fmtRub(result.unitRub)}</span>${result.model.provider === 'dreamina-plus' ? '<span>Спецкурс: 100 ₽ / 10 500 токенов</span>' : result.model.provider === 'syntex' ? '<span>Расчёт по пакету SYNTX</span>' : `<span>Курс: ${fmtNum(settings.usdRub, 2)} ₽/$</span>`}<span>Тарифная база: ${esc(pricing.updated)}</span>`;
+      ? `<span>Ручной тариф: ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>${fmtNum(result.duration, 2)} сек × ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек</span><span>1 токен = ${fmtUnitMoney(result.unitRub)} · ${cloudSession ? 'тариф синхронизирован с личным облаком.' : 'тариф будет синхронизирован после входа.'}</span>`
+      : `<span>${fmtNum(result.units, 2)} ${unitName}</span>${settings.displayCurrency !== 'USD' && result.usd !== null ? `<span>≈ ${fmtUsd(result.usd)}</span>` : ''}<span>1 ${result.model.provider === 'kling' ? 'credit' : 'токен'} = ${fmtUnitMoney(result.unitRub)}</span>${result.model.provider === 'dreamina-plus' ? '<span>Спецкурс: 100 ₽ / 10 500 токенов</span>' : result.model.provider === 'syntex' ? '<span>Расчёт по пакету SYNTX</span>' : `<span>Курс: ${fmtNum(settings.usdRub, 2)} ₽/$</span>`}<span>Тарифная база: ${esc(pricing.updated)}</span>`;
     const status = effectiveStatus(result);
     $('resultStatus').className = 'status ' + status;
     $('resultStatus').textContent = ['manual_duration_override', 'manual_tokens_per_second'].includes(result.pricingMode) ? '● свой тариф' : status === 'verified' ? '✓ verified' : status === 'unverified' ? '⚠ unverified' : '● manual';
@@ -1854,7 +1939,7 @@
       <div class="project-line-result ${item.calcError ? 'has-error' : ''}">
         ${item.calcError
           ? `<span>⚠ ${esc(item.calcError)}</span>`
-          : `<span>${fmtRub(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtRub(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtRub(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtRub(rowBase + rowExtra)}</strong>${syntexCompareMarkup('project-syntex-compare')}`}
+          : `<span>${fmtMoney(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtMoney(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtMoney(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtMoney(rowBase + rowExtra)}</strong>${syntexCompareMarkup('project-syntex-compare')}`}
       </div>`;
 
     bindInlineSyntexComparison(row, () => syntexComparison(item.modelId, item.variantId, item.duration, rowGenerationCount, item.manualUnits));
@@ -1978,7 +2063,7 @@
     const rowExtraCount = item.qty * (item.generationsPerVideo - 1);
     const rowExtra = item.rub * rowExtraCount;
     const rowGenerationCount = item.qty * item.generationsPerVideo;
-    box.innerHTML = `<span>${fmtRub(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtRub(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtRub(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtRub(rowBase + rowExtra)}</strong>${syntexCompareMarkup('project-syntex-compare')}`;
+    box.innerHTML = `<span>${fmtMoney(item.rub)} / генерация</span><span>Готовые: ${item.qty} шт. · ${fmtMoney(rowBase)}</span><span>Повторы: ${rowExtraCount} шт. · ${fmtMoney(rowExtra)}</span><strong>Всего ${rowGenerationCount} генераций: ${fmtMoney(rowBase + rowExtra)}</strong>${syntexCompareMarkup('project-syntex-compare')}`;
     bindInlineSyntexComparison(box, () => syntexComparison(item.modelId, item.variantId, item.duration, rowGenerationCount, item.manualUnits));
   }
 
@@ -2060,7 +2145,7 @@
       const detail = result.pricingMode === 'manual_tokens_per_second'
         ? `Ручной тариф ${fmtNum(result.manualTokensPerSecond, 2)} токенов / сек · ${actualDraft.duration} сек`
         : `${fmtNum(result.units, 2)} ${pricing.providers[model.provider].unit === 'credits' ? 'credits' : 'токенов'} · ${actualDraft.duration} сек`;
-      $('actualDraftResult').innerHTML = `<span>${detail}</span><strong>${fmtRub(result.rub)}</strong>${syntexCompareMarkup('actual-draft-syntex')}`;
+      $('actualDraftResult').innerHTML = `<span>${detail}</span><strong>${fmtMoney(result.rub)}</strong>${syntexCompareMarkup('actual-draft-syntex')}`;
       bindInlineSyntexComparison($('actualDraftResult'), () => syntexComparison(model.id, variant.id, actualDraft.duration, 1, actualDraft.manualUnits));
       $('addActualGeneration').disabled = false;
     } catch (error) {
@@ -2115,7 +2200,7 @@
           <strong>${esc(item.modelName || item.modelId)}</strong>
           <span>${esc(item.variantLabel || item.variantId)} · ${fmtNum(item.duration, 2)} сек · ${fmtNum(item.units, 2)} ${unitFor(item.provider)}</span>
         </div>
-        <div class="actual-cost"><strong>${fmtRub(item.rub)}</strong>${syntexCompareMarkup('actual-syntex-compare')}</div>
+        <div class="actual-cost"><strong>${fmtMoney(item.rub)}</strong>${syntexCompareMarkup('actual-syntex-compare')}</div>
         <button class="actual-action actual-repeat" type="button" title="Повторить" aria-label="Повторить фактическую генерацию">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
@@ -2200,9 +2285,7 @@
     const overview = $('completedOverview');
     overview.classList.toggle('hidden', !completed);
     if (completed) {
-      const totals = window.AIVideoCalculator.calculateProject(projectItems, projectMeta, actualItems);
-      overview.innerHTML = [['Цена заказчику', totals.quotedPrice], ['Себестоимость', totals.actualCost], ['Прибыль', totals.actualProfit]]
-        .map(([label, value]) => `<div class="metric"><span>${label}</span><strong>${fmtRub(value)}</strong></div>`).join('');
+      renderCompletedOverview();
       builder.appendChild(completionPanel);
     } else {
       $('actualExpenses').querySelector('.project-subbody').appendChild(completionPanel);
@@ -2234,6 +2317,13 @@
         delete control.dataset.completionDisabled;
       });
     }
+  }
+
+  function renderCompletedOverview() {
+    if (activeProject()?.status !== 'completed') return;
+    const totals = window.AIVideoCalculator.calculateProject(projectItems, projectMeta, actualItems);
+    $('completedOverview').innerHTML = [['Цена заказчику', totals.quotedPrice], ['Себестоимость', totals.actualCost], ['Прибыль', totals.actualProfit]]
+      .map(([label, value]) => `<div class="metric"><span>${label}</span><strong>${fmtMoney(value)}</strong></div>`).join('');
   }
 
   function formatProjectDate(value) {
@@ -2273,10 +2363,10 @@
             <span>${completed ? 'Завершён ' + formatProjectDate(project.completedAt) : 'Изменён ' + formatProjectDate(project.updatedAt)} · ${(project.items || []).length} позиций</span>
           </div>
           <div class="history-finance">
-            <div><span>Смета</span><strong>${fmtRub(totals.estimateCost)}</strong></div>
-            ${project.meta?.showWorkPrice ? `<div class="client-price"><span>Заказчику</span><strong>${fmtRub(totals.quotedPrice)}</strong></div>` : ''}
-            <div><span>Факт</span><strong>${fmtRub(totals.actualCost)}</strong></div>
-            <div class="profit"><span>Прибыль</span><strong>${fmtRub(totals.actualProfit)}</strong></div>
+            <div><span>Смета</span><strong>${fmtMoney(totals.estimateCost)}</strong></div>
+            ${project.meta?.showWorkPrice ? `<div class="client-price"><span>Заказчику</span><strong>${fmtMoney(totals.quotedPrice)}</strong></div>` : ''}
+            <div><span>Факт</span><strong>${fmtMoney(totals.actualCost)}</strong></div>
+            <div class="profit"><span>Прибыль</span><strong>${fmtMoney(totals.actualProfit)}</strong></div>
           </div>
           <div class="history-actions">
             <button class="btn secondary history-open" type="button" ${project.id === activeProjectId ? 'disabled' : ''}>${project.id === activeProjectId ? 'Открыт' : completed ? 'Посмотреть' : 'Открыть'}</button>
@@ -2299,45 +2389,45 @@
     $('compareEstimateSyntex')?.setAttribute('aria-expanded', 'false');
     $('compareActualSyntex')?.setAttribute('aria-expanded', 'false');
     const totals = window.AIVideoCalculator.calculateProject(projectItems, projectMeta, actualItems);
-    $('baseTotal').textContent = fmtRub(totals.base);
-    $('retryTotal').textContent = fmtRub(totals.reserve);
-    $('grandTotal').textContent = fmtRub(totals.estimateCost);
+    $('baseTotal').textContent = fmtMoney(totals.base);
+    $('retryTotal').textContent = fmtMoney(totals.reserve);
+    $('grandTotal').textContent = fmtMoney(totals.estimateCost);
     $('baseCount').textContent = `${totals.plannedGenerations} шт.`;
     $('retryCount').textContent = `${totals.extraGenerations} шт.`;
     $('grandCount').textContent = `${totals.totalGenerations} генераций`;
-    $('estimateSummary').textContent = fmtRub(totals.estimateCost);
+    $('estimateSummary').textContent = fmtMoney(totals.estimateCost);
 
-    $('plannedImageCost').textContent = fmtRub(totals.plannedImageCost);
-    $('estimateImageTotal').textContent = fmtRub(totals.plannedImageCost);
-    $('estimateImageCount').textContent = totals.includeImages ? `${totals.plannedImages} × ${fmtRub(projectMeta.imageUnitRub)}` : 'выключено';
+    $('plannedImageCost').textContent = fmtMoney(totals.plannedImageCost);
+    $('estimateImageTotal').textContent = fmtMoney(totals.plannedImageCost);
+    $('estimateImageCount').textContent = totals.includeImages ? `${totals.plannedImages} × ${fmtMoney(projectMeta.imageUnitRub)}` : 'выключено';
 
     if (projectMeta.showWorkPrice && totals.estimateCost >= 0) {
       $('workPriceResult').classList.remove('hidden');
-      $('workPrice').textContent = fmtRub(totals.quotedPrice);
-      $('activeProjectPrice').textContent = 'Цена для заказчика · ' + fmtRub(totals.quotedPrice);
+      $('workPrice').textContent = fmtMoney(totals.quotedPrice);
+      $('activeProjectPrice').textContent = 'Цена для заказчика · ' + fmtMoney(totals.quotedPrice);
       $('activeProjectPrice').classList.remove('hidden');
       $('workPriceLabel').textContent = 'Цена для заказчика';
       const source = totals.priceMode === 'custom'
-        ? `Своя цена ${fmtRub(totals.priceBeforeRounding)}`
-        : `Себестоимость ${fmtRub(totals.estimateCost)} + ${totals.readyVideos} готовых видео × ${fmtRub(totals.laborPerVideoRub)}`;
+        ? `Своя цена ${fmtMoney(totals.priceBeforeRounding)}`
+        : `Себестоимость ${fmtMoney(totals.estimateCost)} + ${totals.readyVideos} готовых видео × ${fmtMoney(totals.laborPerVideoRub)}`;
       const rounding = totals.priceRounding === 'up' ? ' · округлено вверх до 100 ₽' : totals.priceRounding === 'down' ? ' · округлено вниз до 100 ₽' : '';
-      $('workPriceMeta').textContent = `${source} = ${fmtRub(totals.quotedPrice)}${rounding}.`;
+      $('workPriceMeta').textContent = `${source} = ${fmtMoney(totals.quotedPrice)}${rounding}.`;
     } else {
       $('workPriceResult').classList.add('hidden');
       $('activeProjectPrice').classList.add('hidden');
     }
 
-    $('actualSummary').textContent = fmtRub(totals.actualCost);
-    $('actualVideoTotal').textContent = fmtRub(totals.actualVideoCost);
+    $('actualSummary').textContent = fmtMoney(totals.actualCost);
+    $('actualVideoTotal').textContent = fmtMoney(totals.actualVideoCost);
     $('actualVideoCount').textContent = `${totals.actualVideoGenerations} шт.`;
-    $('actualImageCost').textContent = fmtRub(totals.actualImageCost);
-    $('actualImagesTotal').textContent = fmtRub(totals.actualImageCost);
-    $('actualImagesCount').textContent = totals.includeImages ? `${totals.actualImages} × ${fmtRub(projectMeta.imageUnitRub)}` : 'выключено';
-    $('actualTotal').textContent = fmtRub(totals.actualCost);
+    $('actualImageCost').textContent = fmtMoney(totals.actualImageCost);
+    $('actualImagesTotal').textContent = fmtMoney(totals.actualImageCost);
+    $('actualImagesCount').textContent = totals.includeImages ? `${totals.actualImages} × ${fmtMoney(projectMeta.imageUnitRub)}` : 'выключено';
+    $('actualTotal').textContent = fmtMoney(totals.actualCost);
 
-    $('compareEstimate').textContent = fmtRub(totals.estimateCost);
-    $('compareActual').textContent = fmtRub(totals.actualCost);
-    $('plannedProfit').textContent = fmtRub(totals.plannedProfit);
+    $('compareEstimate').textContent = fmtMoney(totals.estimateCost);
+    $('compareActual').textContent = fmtMoney(totals.actualCost);
+    $('plannedProfit').textContent = fmtMoney(totals.plannedProfit);
     const hasActual = totals.actualVideoGenerations > 0 || (totals.includeImages && totals.actualImages > 0);
     if (!hasActual) {
       $('varianceLabel').textContent = 'Отклонение';
@@ -2352,28 +2442,28 @@
     const varianceAbs = Math.abs(totals.variance);
     if (totals.variance > 0.005) {
       $('varianceLabel').textContent = 'Перерасход';
-      $('varianceValue').textContent = fmtRub(varianceAbs);
+      $('varianceValue').textContent = fmtMoney(varianceAbs);
       $('varianceValue').className = 'negative-value';
     } else if (totals.variance < -0.005) {
       $('varianceLabel').textContent = 'Экономия (пока)';
-      $('varianceValue').textContent = fmtRub(varianceAbs);
+      $('varianceValue').textContent = fmtMoney(varianceAbs);
       $('varianceValue').className = 'positive-value';
     } else {
       $('varianceLabel').textContent = 'Отклонение';
-      $('varianceValue').textContent = fmtRub(0);
+      $('varianceValue').textContent = fmtMoney(0);
       $('varianceValue').className = '';
     }
-    $('actualProfit').textContent = fmtRub(totals.actualProfit);
+    $('actualProfit').textContent = fmtMoney(totals.actualProfit);
     $('actualProfit').className = totals.actualProfit < 0 ? 'negative-value' : 'positive-value';
-    $('actualProfitMeta').textContent = `${totals.priceMode === 'custom' ? 'Цена для заказчика' : 'Расчётная цена'} ${fmtRub(totals.quotedPrice)} − текущий фактический расход ${fmtRub(totals.actualCost)}. До завершения проекта результат предварительный.`;
+    $('actualProfitMeta').textContent = `${totals.priceMode === 'custom' ? 'Цена для заказчика' : 'Расчётная цена'} ${fmtMoney(totals.quotedPrice)} − текущий фактический расход ${fmtMoney(totals.actualCost)}. До завершения проекта результат предварительный.`;
   }
 
   function renderUnitPrices() {
     if (!pricing) return;
-    $('klingUnitPrice').textContent = fmtRub(window.AIVideoCalculator.unitPriceRub('kling', settings, pricing));
-    $('syntexUnitPrice').textContent = fmtRub(window.AIVideoCalculator.unitPriceRub('syntex', settings, pricing));
-    $('dreaminaUnitPrice').textContent = fmtRub(window.AIVideoCalculator.unitPriceRub('dreamina', settings, pricing));
-    $('dreaminaPlusUnitPrice').textContent = fmtRub(window.AIVideoCalculator.unitPriceRub('dreamina-plus', settings, pricing));
+    $('klingUnitPrice').textContent = fmtUnitMoney(window.AIVideoCalculator.unitPriceRub('kling', settings, pricing));
+    $('syntexUnitPrice').textContent = fmtUnitMoney(window.AIVideoCalculator.unitPriceRub('syntex', settings, pricing));
+    $('dreaminaUnitPrice').textContent = fmtUnitMoney(window.AIVideoCalculator.unitPriceRub('dreamina', settings, pricing));
+    $('dreaminaPlusUnitPrice').textContent = fmtUnitMoney(window.AIVideoCalculator.unitPriceRub('dreamina-plus', settings, pricing));
   }
 
   function renderDataStatus(warning) {
@@ -2634,6 +2724,7 @@
     try {
       const data = JSON.parse(await file.text());
       settings = { ...settings, ...(data.settings || {}) };
+      Object.assign(settings, window.AIVideoPreferences.normalize(settings));
       if (!settings.syntexManualUnits) settings.syntexManualUnits = {};
       if (!settings.manualTokenTariffs || typeof settings.manualTokenTariffs !== 'object') settings.manualTokenTariffs = {};
       if (!Array.isArray(settings.customTariffs)) settings.customTariffs = [];

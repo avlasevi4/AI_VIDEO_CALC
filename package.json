@@ -1,9 +1,9 @@
 {
   "name": "ai-video-calc",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "private": true,
   "scripts": {
-    "test": "node tests/calculator.test.mjs && node tests/projects.test.mjs && node tests/cloud.test.mjs && node tests/ui.test.mjs",
-    "check": "node --check js/calculator.js && node --check js/pricing.js && node --check js/projects.js && node --check js/cloud-config.js && node --check js/cloud.js && node --check js/app.js && node scripts/validate-pricing.mjs && npm test"
+    "test": "node tests/calculator.test.mjs && node tests/pricing.test.mjs && node tests/projects.test.mjs && node tests/cloud.test.mjs && node tests/preferences.test.mjs && node tests/preferences-app.test.mjs && node tests/ui.test.mjs",
+    "check": "node --check js/calculator.js && node --check js/pricing.js && node --check js/projects.js && node --check js/cloud-config.js && node --check js/cloud.js && node --check js/preferences.js && node --check js/app.js && node scripts/validate-pricing.mjs && npm test"
   }
 }

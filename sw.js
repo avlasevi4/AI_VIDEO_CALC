@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v4.0-dreamina-four-seconds-20261004';
+const CACHE_NAME = 'ai-video-calc-v4.1-display-preferences-20261029';
 const ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const ASSETS = [
   './js/pricing.js',
   './js/projects.js',
   './js/app.js',
+  './js/preferences.js',
   './data/pricing.json',
   './manifest.webmanifest',
   './icons/ai-calc-logo.png',
