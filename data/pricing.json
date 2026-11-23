@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "4.2.0-2026-10-29",
-  "updated": "2026-10-29",
+  "dataVersion": "4.3.0-2026-11-23",
+  "updated": "2026-11-23",
   "baseTariffDate": "2026-09-19",
   "currency": "RUB",
   "providers": {
@@ -368,6 +368,17 @@
         { "id": "omni-reference-video-1080", "label": "Omni Reference · с видео · 1080p", "resolution": "1080p", "audio": "Native Audio", "note": "Цены пользователя за 5–30 секунд. Между контрольными точками — интерполяция; 3–4 секунды — предварительная оценка.", "billing": { "type": "duration_curve", "unitsByDuration": { "3": 231, "5": 249, "10": 294, "15": 339, "20": 384, "25": 450, "30": 540 }, "confirmedDurations": [5, 10, 15, 20, 25, 30], "estimatedDurations": [3, 4], "roundDigits": 1, "durationRange": { "min": 3, "max": 30, "step": 1 } } },
         { "id": "keyframes-720", "label": "Keyframes · 720p", "resolution": "720p", "audio": "Native Audio", "billing": { "type": "rate_per_second", "unitsPerSecond": 10, "durationRange": { "min": 3, "max": 30, "step": 1 } } },
         { "id": "keyframes-1080", "label": "Keyframes · 1080p", "resolution": "1080p", "audio": "Native Audio", "billing": { "type": "rate_per_second", "unitsPerSecond": 15, "durationRange": { "min": 3, "max": 30, "step": 1 } } }
+      ]
+    },
+    {
+      "id": "kling-40-flash",
+      "provider": "kling",
+      "name": "Kling 4.0 Flash",
+      "status": "manual",
+      "verifiedAt": "2026-11-23",
+      "sourceNote": "По данным пользователя: 6 credits за секунду без видеореференса; 720p. Длительность 3–20 секунд согласно руководству Kling. Цена при использовании видеореференса не установлена.",
+      "variants": [
+        { "id": "no-video-720", "label": "Без видеореференса · 720p", "resolution": "720p", "audio": "—", "note": "Без видеореференса: 60 credits / 10 сек. Стоимость с видеореференсом не установлена.", "billing": { "type": "rate_per_second", "unitsPerSecond": 6, "durationRange": { "min": 3, "max": 20, "step": 1 } } }
       ]
     },
     {

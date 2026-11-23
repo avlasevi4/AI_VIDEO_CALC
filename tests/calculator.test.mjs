@@ -55,6 +55,16 @@ for (const modelId of ['dreamina-seedance-25', 'dreamina-plus-seedance-25']) {
   }
 }
 
+const flash = pricing.models.find(model => model.id === 'kling-40-flash');
+assert.equal(flash.provider, 'kling');
+assert.equal(flash.variants.length, 1);
+assert.deepEqual(flash.variants[0].billing.durationRange, {min:3,max:20,step:1});
+for (const [duration, credits] of [[3,18],[5,30],[10,60],[15,90],[20,120]]) {
+  const result = calc.calculateSelection(pricing, settings, 'kling-40-flash', 'no-video-720', duration);
+  assert.equal(result.units, credits);
+  assert.ok(Math.abs(result.rub - credits * 750 / 660) < 1e-9);
+}
+
 const kling40 = pricing.models.find(model => model.id === 'kling-40');
 assert.equal(kling40.provider, 'kling');
 assert.equal(kling40.variants.length, 6, 'Kling 4.0 separates Omni with and without video from Keyframes at both resolutions');
