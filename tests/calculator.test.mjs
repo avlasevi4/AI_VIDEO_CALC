@@ -55,6 +55,21 @@ for (const modelId of ['dreamina-seedance-25', 'dreamina-plus-seedance-25']) {
   }
 }
 
+for (const modelId of ['dreamina-seedance-25-flash', 'dreamina-plus-seedance-25-flash']) {
+  const model = pricing.models.find(item => item.id === modelId);
+  assert.equal(model.variants.length, 2, 'Only confirmed keyframe tariffs are present');
+  for (const [variantId, rate] of [['keyframes-480p', 11], ['keyframes-720p', 24]]) {
+    const variant = model.variants.find(item => item.id === variantId);
+    assert.deepEqual(variant.billing.durationRange, {min:4,max:30,step:1});
+    for (const duration of [4,10,20,30]) {
+      const result = calc.calculateSelection(pricing, settings, modelId, variantId, duration);
+      assert.equal(result.units, rate * duration);
+      const expectedRub = model.provider === 'dreamina-plus' ? rate * duration * 100 / 10500 : rate * duration * 11 / 3885 * 75;
+      assert.ok(Math.abs(result.rub - expectedRub) < 1e-9);
+    }
+  }
+}
+
 const flash = pricing.models.find(model => model.id === 'kling-40-flash');
 assert.equal(flash.provider, 'kling');
 assert.equal(flash.variants.length, 1);

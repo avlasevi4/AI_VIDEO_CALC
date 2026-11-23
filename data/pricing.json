@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "4.3.0-2026-11-23",
+  "dataVersion": "4.4.0-2026-11-23",
   "updated": "2026-11-23",
   "baseTariffDate": "2026-09-19",
   "currency": "RUB",
@@ -469,6 +469,18 @@
       ]
     },
     {
+      "id": "dreamina-seedance-25-flash",
+      "provider": "dreamina",
+      "name": "Seedance 2.5 Flash",
+      "status": "manual",
+      "verifiedAt": "2026-11-23",
+      "sourceNote": "Тарифы ключевых кадров предоставлены пользователем: 110 кредитов за 10 секунд в 480p и 240 в 720p. Omni Reference пока не проверен.",
+      "variants": [
+        { "id": "keyframes-480p", "label": "Ключевые кадры · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 11, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
+        { "id": "keyframes-720p", "label": "Ключевые кадры · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 24, "durationRange": { "min": 4, "max": 30, "step": 1 } } }
+      ]
+    },
+    {
       "id": "dreamina-seedance-25",
       "provider": "dreamina",
       "name": "Seedance 2.5",
@@ -517,6 +529,18 @@
         { "id": "720p", "label": "720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 17, "durationRange": { "min": 5, "max": 15, "step": 1 } } },
         { "id": "1080p", "label": "1080p", "resolution": "1080p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 41, "durationRange": { "min": 5, "max": 15, "step": 1 } } },
         { "id": "4k", "label": "4K", "resolution": "4K", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 78, "durationRange": { "min": 5, "max": 15, "step": 1 } } }
+      ]
+    },
+    {
+      "id": "dreamina-plus-seedance-25-flash",
+      "provider": "dreamina-plus",
+      "name": "Seedance 2.5 Flash",
+      "status": "manual",
+      "verifiedAt": "2026-11-23",
+      "sourceNote": "Тарифы ключевых кадров Dreamina, предоставленные пользователем; Dreamina Plus использует отдельный курс кредита. Omni Reference пока не проверен.",
+      "variants": [
+        { "id": "keyframes-480p", "label": "Ключевые кадры · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 11, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
+        { "id": "keyframes-720p", "label": "Ключевые кадры · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 24, "durationRange": { "min": 4, "max": 30, "step": 1 } } }
       ]
     },
     {
