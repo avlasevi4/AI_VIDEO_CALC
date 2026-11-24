@@ -74,12 +74,26 @@ const bridge = `
     changeDisplayCurrency, changeDreaminaPlusVisibility, synchronizeCloudTariffs,
     sharedTariffs, applySharedTariffs, visibleProviderIds, providerOptions,
     normalizeProjectItem, renderManualTariffEditor, renderDisplayPreferences,
-    toggleSyntexComparison, configureDurationSlider, syntexComparison
+    toggleSyntexComparison, configureDurationSlider, syntexComparison,
+    isFlashVideoVariant, flashDiscountVariant, updateFlashDiscount
   };
 `;
 vm.runInContext(appSource.replace(/\}\)\(\);\s*$/,bridge+'})();'),context,{filename:'app.js'});
 const app = context.window.testPreferences;
 const pricing = JSON.parse(await readFile(new URL('../data/pricing.json',import.meta.url),'utf8'));
+for (const modelId of ['dreamina-seedance-25-flash','dreamina-plus-seedance-25-flash']) {
+  const model = pricing.models.find(item => item.id === modelId);
+  const full = model.variants.find(item => item.id === 'omni-reference-video-720p-full');
+  const discounted = model.variants.find(item => item.id === 'omni-reference-video-720p');
+  assert.equal(app.flashDiscountVariant(full.id, true), discounted.id);
+  assert.equal(app.flashDiscountVariant(discounted.id, false), full.id);
+  app.updateFlashDiscount('calculatorDiscountField','calculatorDiscount',model,full);
+  assert.equal(get('calculatorDiscount').checked, false);
+  app.updateFlashDiscount('calculatorDiscountField','calculatorDiscount',model,discounted);
+  assert.equal(get('calculatorDiscount').checked, true);
+  app.updateFlashDiscount('calculatorDiscountField','calculatorDiscount',model,model.variants[0]);
+  assert.equal(get('calculatorDiscountField').classList.contains('hidden'), true);
+}
 const project = {
   id:'completed-test',name:'Тест',status:'completed',updatedAt:'2026-10-01T00:00:00Z',
   items:[{id:'estimate-1',provider:'dreamina-plus',modelId:'dreamina-plus-seedance-25',variantId:'720p',duration:10,qty:2,generationsPerVideo:2,rub:80,units:370}],

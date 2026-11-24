@@ -57,7 +57,7 @@ for (const modelId of ['dreamina-seedance-25', 'dreamina-plus-seedance-25']) {
 
 for (const modelId of ['dreamina-seedance-25-flash', 'dreamina-plus-seedance-25-flash']) {
   const model = pricing.models.find(item => item.id === modelId);
-  assert.equal(model.variants.length, 2, 'Only confirmed keyframe tariffs are present');
+  assert.equal(model.variants.length, 6, 'Keyframes and video reference have separate regular and discounted rates');
   for (const [variantId, rate] of [['keyframes-480p', 11], ['keyframes-720p', 24]]) {
     const variant = model.variants.find(item => item.id === variantId);
     assert.deepEqual(variant.billing.durationRange, {min:4,max:30,step:1});
@@ -67,6 +67,25 @@ for (const modelId of ['dreamina-seedance-25-flash', 'dreamina-plus-seedance-25-
       const expectedRub = model.provider === 'dreamina-plus' ? rate * duration * 100 / 10500 : rate * duration * 11 / 3885 * 75;
       assert.ok(Math.abs(result.rub - expectedRub) < 1e-9);
     }
+  }
+  for (const [variantId, points] of [
+    ['omni-reference-video-480p', {4:152,10:200,15:240,20:280,25:320,30:360}],
+    ['omni-reference-video-720p', {4:323,10:425,15:510,20:595,25:680,30:765}],
+    ['omni-reference-video-480p-full', {4:209,10:275,20:385,30:495}],
+    ['omni-reference-video-720p-full', {4:456,10:600,20:840,30:1080}]
+  ]) {
+    for (const [duration, units] of Object.entries(points)) {
+      const result = calc.calculateSelection(pricing, settings, modelId, variantId, Number(duration));
+      assert.equal(result.units, units);
+      assert.match(result.calculationNote, /длительность исходного видео/);
+      const expectedRub = model.provider === 'dreamina-plus' ? units * 100 / 10500 : units * 11 / 3885 * 75;
+      assert.ok(Math.abs(result.rub - expectedRub) < 1e-9);
+    }
+    for (const duration of [5,6,7,8,9]) {
+      const result = calc.calculateSelection(pricing, settings, modelId, variantId, duration);
+      assert.match(result.calculationNote, /интерполяция/);
+    }
+    assert.match(calc.calculateSelection(pricing, settings, modelId, variantId, 12).calculationNote, /интерполяция/);
   }
 }
 

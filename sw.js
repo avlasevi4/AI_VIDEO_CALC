@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ai-video-calc-v4.4-seedance25flash-20261123';
+const CACHE_NAME = 'ai-video-calc-v4.5-seedance25flashvideo-20261124';
 const ASSETS = [
   './',
   './index.html',

@@ -129,11 +129,12 @@
     const rub = units * unitRub;
     const usd = ['kling', 'dreamina'].includes(model.provider) ? rub / safeNumber(settings.usdRub, 75.05) : null;
     const calculationNote = variant.billing.estimatedDurations?.includes(normalizedDuration)
-      ? 'Предварительная цена: точный тариф для 3–4 секунд пока не указан.'
+      ? (variant.billing.estimatedNote || 'Предварительная цена: точный тариф для 3–4 секунд пока не указан.')
       : Array.isArray(variant.billing.confirmedDurations) && !variant.billing.confirmedDurations.includes(normalizedDuration)
         ? 'Расчётная цена: интерполяция между контрольными длительностями.'
         : '';
-    return { model, variant, duration: normalizedDuration, units, unitRub, rub, usd, manualUnits: safeNumber(manualUnits, 0), pricingMode: 'provider_units', ...(calculationNote ? {calculationNote} : {}) };
+    const notes = [calculationNote, variant.billing.pricingNote].filter(Boolean).join(' ');
+    return { model, variant, duration: normalizedDuration, units, unitRub, rub, usd, manualUnits: safeNumber(manualUnits, 0), pricingMode: 'provider_units', ...(notes ? {calculationNote: notes} : {}) };
   }
 
   function calculateProject(items, meta = {}, actualItems = []) {

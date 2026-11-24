@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "dataVersion": "4.4.0-2026-11-23",
-  "updated": "2026-11-23",
+  "dataVersion": "4.5.0-2026-11-24",
+  "updated": "2026-11-24",
   "baseTariffDate": "2026-09-19",
   "currency": "RUB",
   "providers": {
@@ -474,10 +474,14 @@
       "name": "Seedance 2.5 Flash",
       "status": "manual",
       "verifiedAt": "2026-11-23",
-      "sourceNote": "Тарифы ключевых кадров предоставлены пользователем: 110 кредитов за 10 секунд в 480p и 240 в 720p. Omni Reference пока не проверен.",
+      "sourceNote": "Тарифы с видео со скидкой и без скидки предоставлены пользователем; промежуточные значения рассчитаны между подтверждёнными точками.",
       "variants": [
         { "id": "keyframes-480p", "label": "Ключевые кадры · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 11, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
-        { "id": "keyframes-720p", "label": "Ключевые кадры · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 24, "durationRange": { "min": 4, "max": 30, "step": 1 } } }
+        { "id": "keyframes-720p", "label": "Ключевые кадры · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 24, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-video-480p-full", "label": "Omni Reference с видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 209, "10": 275, "20": 385, "30": 495 }, "confirmedDurations": [4, 10, 20, 30], "pricingNote": "Цена без скидки из проверенных примеров. Dreamina учитывает длительность исходного видео; проверьте стоимость перед генерацией.", "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-video-480p", "label": "Omni Reference с видео · 480p · скидка", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 152, "10": 200, "15": 240, "20": 280, "25": 320, "30": 360 }, "confirmedDurations": [4, 10, 15, 20, 25, 30], "pricingNote": "Цена со скидкой из проверенного примера. Dreamina учитывает длительность исходного видео; проверьте стоимость перед генерацией.", "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-video-720p-full", "label": "Omni Reference с видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 456, "10": 600, "20": 840, "30": 1080 }, "confirmedDurations": [4, 10, 20, 30], "pricingNote": "Цена без скидки из проверенных примеров. Dreamina учитывает длительность исходного видео; проверьте стоимость перед генерацией.", "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-video-720p", "label": "Omni Reference с видео · 720p · скидка", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 323, "10": 425, "15": 510, "20": 595, "25": 680, "30": 765 }, "confirmedDurations": [4, 10, 15, 20, 25, 30], "pricingNote": "Цена со скидкой из проверенного примера. Dreamina учитывает длительность исходного видео; проверьте стоимость перед генерацией.", "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } } }
       ]
     },
     {
@@ -537,10 +541,14 @@
       "name": "Seedance 2.5 Flash",
       "status": "manual",
       "verifiedAt": "2026-11-23",
-      "sourceNote": "Тарифы ключевых кадров Dreamina, предоставленные пользователем; Dreamina Plus использует отдельный курс кредита. Omni Reference пока не проверен.",
+      "sourceNote": "Тарифы с видео со скидкой и без скидки предоставлены пользователем; Dreamina Plus использует отдельный курс кредита.",
       "variants": [
         { "id": "keyframes-480p", "label": "Ключевые кадры · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 11, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
-        { "id": "keyframes-720p", "label": "Ключевые кадры · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 24, "durationRange": { "min": 4, "max": 30, "step": 1 } } }
+        { "id": "keyframes-720p", "label": "Ключевые кадры · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "rate_per_second", "unitsPerSecond": 24, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-video-480p-full", "label": "Omni Reference с видео · 480p", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 209, "10": 275, "20": 385, "30": 495 }, "confirmedDurations": [4, 10, 20, 30], "pricingNote": "Цена без скидки из проверенных примеров. Dreamina учитывает длительность исходного видео; проверьте стоимость перед генерацией.", "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-video-480p", "label": "Omni Reference с видео · 480p · скидка", "resolution": "480p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 152, "10": 200, "15": 240, "20": 280, "25": 320, "30": 360 }, "confirmedDurations": [4, 10, 15, 20, 25, 30], "pricingNote": "Цена со скидкой из проверенного примера. Dreamina учитывает длительность исходного видео; проверьте стоимость перед генерацией.", "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-video-720p-full", "label": "Omni Reference с видео · 720p", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 456, "10": 600, "20": 840, "30": 1080 }, "confirmedDurations": [4, 10, 20, 30], "pricingNote": "Цена без скидки из проверенных примеров. Dreamina учитывает длительность исходного видео; проверьте стоимость перед генерацией.", "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } } },
+        { "id": "omni-reference-video-720p", "label": "Omni Reference с видео · 720p · скидка", "resolution": "720p", "audio": "—", "billing": { "type": "duration_curve", "unitsByDuration": { "4": 323, "10": 425, "15": 510, "20": 595, "25": 680, "30": 765 }, "confirmedDurations": [4, 10, 15, 20, 25, 30], "pricingNote": "Цена со скидкой из проверенного примера. Dreamina учитывает длительность исходного видео; проверьте стоимость перед генерацией.", "roundDigits": 1, "durationRange": { "min": 4, "max": 30, "step": 1 } } }
       ]
     },
     {

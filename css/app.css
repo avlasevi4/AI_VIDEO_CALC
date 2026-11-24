@@ -160,6 +160,9 @@ details:not([open])>.card-summary::after,.details:not([open])>summary::after,.pr
 
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
 .field{display:grid;gap:6px;min-width:0}
+.discount-option{display:flex;align-items:center;gap:10px;min-height:44px;color:#d8e4f5;font-size:14px;font-weight:600;cursor:pointer}
+.discount-option input{width:19px;height:19px;flex:none;accent-color:#89dfc4}
+.discount-option input:focus-visible{outline:2px solid #a9bfff;outline-offset:3px}
 .field.full{grid-column:1/-1}
 .field label{color:#8fa3b7;font-size:10px;font-weight:750;line-height:1.3;letter-spacing:.035em}
 .field select,.field input[type=number],.field input[type=text],

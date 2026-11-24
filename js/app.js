@@ -544,6 +544,10 @@
       const retainedDuration = currentDuration();
       renderDuration(retainedDuration); renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal();
     });
+    $('calculatorDiscount').addEventListener('change', event => {
+      $('variantSelect').value = flashDiscountVariant(currentVariant().id, event.target.checked);
+      renderResult(); rememberCalculatorSelection(); saveLocal();
+    });
     $('durationRange').addEventListener('input', () => { $('durationNumber').value = $('durationRange').value; renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal(); });
     $('durationNumber').addEventListener('input', () => { $('durationRange').value = $('durationNumber').value; renderManualUnits(); renderResult(); rememberCalculatorSelection(); saveLocal(); });
     $('manualUnits').addEventListener('input', () => { setStoredManualUnits($('manualUnits').value); renderResult(); });
@@ -623,6 +627,13 @@
       actualDraft.variantId = $('actualVariant').value;
       actualDraft.manualUnits = '';
       renderActualDraft();
+    });
+    $('actualDiscount').addEventListener('change', event => {
+      actualDraft.variantId = flashDiscountVariant(actualDraft.variantId, event.target.checked);
+      renderActualDraft();
+      settings.lastActualSelectionByProvider ||= {};
+      settings.lastActualSelectionByProvider[actualDraft.provider] = {modelId: actualDraft.modelId, variantId: actualDraft.variantId, duration: actualDraft.duration};
+      saveLocal();
     });
     $('actualDurationRange').addEventListener('input', () => {
       actualDraft.duration = durationFromSlider($('actualDurationRange'));
@@ -1070,11 +1081,26 @@
     return model?.variants.find(variant => variant.id === $('variantSelect').value) || model?.variants[0];
   }
 
+  function isFlashVideoVariant(model, variant) {
+    return /^(dreamina|dreamina-plus)-seedance-25-flash$/.test(model?.id || '') && /^omni-reference-video-(480p|720p)(-full)?$/.test(variant?.id || '');
+  }
+
+  function flashDiscountVariant(variantId, discounted) {
+    const base = String(variantId || '').replace(/-full$/, '');
+    return discounted ? base : `${base}-full`;
+  }
+
+  function updateFlashDiscount(fieldId, inputId, model, variant) {
+    const visible = isFlashVideoVariant(model, variant);
+    $(fieldId).classList.toggle('hidden', !visible);
+    $(inputId).checked = visible && !variant.id.endsWith('-full');
+  }
+
   function renderVariants(preferredVariantId = '') {
     const model = currentModel();
     if (!model) return;
     const selected = model.variants.find(variant => variant.id === preferredVariantId) || model.variants[0];
-    $('variantSelect').innerHTML = model.variants.map(variant => `<option value="${esc(variant.id)}" ${variant.id === selected?.id ? 'selected' : ''}>${esc(variant.label)}</option>`).join('');
+    $('variantSelect').innerHTML = model.variants.map(variant => `<option value="${esc(variant.id)}" ${isFlashVideoVariant(model, variant) && !variant.id.endsWith('-full') ? 'hidden' : ''} ${variant.id === selected?.id ? 'selected' : ''}>${esc(variant.label)}</option>`).join('');
     $('variantField').classList.toggle('hidden', model.variants.length === 1 && /^(Стандартный режим|Hailuo MiniMax|Pika|Topaz AI 2\.5|Lip Sync|Act-One|Аватар)$/.test(model.variants[0].label));
   }
 
@@ -1617,6 +1643,7 @@
 
   function renderResult() {
     if (!pricing || !currentModel() || !currentVariant()) return;
+    updateFlashDiscount('calculatorDiscountField', 'calculatorDiscount', currentModel(), currentVariant());
     $('calculatorSyntexComparison')?.classList.add('hidden');
     $('compareCalculatorSyntex')?.setAttribute('aria-expanded', 'false');
     let result;
@@ -1917,8 +1944,9 @@
         </div>
         <div class="field project-wide">
           <label>Режим / качество</label>
-          <select class="project-variant">${model.variants.map(v => `<option value="${esc(v.id)}" ${v.id === variant.id ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
+          <select class="project-variant">${model.variants.map(v => `<option value="${esc(v.id)}" ${isFlashVideoVariant(model, v) && !v.id.endsWith('-full') ? 'hidden' : ''} ${v.id === variant.id ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
         </div>
+        ${isFlashVideoVariant(model, variant) ? `<label class="discount-option project-wide"><input class="project-discount" type="checkbox" ${variant.id.endsWith('-full') ? '' : 'checked'}> Учитывать скидку</label>` : ''}
         <div class="field">
           <label>Длительность</label>
           ${projectDurationControl(item, variant)}
@@ -1991,6 +2019,14 @@
       const nextVariant = getProjectVariant(item);
       item.duration = initialDurationForVariant(nextVariant, retainedDuration);
       item.manualUnits = '';
+      rememberProjectSelection(item);
+      saveLocal();
+      renderProject();
+    });
+
+    row.querySelector('.project-discount')?.addEventListener('change', event => {
+      item.variantId = flashDiscountVariant(item.variantId, event.target.checked);
+      recalcProjectItem(item);
       rememberProjectSelection(item);
       saveLocal();
       renderProject();
@@ -2135,7 +2171,8 @@
 
     const variant = model.variants.find(item => item.id === actualDraft.variantId) || model.variants[0];
     actualDraft.variantId = variant.id;
-    $('actualVariant').innerHTML = model.variants.map(item => `<option value="${esc(item.id)}" ${item.id === variant.id ? 'selected' : ''}>${esc(item.label)}</option>`).join('');
+    $('actualVariant').innerHTML = model.variants.map(item => `<option value="${esc(item.id)}" ${isFlashVideoVariant(model, item) && !item.id.endsWith('-full') ? 'hidden' : ''} ${item.id === variant.id ? 'selected' : ''}>${esc(item.label)}</option>`).join('');
+    updateFlashDiscount('actualDiscountField', 'actualDiscount', model, variant);
 
     actualDraft.duration = configureDurationSlider($('actualDurationRange'), $('actualDurationValue'), variant, actualDraft.duration || 5);
     syncActualManualFromStored();
@@ -2617,7 +2654,7 @@
     downloadJson({
       type: 'ai-video-calc-tariffs',
       schemaVersion: 1,
-      appVersion: '4.4',
+      appVersion: '4.5',
       exportedAt: new Date().toISOString(),
       providers
     }, 'ai-video-calc-tariffs.json');
@@ -2718,14 +2755,14 @@
   function exportData() {
     syncActiveProjectState(false);
     const payload = {
-      app: 'AI VIDEO CALC 4.4',
+      app: 'AI VIDEO CALC 4.5',
       schemaVersion: 2,
       exportedAt: new Date().toISOString(),
       settings,
       activeProjectId,
       projects
     };
-    downloadJson(payload, 'ai-video-calc-v4.4-data.json');
+    downloadJson(payload, 'ai-video-calc-v4.5-data.json');
   }
 
   async function importData(event) {
